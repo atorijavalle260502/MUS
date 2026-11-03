@@ -387,6 +387,47 @@ html::after{content:'';position:fixed;left:0;right:0;bottom:0;height:env(safe-ar
 #app.home:has(#cont) .logo{font-size:clamp(46px,10vh,96px)}
 #app.home:has(#cont) .fan{margin-bottom:clamp(14px,2.6vh,26px)}
 @media (max-height:700px){#app.home .logo{font-size:clamp(46px,11vh,80px)}}
+
+/* ===== Inicio: contenido centrado, mismo aire arriba y abajo ===== */
+#app.home,#app.home:has(#cont){justify-content:center;padding-top:clamp(40px,7vh,66px);padding-bottom:clamp(40px,7vh,66px)}
+#app.home .menu{margin-top:clamp(10px,2.2vh,22px);margin-bottom:0;flex:0 0 auto}
+#app.home .logo{margin-top:0}
+#app.home .fan{margin-top:clamp(6px,1.4vh,16px)}
+#app.home:has(#cont) .fan{margin-bottom:clamp(10px,2vh,20px)}
+/* ===== Contador: compacto en pantallas bajas para que todo entre ===== */
+@media (max-height:780px){
+ .table{gap:5px}.mid{gap:4px}
+ .half{padding:7px 9px;gap:4px}
+ .half .big{font-size:40px}
+ .half .btns{gap:6px}.half .btns button{padding:7px 0;font-size:17px}
+ .mini{gap:5px}.mini button{padding:6px 0;font-size:13px}
+ .half .row button,.half .ord{padding:7px 12px}
+ .half .row input{padding:7px}
+ .slot{height:54px}.sm{flex-basis:38px}
+ .strip{padding:0 4px}.cnt{font-size:17px}
+}
+@media (max-height:600px){
+ .half .big{font-size:34px}.half .btns button{padding:5px 0;font-size:15px}.mini button{padding:4px 0;font-size:12px}.slot{height:46px}
+}
+
+#app.home .logo{margin-top:-6px}
+@media (max-height:720px){
+ #app.home,#app.home:has(#cont){padding-top:62px;padding-bottom:62px}
+ #app.home .logo{font-size:clamp(40px,9vh,64px);margin-top:-4px}
+ #app.home .fan{height:calc(min(21vw,11.5vh,100px)*1.55 + 26px);margin-top:0}
+ #app.home .fan .ac{width:min(21vw,11.5vh,100px);margin-left:calc(min(21vw,11.5vh,100px)/-2)}
+ #app.home:has(#cont) .fan,#app.home .fan{margin-bottom:8px}
+ #app.home .menu{margin-top:6px;gap:8px}
+ #app.home .menu button.gold{padding:11px 14px;font-size:19px}
+ #app.home .menu #sd{padding:14px;font-size:20px}
+ #app.home .menu .nav button{padding:10px;font-size:16px}
+ #app.home .menu button.ghost:not(#sd){padding:8px;font-size:14px}
+}
+@media (max-height:720px){#app.home>.cn4.tl,#app.home>.cn4.tr{top:10px}#app.home>.cn4.bl,#app.home>.cn4.br{bottom:10px}}
+@media (max-height:600px){#app.home,#app.home:has(#cont){padding-top:46px;padding-bottom:46px}}
+
+#app.home:has(#cont) .menu{margin-top:clamp(10px,2.2vh,22px);margin-bottom:0;justify-content:flex-start}
+@media (max-height:720px){#app.home:has(#cont) .menu{margin-top:6px}}
 </style>
 </head>
 <body>
