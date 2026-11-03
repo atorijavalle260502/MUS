@@ -219,41 +219,41 @@ button,input,select,textarea{font-family:inherit}
 .fpk button.lk{color:var(--mute)}
 
 /* ===== TAPETES: lavado de cara de menús ===== */
-:root{--tp1:#2b7a4e;--tp2:#1d5d3a;--tp3:#123c26;--rim:#d9a93a;--weave:repeating-linear-gradient(45deg,rgba(255,255,255,.035) 0 2px,transparent 2px 5px),repeating-linear-gradient(-45deg,rgba(0,0,0,.05) 0 2px,transparent 2px 5px)}
+:root{--tp1:#33684b;--tp2:#244f37;--tp3:#163324;--rim:#bf9a44;--weave:repeating-linear-gradient(45deg,rgba(255,255,255,.035) 0 2px,transparent 2px 5px),repeating-linear-gradient(-45deg,rgba(0,0,0,.05) 0 2px,transparent 2px 5px)}
 /* recuadros y diálogos */
-#app:not(.game) .card,.ov.c .mp{--ink:#f6efdc;--mute:#d2c7a6;--line:rgba(224,176,74,.5);--card:#14301f;--a:#ff9486;--b:#7cc0ff;position:relative;color:var(--ink);border-radius:16px;padding:18px;
+#app:not(.game) .card,.ov.c .mp{--ink:#eae2cc;--mute:#c3ba9e;--line:rgba(200,160,80,.5);--card:#16291e;--a:#eb8f83;--b:#7bb4e9;position:relative;color:var(--ink);border-radius:16px;padding:18px;
 background:var(--weave),radial-gradient(ellipse at 28% 18%,var(--tp1) 0%,var(--tp2) 55%,var(--tp3) 100%);
 box-shadow:inset 0 0 0 2px #101010,inset 0 0 0 4px var(--rim),inset 0 0 0 5.5px #101010,inset 0 0 26px rgba(0,0,0,.45),0 4px 10px rgba(0,0,0,.35)}
-#app:not(.game) .card::before,.ov.c .mp::before{content:'';position:absolute;inset:9px;border:1.5px dashed rgba(224,176,74,.35);border-radius:10px;pointer-events:none}
+#app:not(.game) .card::before,.ov.c .mp::before{content:'';position:absolute;inset:9px;border:1.5px dashed rgba(200,160,80,.35);border-radius:10px;pointer-events:none}
 #app.setup .card{padding:14px}
 .ov.c .mp{padding:20px}
 /* desplegables, campos y botones dentro de los recuadros */
 #app:not(.game) .card select,.ov.c select{-webkit-appearance:none;appearance:none;padding-right:40px;border:2px solid var(--rim);border-radius:12px;font-weight:600;
 background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 8'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%23e0b04a' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 14px center/14px,linear-gradient(rgba(0,0,0,.34),rgba(0,0,0,.34));box-shadow:inset 0 2px 6px rgba(0,0,0,.4)}
-#app:not(.game) .card input,#app:not(.game) .card textarea,.ov.c input,.ov.c textarea{background:rgba(0,0,0,.3);border:1.5px solid rgba(224,176,74,.55);box-shadow:inset 0 2px 6px rgba(0,0,0,.4)}
+#app:not(.game) .card input,#app:not(.game) .card textarea,.ov.c input,.ov.c textarea{background:rgba(0,0,0,.3);border:1.5px solid rgba(200,160,80,.55);box-shadow:inset 0 2px 6px rgba(0,0,0,.4)}
 input::placeholder,textarea::placeholder{color:rgba(246,239,220,.5)}
-option{background:#14301f;color:#f6efdc}
-#app:not(.game) .card button.ghost,.ov.c button.ghost{border-color:rgba(224,176,74,.6)}
-#app:not(.game) .card .slotb{border-color:rgba(224,176,74,.55);background:rgba(0,0,0,.2)}
-#app:not(.game) .card button:not(.ghost):not(.med):not(.slotb):not(.avb):not(.gold):not([data-id]):not([data-e]){background:var(--ink);color:#14301f}
+option{background:#16291e;color:#eae2cc}
+#app:not(.game) .card button.ghost,.ov.c button.ghost{border-color:rgba(200,160,80,.6)}
+#app:not(.game) .card .slotb{border-color:rgba(200,160,80,.55);background:rgba(0,0,0,.2)}
+#app:not(.game) .card button:not(.ghost):not(.med):not(.slotb):not(.avb):not(.gold):not([data-id]):not([data-e]){background:var(--ink);color:#16291e}
 /* equipos en la pantalla de partida */
 #app .card.team{border:0;--rim:var(--cf)}
-#app .card.team[style*="var(--a)"]{--tp1:#b8402f;--tp2:#832419;--tp3:#450f0c}
-#app .card.team[style*="var(--b)"]{--tp1:#2f73b3;--tp2:#1d4f80;--tp3:#0d2845}
+#app .card.team[style*="var(--a)"]{--tp1:#9b4a3e;--tp2:#6d2d25;--tp3:#391513}
+#app .card.team[style*="var(--b)"]{--tp1:#3e6c97;--tp2:#284a6b;--tp3:#142639}
 /* botones de navegación como mini-tapetes */
-#app:not(.game) .top button,#app:not(.game) .nav button,#app.home .menu button.ghost{border:0;color:#f6efdc;background:var(--weave),radial-gradient(ellipse at 30% 20%,#2b7a4e,#1a5436 60%,#102f1f)!important;box-shadow:inset 0 0 0 1.5px #101010,inset 0 0 0 3px #d9a93a,inset 0 0 0 4px #101010,0 3px 7px rgba(0,0,0,.4)}
+#app:not(.game) .top button,#app:not(.game) .nav button,#app.home .menu button.ghost{border:0;color:#eae2cc;background:var(--weave),radial-gradient(ellipse at 30% 20%,#33684b,#204733 60%,#13281d)!important;box-shadow:inset 0 0 0 1.5px #101010,inset 0 0 0 3px #bf9a44,inset 0 0 0 4px #101010,0 3px 7px rgba(0,0,0,.4)}
 #app.home .menu button.ghost{padding:13px}
-#app.home #mp{background:var(--weave),radial-gradient(ellipse at 30% 20%,#254a8f,#16295a 60%,#0a1633)!important}
-#app.profile .top button{background:var(--weave),radial-gradient(ellipse at 30% 20%,#254a8f,#16295a 60%,#0a1633)!important}
+#app.home #mp{background:var(--weave),radial-gradient(ellipse at 30% 20%,#1a2a58,#0f1a3a 60%,#070d20)!important}
+#app.profile .top button{background:var(--weave),radial-gradient(ellipse at 30% 20%,#1a2a58,#0f1a3a 60%,#070d20)!important}
 /* PERFIL: tapete azul marino con reborde dorado */
-#app.profile{--felt:#16306a;--felt2:#0a1533}
-#app.profile .card,body:has(#app.profile) .ov.c .mp{--tp1:#22438a;--tp2:#152c5e;--tp3:#0a1636;--rim:#e8b94c;--card:#0f1c38;--weave:repeating-linear-gradient(45deg,rgba(255,255,255,.04) 0 2px,transparent 2px 5px),repeating-linear-gradient(-45deg,rgba(0,0,0,.08) 0 2px,transparent 2px 5px);box-shadow:inset 0 0 0 2px #060d1e,inset 0 0 0 4.5px var(--rim),inset 0 0 0 6px #060d1e,inset 0 0 28px rgba(0,0,0,.5),0 4px 10px rgba(0,0,0,.4)}
+#app.profile{--felt:#101a38;--felt2:#060b1a}
+#app.profile .card,body:has(#app.profile) .ov.c .mp{--tp1:#17234a;--tp2:#0f1834;--tp3:#080e22;--rim:#cea953;--card:#0a1126;--weave:repeating-linear-gradient(45deg,rgba(255,255,255,.04) 0 2px,transparent 2px 5px),repeating-linear-gradient(-45deg,rgba(0,0,0,.08) 0 2px,transparent 2px 5px);box-shadow:inset 0 0 0 2px #060d1e,inset 0 0 0 4.5px var(--rim),inset 0 0 0 6px #060d1e,inset 0 0 28px rgba(0,0,0,.5),0 4px 10px rgba(0,0,0,.4)}
 #app.profile .card::before,body:has(#app.profile) .ov.c .mp::before{border-color:rgba(232,185,76,.4)}
-#app.profile option,body:has(#app.profile) option{background:#13264f}
-#app.profile .card select,body:has(#app.profile) .ov.c select{border-color:#e8b94c}
-#app.profile .bar i{background:linear-gradient(90deg,#c8962b,#f4cc62)}
+#app.profile option,body:has(#app.profile) option{background:#0c1530}
+#app.profile .card select,body:has(#app.profile) .ov.c select{border-color:#cea953}
+#app.profile .bar i{background:linear-gradient(90deg,#a7853d,#dcbb66)}
 /* ===== ARENAS: un tapete distinto por liga ===== */
-.nd[data-l]{--sh:inset 0 0 0 4px #101010,inset 0 0 0 7px var(--rim),inset 0 0 0 9px #101010,inset 0 0 38px rgba(0,0,0,.5);--rad:20px;--bi:11px;--ibs:dashed;--ibc:rgba(224,176,74,.35);--ac:#e0b04a;--glow:rgba(224,176,74,.75);
+.nd[data-l]{--sh:inset 0 0 0 4px #101010,inset 0 0 0 7px var(--rim),inset 0 0 0 9px #101010,inset 0 0 38px rgba(0,0,0,.5);--rad:20px;--bi:11px;--ibs:dashed;--ibc:rgba(200,160,80,.35);--ac:#c7a152;--glow:rgba(200,160,80,.75);
 border-radius:var(--rad);background:radial-gradient(ellipse at 28% 30%,var(--t1) 0%,var(--t2) 48%,var(--t3) 100%);box-shadow:var(--sh),var(--x,0 0 0 0 transparent),0 6px 14px rgba(0,0,0,.45)}
 .nd[data-l]::before{inset:var(--bi);border:1.5px var(--ibs) var(--ibc);border-radius:max(calc(var(--rad) - var(--bi) + 4px),3px)}
 .nd[data-l]::after{border-radius:inherit;opacity:1;background:var(--pat)}
@@ -261,30 +261,30 @@ border-radius:var(--rad);background:radial-gradient(ellipse at 28% 30%,var(--t1)
 .nd.cur[data-l]{box-shadow:var(--sh),0 0 0 3px var(--rim),0 0 26px var(--glow)}
 .nd.lock[data-l]{filter:grayscale(.55) brightness(.72)}
 /* 1 Novato · mesa de taberna: verde clásico, ribete de madera */
-.nd[data-l="0"]{--t1:#2f8556;--t2:#1d5d3a;--t3:#0f3622;--rim:#a8733a;--ibc:rgba(232,184,120,.35);--ac:#e8b878;--glow:rgba(232,184,120,.7);--pat:repeating-linear-gradient(45deg,rgba(255,255,255,.035) 0 2px,transparent 2px 5px),repeating-linear-gradient(-45deg,rgba(0,0,0,.06) 0 2px,transparent 2px 5px)}
+.nd[data-l="0"]{--t1:#377252;--t2:#244f37;--t3:#132e20;--rim:#8f6c45;--ibc:rgba(232,184,120,.35);--ac:#d3ac78;--glow:rgba(232,184,120,.7);--pat:repeating-linear-gradient(45deg,rgba(255,255,255,.035) 0 2px,transparent 2px 5px),repeating-linear-gradient(-45deg,rgba(0,0,0,.06) 0 2px,transparent 2px 5px)}
 /* 2 Aprendiz · lino salvia con costura de tiza */
-.nd[data-l="1"]{--t1:#5c9a60;--t2:#3a7046;--t3:#1e4529;--rim:#dfe6bd;--rad:26px;--ibc:rgba(235,244,205,.55);--ac:#e4efbd;--glow:rgba(225,238,180,.7);--pat:repeating-linear-gradient(0deg,rgba(255,255,255,.06) 0 1px,transparent 1px 4px),repeating-linear-gradient(90deg,rgba(255,255,255,.06) 0 1px,transparent 1px 4px)}
+.nd[data-l="1"]{--t1:#5f8961;--t2:#3e6246;--t3:#213c29;--rim:#d1d8b2;--rad:26px;--ibc:rgba(235,244,205,.55);--ac:#d6e1b2;--glow:rgba(225,238,180,.7);--pat:repeating-linear-gradient(0deg,rgba(255,255,255,.06) 0 1px,transparent 1px 4px),repeating-linear-gradient(90deg,rgba(255,255,255,.06) 0 1px,transparent 1px 4px)}
 /* 3 Aficionado · azul petróleo, rombos y ribete plateado */
-.nd[data-l="2"]{--t1:#2b94b0;--t2:#18627f;--t3:#0b3548;--rim:#cfdce6;--rad:10px;--ibs:dotted;--ibc:rgba(207,220,230,.6);--ac:#bfe8f7;--glow:rgba(150,220,245,.7);--pat:repeating-linear-gradient(45deg,rgba(255,255,255,.09) 0 1.5px,transparent 1.5px 17px),repeating-linear-gradient(-45deg,rgba(255,255,255,.09) 0 1.5px,transparent 1.5px 17px)}
+.nd[data-l="2"]{--t1:#3a8194;--t2:#24566a;--t3:#122f3c;--rim:#c2cfd9;--rad:10px;--ibs:dotted;--ibc:rgba(207,220,230,.6);--ac:#b2dbe9;--glow:rgba(150,220,245,.7);--pat:repeating-linear-gradient(45deg,rgba(255,255,255,.09) 0 1.5px,transparent 1.5px 17px),repeating-linear-gradient(-45deg,rgba(255,255,255,.09) 0 1.5px,transparent 1.5px 17px)}
 /* 4 Jugador · azul real a cuadros tipo tartán */
-.nd[data-l="3"]{--t1:#3f6fd0;--t2:#244592;--t3:#11285c;--rim:#e0b04a;--rad:16px;--ibs:solid;--ibc:rgba(224,176,74,.4);--ac:#f3cf6e;--pat:repeating-linear-gradient(90deg,rgba(255,255,255,.08) 0 6px,transparent 6px 24px),repeating-linear-gradient(0deg,rgba(255,255,255,.08) 0 6px,transparent 6px 24px),repeating-linear-gradient(90deg,rgba(0,0,0,.14) 0 2px,transparent 2px 12px)}
+.nd[data-l="3"]{--t1:#486db7;--t2:#30477b;--t3:#1a294d;--rim:#c7a152;--rad:16px;--ibs:solid;--ibc:rgba(200,160,80,.4);--ac:#dcbf70;--pat:repeating-linear-gradient(90deg,rgba(255,255,255,.08) 0 6px,transparent 6px 24px),repeating-linear-gradient(0deg,rgba(255,255,255,.08) 0 6px,transparent 6px 24px),repeating-linear-gradient(90deg,rgba(0,0,0,.14) 0 2px,transparent 2px 12px)}
 /* 5 Veterano · ciruela con rayas finas y doble ribete lavanda */
-.nd[data-l="4"]{--t1:#7d4fbb;--t2:#512b8a;--t3:#2b1651;--rim:#d3b0f7;--rad:30px;--ibs:double;--ibc:rgba(211,176,247,.5);--ac:#e6ccff;--glow:rgba(200,160,255,.75);--pat:repeating-linear-gradient(90deg,rgba(255,226,160,.11) 0 1px,transparent 1px 9px)}
+.nd[data-l="4"]{--t1:#7755a5;--t2:#4f3575;--t3:#2b1c44;--rim:#c6a6e8;--rad:30px;--ibs:double;--ibc:rgba(211,176,247,.5);--ac:#d8bbf4;--glow:rgba(200,160,255,.75);--pat:repeating-linear-gradient(90deg,rgba(255,226,160,.11) 0 1px,transparent 1px 9px)}
 /* 6 Experto · cobre con damero */
-.nd[data-l="5"]{--t1:#d77f45;--t2:#a2501f;--t3:#5b280c;--rim:#f0b26a;--rad:6px;--ibc:rgba(255,214,160,.5);--ac:#ffd6a0;--glow:rgba(255,190,110,.75);--pat:conic-gradient(rgba(0,0,0,.16) 25%,transparent 0 50%,rgba(0,0,0,.16) 0 75%,transparent 0) 0 0/28px 28px}
+.nd[data-l="5"]{--t1:#be7a4d;--t2:#87502e;--t3:#4b2916;--rim:#d9a76c;--rad:6px;--ibc:rgba(255,214,160,.5);--ac:#eec998;--glow:rgba(255,190,110,.75);--pat:conic-gradient(rgba(0,0,0,.16) 25%,transparent 0 50%,rgba(0,0,0,.16) 0 75%,transparent 0) 0 0/28px 28px}
 /* 7 Maestro · granate tachonado */
-.nd[data-l="6"]{--t1:#c8402f;--t2:#8b201b;--t3:#470b0b;--rim:#e0b04a;--rad:14px;--ibs:dotted;--ibc:rgba(255,224,150,.55);--ac:#ffdb82;--pat:radial-gradient(circle,rgba(255,224,150,.34) 0 1.7px,transparent 2.2px) 0 0/16px 16px,repeating-linear-gradient(45deg,rgba(255,255,255,.03) 0 2px,transparent 2px 5px)}
+.nd[data-l="6"]{--t1:#a84c40;--t2:#742c28;--t3:#3b1212;--rim:#c7a152;--rad:14px;--ibs:dotted;--ibc:rgba(255,224,150,.55);--ac:#eacc80;--pat:radial-gradient(circle,rgba(255,224,150,.34) 0 1.7px,transparent 2.2px) 0 0/16px 16px,repeating-linear-gradient(45deg,rgba(255,255,255,.03) 0 2px,transparent 2px 5px)}
 /* 8 Gran Maestro · carbón con filigrana y doble aro dorado */
-.nd[data-l="7"]{--t1:#42424a;--t2:#222227;--t3:#09090b;--rim:#f2c94c;--bi:17px;--rad:22px;--ibc:rgba(242,201,76,.4);--ac:#f6d466;--sh:inset 0 0 0 4px #101010,inset 0 0 0 7px var(--rim),inset 0 0 0 9px #101010,inset 0 0 0 11px var(--rim),inset 0 0 0 12.5px #101010,inset 0 0 38px rgba(0,0,0,.55);--pat:radial-gradient(circle at 50% 100%,transparent 0 7px,rgba(224,176,74,.28) 7px 8px,transparent 8px) 0 0/26px 26px,radial-gradient(circle at 50% 100%,transparent 0 7px,rgba(224,176,74,.28) 7px 8px,transparent 8px) 13px 13px/26px 26px}
+.nd[data-l="7"]{--t1:#42424a;--t2:#222227;--t3:#09090b;--rim:#d7b754;--bi:17px;--rad:22px;--ibc:rgba(242,201,76,.4);--ac:#dec269;--sh:inset 0 0 0 4px #101010,inset 0 0 0 7px var(--rim),inset 0 0 0 9px #101010,inset 0 0 0 11px var(--rim),inset 0 0 0 12.5px #101010,inset 0 0 38px rgba(0,0,0,.55);--pat:radial-gradient(circle at 50% 100%,transparent 0 7px,rgba(200,160,80,.28) 7px 8px,transparent 8px) 0 0/26px 26px,radial-gradient(circle at 50% 100%,transparent 0 7px,rgba(200,160,80,.28) 7px 8px,transparent 8px) 13px 13px/26px 26px}
 /* 9 Leyenda · esmeralda y cielo estrellado */
-.nd[data-l="8"]{--t1:#22b5a5;--t2:#0e716c;--t3:#06403f;--rim:#a4f5ea;--rad:24px;--ibs:dotted;--ibc:rgba(170,250,238,.6);--ac:#b8fff4;--glow:rgba(110,240,220,.8);--x:0 0 16px rgba(80,230,210,.4);--pat:radial-gradient(circle,rgba(190,255,248,.6) 0 1px,transparent 1.6px) 0 0/34px 34px,radial-gradient(circle,rgba(190,255,248,.4) 0 .8px,transparent 1.4px) 17px 11px/23px 23px}
+.nd[data-l="8"]{--t1:#33978c;--t2:#1a5d5a;--t3:#0d3534;--rim:#9ce4db;--rad:24px;--ibs:dotted;--ibc:rgba(170,250,238,.6);--ac:#abf1e7;--glow:rgba(110,240,220,.8);--x:0 0 16px rgba(80,230,210,.4);--pat:radial-gradient(circle,rgba(190,255,248,.6) 0 1px,transparent 1.6px) 0 0/34px 34px,radial-gradient(circle,rgba(190,255,248,.4) 0 .8px,transparent 1.4px) 17px 11px/23px 23px}
 /* 10 Leyenda del Mus · medianoche con rayos de sol dorados */
-.nd[data-l="9"]{--t1:#3a2480;--t2:#1b0f48;--t3:#07041c;--rim:#ffd75a;--bi:15px;--rad:22px;--ibs:solid;--ibc:rgba(255,215,90,.45);--ac:#ffe083;--glow:rgba(255,205,70,.9);--x:0 0 22px rgba(255,200,60,.5);--sh:inset 0 0 0 4px #101010,inset 0 0 0 8px var(--rim),inset 0 0 0 10px #101010,inset 0 0 0 11.5px var(--rim),inset 0 0 0 13px #101010,inset 0 0 38px rgba(0,0,0,.5);--pat:repeating-conic-gradient(from 0deg at 28% 50%,rgba(255,215,100,.14) 0 6deg,transparent 6deg 15deg)}
+.nd[data-l="9"]{--t1:#3d2e6c;--t2:#1e163c;--t3:#090717;--rim:#e5c55f;--bi:15px;--rad:22px;--ibs:solid;--ibc:rgba(255,215,90,.45);--ac:#ead080;--glow:rgba(255,205,70,.9);--x:0 0 22px rgba(255,200,60,.5);--sh:inset 0 0 0 4px #101010,inset 0 0 0 8px var(--rim),inset 0 0 0 10px #101010,inset 0 0 0 11.5px var(--rim),inset 0 0 0 13px #101010,inset 0 0 38px rgba(0,0,0,.5);--pat:repeating-conic-gradient(from 0deg at 28% 50%,rgba(255,215,100,.14) 0 6deg,transparent 6deg 15deg)}
 
 /* ===== Efecto de hundirse al pulsar ===== */
 button{transition:transform .09s ease-out,filter .09s ease-out,box-shadow .09s ease-out}
 button:active:not(:disabled){transform:translateY(3px) scale(.965);filter:brightness(.85)}
-#app:not(.game) .top button:active,#app:not(.game) .nav button:active,#app.home .menu button.ghost:active{box-shadow:inset 0 0 0 1.5px #101010,inset 0 0 0 3px #d9a93a,inset 0 0 0 4px #101010,inset 0 4px 10px rgba(0,0,0,.6)!important}
+#app:not(.game) .top button:active,#app:not(.game) .nav button:active,#app.home .menu button.ghost:active{box-shadow:inset 0 0 0 1.5px #101010,inset 0 0 0 3px #bf9a44,inset 0 0 0 4px #101010,inset 0 4px 10px rgba(0,0,0,.6)!important}
 #app.home .menu button.gold:active{box-shadow:inset 0 4px 10px rgba(0,0,0,.35)}
 @media (prefers-reduced-motion:reduce){button{transition:none}}
 /* ===== Botones del inicio más grandes (Senda > Amigos / Mi perfil) ===== */
@@ -295,26 +295,62 @@ button:active:not(:disabled){transform:translateY(3px) scale(.965);filter:bright
 /* ===== Botones principales con detalles ===== */
 #app.home .menu button.gold,#app.home .menu #sd{position:relative;overflow:hidden;isolation:isolate}
 /* Iniciar partida: oro bruñido con doble filete */
-#app.home .menu button.gold{border:0;border-radius:16px;color:#2a1b04;text-shadow:0 1px 0 rgba(255,240,190,.7);letter-spacing:.04em;
-background:linear-gradient(180deg,rgba(255,255,255,.38) 0,rgba(255,255,255,0) 46%),linear-gradient(180deg,#f2cf6a 0%,#d9a93a 48%,#b07e1c 100%);
-box-shadow:inset 0 0 0 2px #3a2606,inset 0 0 0 4px #f8e19a,inset 0 0 0 5.5px #8a5e12,inset 0 -6px 10px rgba(90,56,4,.35),0 4px 0 #6a4609,0 8px 14px rgba(0,0,0,.5)}
+#app.home .menu button.gold{border:0;border-radius:16px;color:#221809;letter-spacing:.04em;
+background:linear-gradient(180deg,#b39554 0%,#957c43 55%,#786131 100%);
+box-shadow:inset 0 0 0 2px #30220c,inset 0 0 0 4px #c5b27c,inset 0 0 0 5.5px #725421,inset 0 -6px 10px rgba(90,56,4,.35),0 4px 0 #573f15,0 8px 14px rgba(0,0,0,.5)}
 #app.home .menu button.gold::before{content:'';position:absolute;inset:8px;border:1.5px dashed rgba(70,42,4,.5);border-radius:10px;pointer-events:none;z-index:-1}
-#app.home .menu button.gold::after{content:'';position:absolute;top:0;bottom:0;left:-60%;width:40%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.45),transparent);transform:skewX(-20deg);animation:brillo 4.5s ease-in-out infinite;pointer-events:none;z-index:-1}
+#app.home .menu button.gold::after{content:'';position:absolute;top:0;bottom:0;left:-60%;width:40%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.45),transparent);transform:skewX(-20deg);display:none;pointer-events:none;z-index:-1}
 @keyframes brillo{0%,60%{left:-60%}100%{left:130%}}
 @media (prefers-reduced-motion:reduce){#app.home .menu button.gold::after{animation:none;display:none}}
-#app.home .menu button.gold:active:not(:disabled){box-shadow:inset 0 0 0 2px #3a2606,inset 0 0 0 4px #f8e19a,inset 0 0 0 5.5px #8a5e12,inset 0 5px 12px rgba(60,36,2,.55),0 1px 0 #6a4609!important}
+#app.home .menu button.gold:active:not(:disabled){box-shadow:inset 0 0 0 2px #30220c,inset 0 0 0 4px #c5b27c,inset 0 0 0 5.5px #725421,inset 0 5px 12px rgba(60,36,2,.55),0 1px 0 #573f15!important}
 /* Senda del Órdago: tapete con triple aro y costura */
-#app.home .menu #sd{color:#fff3cf;text-shadow:0 2px 0 rgba(0,0,0,.55),0 0 14px rgba(224,176,74,.45);
-background:var(--weave),radial-gradient(ellipse at 30% 20%,#34905f 0%,#1d5d3a 55%,#0f3622 100%)!important;
-box-shadow:inset 0 0 0 2px #101010,inset 0 0 0 4.5px #e0b04a,inset 0 0 0 6px #101010,inset 0 0 0 8px #d9a93a,inset 0 0 0 9px #101010,inset 0 0 22px rgba(0,0,0,.5),0 4px 0 #0a2416,0 8px 14px rgba(0,0,0,.5)}
-#app.home .menu #sd::before{content:'';position:absolute;inset:13px;border:1.5px dashed rgba(224,176,74,.45);border-radius:8px;pointer-events:none;z-index:-1}
-#app.home .menu #sd::after{content:'◆ ◆';position:absolute;top:50%;left:22px;right:22px;transform:translateY(-50%);text-align:justify;text-align-last:justify;pointer-events:none;color:#e0b04a;font-size:13px;line-height:1;z-index:-1}
-#app.home .menu #sd:active:not(:disabled){box-shadow:inset 0 0 0 2px #101010,inset 0 0 0 4.5px #e0b04a,inset 0 0 0 6px #101010,inset 0 0 0 8px #d9a93a,inset 0 0 0 9px #101010,inset 0 6px 14px rgba(0,0,0,.65),0 1px 0 #0a2416!important}
+#app.home .menu #sd{color:#f4e7be;text-shadow:0 2px 0 rgba(0,0,0,.5);
+background:var(--weave),radial-gradient(ellipse at 30% 20%,#3d7b5a 0%,#244f37 55%,#132e20 100%)!important;
+box-shadow:inset 0 0 0 2px #101010,inset 0 0 0 4.5px #c7a152,inset 0 0 0 6px #101010,inset 0 0 0 8px #bf9a44,inset 0 0 0 9px #101010,inset 0 0 22px rgba(0,0,0,.5),0 4px 0 #0d1e15,0 8px 14px rgba(0,0,0,.5)}
+#app.home .menu #sd::before{content:'';position:absolute;inset:13px;border:1.5px dashed rgba(200,160,80,.45);border-radius:8px;pointer-events:none;z-index:-1}
+#app.home .menu #sd::after{content:'◆ ◆';position:absolute;top:50%;left:22px;right:22px;transform:translateY(-50%);text-align:justify;text-align-last:justify;pointer-events:none;color:#c7a152;font-size:13px;line-height:1;z-index:-1}
+#app.home .menu #sd:active:not(:disabled){box-shadow:inset 0 0 0 2px #101010,inset 0 0 0 4.5px #c7a152,inset 0 0 0 6px #101010,inset 0 0 0 8px #bf9a44,inset 0 0 0 9px #101010,inset 0 6px 14px rgba(0,0,0,.65),0 1px 0 #0d1e15!important}
 
 /* ===== Marco fijo: el contenido se desliza por debajo y no se sale ===== */
 #app{box-shadow:none!important}
 body::after{content:'';position:fixed;top:0;bottom:0;left:50%;width:min(100%,520px);transform:translateX(-50%);pointer-events:none;z-index:8;box-shadow:inset 0 0 0 8px #101010,inset 0 0 0 11px var(--gold),inset 0 0 0 13px #101010}
 #app{scrollbar-width:none}#app::-webkit-scrollbar{display:none}
+
+/* ===== Portada con "Continuar partida": más aire sobre las cartas ===== */
+#app.home:has(#cont){padding-top:max(30px,4vh);padding-bottom:max(80px,9vh)}
+#app.home:has(#cont) .logo{font-size:clamp(52px,10.5vh,96px);margin-top:0}
+#app.home:has(#cont) .fan{margin-top:0;margin-bottom:max(26px,3.5vh);transform:translateY(-4px)}
+#app.home:has(#cont) .menu{margin-top:auto;justify-content:flex-end}
+
+/* ===== Tapetes lisos con reborde elaborado ===== */
+#app:not(.game) .card,.ov.c .mp{padding:20px;background:var(--tp2);
+box-shadow:inset 0 0 0 2px #101010,inset 0 0 0 4px var(--rim),inset 0 0 0 5.5px #101010,inset 0 0 0 8px var(--tp2),inset 0 0 0 9px var(--rim),inset 0 0 0 10.5px #101010,0 4px 10px rgba(0,0,0,.35)}
+#app:not(.game) .card::before,.ov.c .mp::before{inset:14px;border-radius:8px}
+#app:not(.game) .card::after,.ov.c .mp::after{content:'';position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+background:radial-gradient(circle,var(--rim) 0 2.4px,transparent 3px) left 4px top 4px/9px 9px no-repeat,radial-gradient(circle,var(--rim) 0 2.4px,transparent 3px) right 4px top 4px/9px 9px no-repeat,radial-gradient(circle,var(--rim) 0 2.4px,transparent 3px) left 4px bottom 4px/9px 9px no-repeat,radial-gradient(circle,var(--rim) 0 2.4px,transparent 3px) right 4px bottom 4px/9px 9px no-repeat}
+#app.setup .card{padding:18px}
+#app.profile .card,body:has(#app.profile) .ov.c .mp{background:var(--tp2);box-shadow:inset 0 0 0 2px #04070f,inset 0 0 0 4.5px var(--rim),inset 0 0 0 6px #04070f,inset 0 0 0 8.5px var(--tp2),inset 0 0 0 9.5px var(--rim),inset 0 0 0 11px #04070f,0 4px 10px rgba(0,0,0,.45)}
+#app .card.team{border:0}
+#app:not(.game) .card select,.ov.c select{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 8'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%23c9a24e' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 14px center/14px,linear-gradient(rgba(0,0,0,.3),rgba(0,0,0,.3));box-shadow:none}
+#app:not(.game) .card input,#app:not(.game) .card textarea,.ov.c input,.ov.c textarea{box-shadow:none;background:rgba(0,0,0,.28)}
+/* botones-tapete lisos */
+#app:not(.game) .top button,#app:not(.game) .nav button,#app.home .menu button.ghost{background:var(--tp2)!important;box-shadow:inset 0 0 0 1.5px #101010,inset 0 0 0 3px var(--rim),inset 0 0 0 4.5px #101010,inset 0 0 0 6px var(--tp2),inset 0 0 0 7px var(--rim),inset 0 0 0 8px #101010,0 3px 7px rgba(0,0,0,.4)}
+#app.home #mp,#app.profile .top button{background:#0f1a3a!important}
+#app.home #mp,#app.profile .top button{--tp2:#0f1a3a}
+#app.home .menu #sd{background:var(--tp2)!important}
+/* Iniciar/Continuar: oro con ese punto más brillante */
+#app.home .menu button.gold{text-shadow:0 1px 0 rgba(255,240,190,.7);
+background:linear-gradient(180deg,rgba(255,255,255,.34) 0,rgba(255,255,255,0) 46%),linear-gradient(180deg,#eac55e 0%,#cf9f33 50%,#a87a1c 100%);
+box-shadow:inset 0 0 0 2px #3a2606,inset 0 0 0 4px #f6dd92,inset 0 0 0 5.5px #8a5e12,inset 0 -6px 10px rgba(90,56,4,.35),0 4px 0 #6a4609,0 8px 14px rgba(0,0,0,.5)}
+#app.home .menu button.gold::after{display:block;animation:brillo 4.5s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){#app.home .menu button.gold::after{display:none}}
+/* arenas lisas, cada una con su color y su reborde */
+.nd[data-l]{--sh:inset 0 0 0 4px #101010,inset 0 0 0 7px var(--rim),inset 0 0 0 9px #101010,inset 0 0 0 12px var(--t2),inset 0 0 0 13px var(--rim),inset 0 0 0 14px #101010;--bi:19px;background:var(--t2)}
+.nd[data-l]::after{background:none!important}
+.nd[data-l="7"]{--bi:25px;--sh:inset 0 0 0 4px #101010,inset 0 0 0 7px var(--rim),inset 0 0 0 9px #101010,inset 0 0 0 11px var(--rim),inset 0 0 0 12.5px #101010,inset 0 0 0 15px var(--t2),inset 0 0 0 16px var(--rim),inset 0 0 0 17px #101010}
+.nd[data-l="9"]{--bi:26px;--sh:inset 0 0 0 4px #101010,inset 0 0 0 8px var(--rim),inset 0 0 0 10px #101010,inset 0 0 0 11.5px var(--rim),inset 0 0 0 13px #101010,inset 0 0 0 16px var(--t2),inset 0 0 0 17px var(--rim),inset 0 0 0 18.5px #101010}
+.nd[data-l="2"]{--bi:20px}
+.nd.cur[data-l]{box-shadow:var(--sh),0 0 0 3px var(--rim),0 0 26px var(--glow)}
 </style>
 </head>
 <body>
