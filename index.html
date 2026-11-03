@@ -366,8 +366,10 @@ body{position:fixed;top:0;bottom:0;left:0;right:0;height:auto;overflow:hidden;ov
 /* ===== El contenido se mete DEBAJO del marco, nunca por encima ni fuera ===== */
 body{top:env(safe-area-inset-top,0px);bottom:env(safe-area-inset-bottom,0px)}
 body::after{top:env(safe-area-inset-top,0px);bottom:env(safe-area-inset-bottom,0px);z-index:40}
-#app{clip-path:inset(13px);padding-top:max(28px,calc(13px + 12px));}
-#app.game{clip-path:none}
+/* el área que se desplaza empieza justo donde acaba el marco: nada puede verse por encima */
+#app{position:fixed;top:calc(env(safe-area-inset-top,0px) + 13px);bottom:calc(env(safe-area-inset-bottom,0px) + 13px);left:0;right:0;margin:0 auto;width:min(100%,520px);height:auto;max-width:none}
+html::before{content:'';position:fixed;left:0;right:0;top:0;height:env(safe-area-inset-top,0px);background:#101010;z-index:41;pointer-events:none}
+html::after{content:'';position:fixed;left:0;right:0;bottom:0;height:env(safe-area-inset-bottom,0px);background:#101010;z-index:41;pointer-events:none}
 </style>
 </head>
 <body>
