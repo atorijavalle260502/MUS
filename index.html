@@ -362,6 +362,12 @@ body{position:fixed;top:0;bottom:0;left:0;right:0;height:auto;overflow:hidden;ov
 #app.friends{overflow-y:auto}
 #app.friends #list{flex:0 0 auto;min-height:0;overflow:visible}
 #app.home{overflow-y:auto}
+
+/* ===== El contenido se mete DEBAJO del marco, nunca por encima ni fuera ===== */
+body{top:env(safe-area-inset-top,0px);bottom:env(safe-area-inset-bottom,0px)}
+body::after{top:env(safe-area-inset-top,0px);bottom:env(safe-area-inset-bottom,0px);z-index:40}
+#app{clip-path:inset(13px);padding-top:max(28px,calc(13px + 12px));}
+#app.game{clip-path:none}
 </style>
 </head>
 <body>
