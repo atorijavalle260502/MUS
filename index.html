@@ -351,6 +351,17 @@ box-shadow:inset 0 0 0 2px #3a2606,inset 0 0 0 4px #f6dd92,inset 0 0 0 5.5px #8a
 .nd[data-l="9"]{--bi:26px;--sh:inset 0 0 0 4px #101010,inset 0 0 0 8px var(--rim),inset 0 0 0 10px #101010,inset 0 0 0 11.5px var(--rim),inset 0 0 0 13px #101010,inset 0 0 0 16px var(--t2),inset 0 0 0 17px var(--rim),inset 0 0 0 18.5px #101010}
 .nd[data-l="2"]{--bi:20px}
 .nd.cur[data-l]{box-shadow:var(--sh),0 0 0 3px var(--rim),0 0 26px var(--glow)}
+
+/* ===== Scroll: sin cabecera fija, sin rebote, nada fuera del marco ===== */
+html{overflow:hidden;overscroll-behavior:none}
+body{position:fixed;top:0;bottom:0;left:0;right:0;height:auto;overflow:hidden;overscroll-behavior:none}
+#app{overscroll-behavior:none;-webkit-overflow-scrolling:touch}
+#app.senda .top{position:static;margin:0;padding:0;background:none}
+#app.senda{padding-top:30px}
+/* Amigos: scrolla toda la pantalla y no la tarjeta, para que el reborde no se mueva */
+#app.friends{overflow-y:auto}
+#app.friends #list{flex:0 0 auto;min-height:0;overflow:visible}
+#app.home{overflow-y:auto}
 </style>
 </head>
 <body>
