@@ -664,10 +664,24 @@ box-shadow:inset 0 0 0 1.5px #101010,inset 0 0 0 3px #c9a24e,inset 0 0 0 4.5px #
 /* ===== Inicio: símbolos arriba, resto con aire repartido ===== */
 #app.home,#app.home.hc{justify-content:flex-start!important;gap:clamp(8px,calc(1.2*var(--vh)),16px);padding-top:clamp(18px,calc(2.6*var(--vh)),30px)!important;padding-bottom:clamp(22px,calc(3.4*var(--vh)),38px)!important}
 #app.home .hsuits{position:static!important;flex:0 0 auto;width:100%;padding:0 6px;box-sizing:border-box;left:auto;right:auto;top:auto}
-#app.home .hsuits svg{max-width:21vw}
-#app.home .logo,#app.home.hc .logo{margin-top:auto!important;margin-bottom:auto!important}
-#app.home .fan,#app.home.hc .fan{margin-top:auto!important;margin-bottom:auto!important}
+#app.home .hsuits svg{max-width:16vw}
+#app.home .logo,#app.home.hc .logo{margin-top:auto!important;margin-bottom:0!important;line-height:.95}
+#app.home .fan,#app.home.hc .fan{margin-top:calc(-1*clamp(6px,calc(1.2*var(--vh)),14px))!important;margin-bottom:0!important}
 #app.home .menu,#app.home.hc .menu{margin-top:auto!important;margin-bottom:0!important}
+
+/* ===== Senda: logo a la izquierda, nombre y título a la derecha, trofeos abajo ===== */
+.nd[data-l]{flex-direction:column!important;align-items:stretch!important;gap:8px!important;padding:12px 16px 12px 12px!important}
+.nd .nt{display:flex;align-items:center;gap:14px;position:relative;z-index:1}
+.nd .nt .emb{margin-left:2px!important}
+.nd .nt .ni{flex:1;min-width:0;gap:8px!important;align-items:flex-start}
+.nd .nm{font-size:30px!important;line-height:1.04!important;overflow-wrap:anywhere}
+.nd .nm.nmx{font-size:25px!important}
+.nd .ntl{font:italic 600 15px/1.25 Literata,Georgia,serif;color:var(--ac,#e9dcb5);text-shadow:0 1px 0 rgba(0,0,0,.55)}
+.nd .nb{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;position:relative;z-index:1}
+.nd .nb .bar{width:100%}
+.nd .nb .stt{justify-content:center;text-align:center}
+.nd .tro{display:inline-flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap;font-size:14px;color:#d9ceb4}
+.nd .tro b{font:700 22px/1 Literata,Georgia,serif;color:#f4cc62;text-shadow:0 2px 0 rgba(0,0,0,.45)}
 </style>
 </head>
 <body>
@@ -858,7 +872,7 @@ const RANKS=[1,2,3,4,5,6,7,10,11,12],SN={o:'oros',c:'copas',e:'espadas',b:'basto
 const ensureMe=cb=>{if(!live().some(f=>f.id===S.me)){S.me=(live()[0]||{}).id;save()}cb()};
 let profBack='home';
 function home(){
-  app.innerHTML='<div class="hsuits">'+['o','c','e','b'].map(k=>suit(k,k==='o'?66:84)).join('')+'</div>'+'<div class="logo">MUS</div>'+fan()+'<div class="menu">'+(S.game?'<button class="gold" style="width:100%" id="cont">Continuar partida</button>':'')+'<button class="'+(S.game?'ghost" style="width:100%;background:var(--card)':'gold" style="width:100%')+'" id="go">Iniciar partida</button>'
+  app.innerHTML='<div class="hsuits">'+['o','c','e','b'].map(k=>suit(k,k==='o'?50:64)).join('')+'</div>'+'<div class="logo">MUS</div>'+fan()+'<div class="menu">'+(S.game?'<button class="gold" style="width:100%" id="cont">Continuar partida</button>':'')+'<button class="'+(S.game?'ghost" style="width:100%;background:var(--card)':'gold" style="width:100%')+'" id="go">Iniciar partida</button>'
   +'<button class="ghost" id="sd" style="width:100%;background:var(--card)">Senda del Órdago</button>'
   +'<div class="nav" style="margin-top:0"><button id="fr">Amigos</button><button id="mp">Mi perfil</button></div></div>';
   $('#go').onclick=()=>{if(live().length<4){dlg('Añade al menos 4 amigos en la biblioteca para empezar una partida.',{},()=>go('friends'))}else go('setup')};
@@ -950,9 +964,10 @@ function pickAvatar(f,p){
 function senda(){
   const f=S.friends.find(x=>x.id===S.me),p=f?(progress()[f.id]||blank()):blank();
   const node=i=>{const l=LEAGUES[i],nx=LEAGUES[i+1],st=i<p.lg?'done':i===p.lg?'cur':'lock';const t=i?TITLES.find(x=>x.id==='lg'+i):null;
-    const rw=t?'<div class="rw"><div><div class="rwl">Título al llegar</div><b>«'+esc(t.text)+'»</b></div></div>':'<div class="rw"><div><div class="rwl">Punto de partida</div><div class="rwt">Todos empiezan aquí</div></div></div>';
-    const state=st==='done'?'<div class="stt ok">✓ Conseguida</div>':st==='cur'?'<div class="stt here">Estás aquí · '+trIcon(16)+fmt(p.tr)+'</div>'+(nx?'<div class="bar"><i style="width:'+Math.round(100*(p.tr-l[1])/(nx[1]-l[1]))+'%"></i></div><div class="stt">Faltan '+fmt(nx[1]-p.tr)+' trofeos para '+nx[0]+'</div>':'<div class="stt">Liga máxima</div>'):'<div class="stt">Te faltan '+fmt(l[1]-p.tr)+' trofeos</div>';
-    return '<div class="nd '+st+'" data-l="'+i+'">'+corners(22)+'<div class="emb">'+lgEmblem(i,104)+'</div><div class="ni"><div class="nk">Liga '+(i+1)+' de 10</div><div class="nm">'+l[0]+'</div><div class="rg">'+trIcon(32)+'<span class="big">'+fmt(l[1])+'</span><span class="un">trofeos<br>'+(i?'para entrar':'de inicio')+'</span></div>'+rw+state+'</div></div>'};
+    const ttl=t?'«'+esc(t.text)+'»':'Punto de partida';
+    const need='<div class="tro">'+trIcon(20)+'<b>'+fmt(l[1])+'</b><span>'+(i?'trofeos para entrar':'trofeos de inicio')+'</span></div>';
+    const bot=st==='cur'?(nx?'<div class="bar"><i style="width:'+Math.round(100*(p.tr-l[1])/(nx[1]-l[1]))+'%"></i></div><div class="stt">Faltan '+fmt(nx[1]-p.tr)+' trofeos para '+nx[0]+'</div>':'<div class="stt">Liga máxima · '+trIcon(16)+fmt(p.tr)+'</div>'):need;
+    return '<div class="nd '+st+'" data-l="'+i+'"><div class="nt"><div class="emb">'+lgEmblem(i,104)+'</div><div class="ni"><div class="nm'+(l[0].length>9?' nmx':'')+'">'+l[0]+'</div><div class="ntl">'+ttl+'</div></div></div><div class="nb">'+bot+'</div></div>'};
   app.innerHTML='<div class="top"><button id="b">‹ Inicio</button><h2>Senda del Órdago</h2></div><div class="sd">'+LEAGUES.map((l,i)=>i).reverse().map(node).join('')+'</div>';
   $('#b').onclick=()=>go('home');
   const c=app.querySelector('.nd.cur');if(c)c.scrollIntoView({block:'center'});
