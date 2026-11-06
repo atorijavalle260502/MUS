@@ -780,6 +780,80 @@ button .hq{position:absolute;right:14px;top:50%;margin:-11px 0 0 0}
 .gp .lt b.go{filter:drop-shadow(0 0 4px rgba(255,205,80,.65))}
 .gp .ht{mix-blend-mode:screen;-webkit-mask-image:linear-gradient(to top,transparent calc(var(--p) - 46px),#000 calc(var(--p) - 12px),transparent var(--p));mask-image:linear-gradient(to top,transparent calc(var(--p) - 46px),#000 calc(var(--p) - 12px),transparent var(--p))}
 .gp .ht b{filter:brightness(1.7) saturate(1.2) drop-shadow(0 0 8px rgba(255,220,130,.9))}
+
+/* ===== ESTILO 3D (versión lisa): volumen suave, colores vivos, poca sombra ===== */
+#app:not(.game) .card,.ov.c .mp{
+--rl:color-mix(in srgb,var(--rim) 55%,#fff);--rd:color-mix(in srgb,var(--rim) 72%,#000);--fl:color-mix(in srgb,var(--tp2) 52%,var(--tp1));
+border:5px solid transparent!important;border-radius:20px;padding:14px;
+background:
+linear-gradient(180deg,rgba(255,255,255,.09) 0,rgba(255,255,255,0) 32%) padding-box,
+linear-gradient(var(--fl),var(--fl)) padding-box,
+linear-gradient(160deg,var(--rl) 0%,var(--rim) 30%,var(--rim) 62%,var(--rd) 100%) border-box!important;
+box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.28),0 0 0 2px #101010,0 4px 0 2px #101010,0 9px 12px rgba(0,0,0,.2)!important}
+#app.setup .card{padding:10px}
+.ov.c .mp{padding:16px}
+#app:not(.game) .card{margin-bottom:5px}
+#app:not(.game) .card::before,.ov.c .mp::before{content:'';position:absolute;inset:-5px!important;border:0!important;border-radius:inherit!important;pointer-events:none;
+box-shadow:inset 0 1.5px 0 rgba(255,255,255,.5),inset 1.5px 0 0 rgba(255,255,255,.14),inset 0 -1.5px 0 rgba(0,0,0,.2)}
+#app:not(.game) .card::after,.ov.c .mp::after{content:'';position:absolute;inset:-5px;pointer-events:none;border-radius:inherit;
+background:
+radial-gradient(circle at 35% 30%,rgba(255,255,255,.85) 0 1px,transparent 2.2px) left 3px top 3px/11px 11px no-repeat,
+radial-gradient(circle closest-side,var(--rl) 0,var(--rim) 55%,var(--rd) 80%,#101010 84%,#101010 96%,transparent 100%) left 3px top 3px/11px 11px no-repeat,
+radial-gradient(circle at 35% 30%,rgba(255,255,255,.85) 0 1px,transparent 2.2px) right 3px top 3px/11px 11px no-repeat,
+radial-gradient(circle closest-side,var(--rl) 0,var(--rim) 55%,var(--rd) 80%,#101010 84%,#101010 96%,transparent 100%) right 3px top 3px/11px 11px no-repeat,
+radial-gradient(circle at 35% 30%,rgba(255,255,255,.85) 0 1px,transparent 2.2px) left 3px bottom 3px/11px 11px no-repeat,
+radial-gradient(circle closest-side,var(--rl) 0,var(--rim) 55%,var(--rd) 80%,#101010 84%,#101010 96%,transparent 100%) left 3px bottom 3px/11px 11px no-repeat,
+radial-gradient(circle at 35% 30%,rgba(255,255,255,.85) 0 1px,transparent 2.2px) right 3px bottom 3px/11px 11px no-repeat,
+radial-gradient(circle closest-side,var(--rl) 0,var(--rim) 55%,var(--rd) 80%,#101010 84%,#101010 96%,transparent 100%) right 3px bottom 3px/11px 11px no-repeat}
+/* campos */
+#app:not(.game) .card select,.ov.c select,#app:not(.game) .card input,#app:not(.game) .card textarea,.ov.c input,.ov.c textarea,button.csel{
+border:2px solid transparent!important;border-radius:13px;
+background:linear-gradient(color-mix(in srgb,var(--tp2) 74%,#000),color-mix(in srgb,var(--tp2) 74%,#000)) padding-box,linear-gradient(180deg,var(--rim),var(--rl)) border-box!important;
+box-shadow:inset 0 2px 3px rgba(0,0,0,.28),0 1.5px 0 rgba(255,255,255,.12)!important}
+#app:not(.game) .card select,.ov.c select,button.csel{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 8'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%23e0b04a' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 14px center/14px,linear-gradient(color-mix(in srgb,var(--tp2) 74%,#000),color-mix(in srgb,var(--tp2) 74%,#000)) padding-box,linear-gradient(180deg,var(--rim),var(--rl)) border-box!important}
+button.csel{--rl:color-mix(in srgb,var(--rim) 55%,#fff)}
+/* botones pequeños */
+#app:not(.game) .card button.ghost,.ov.c .mp button.ghost{
+background:linear-gradient(180deg,rgba(255,255,255,.14) 0,rgba(255,255,255,.03) 100%)!important;
+box-shadow:inset 0 1.5px 0 rgba(255,255,255,.28),0 2px 0 rgba(0,0,0,.4)!important;text-shadow:none}
+/* botones claros */
+#app:not(.game) .card button:not(.ghost):not(.med):not(.slotb):not(.avb):not(.gold):not([data-id]):not([data-e]):not(.hq):not(.csel),.ov.c .mp .row button:not(.ghost){
+border:0!important;
+background:linear-gradient(180deg,rgba(255,255,255,.6) 0,rgba(255,255,255,0) 50%) padding-box,linear-gradient(var(--ink),var(--ink)) padding-box!important;
+box-shadow:0 0 0 1.5px #101010,0 3px 0 1.5px #101010,0 3px 0 0 color-mix(in srgb,var(--ink) 60%,#7a5a20),inset 0 1px 0 rgba(255,255,255,.7)!important;text-shadow:none}
+/* botones de navegación y menú */
+#app:not(.game) .top button,#app:not(.game) .nav button,#app.home .menu button.ghost,#app.home .menu #sd{
+--rl:color-mix(in srgb,var(--rim) 55%,#fff);--rd:color-mix(in srgb,var(--rim) 72%,#000);
+border:3px solid transparent!important;
+background:
+linear-gradient(180deg,rgba(255,255,255,.13) 0,rgba(255,255,255,0) 46%) padding-box,
+linear-gradient(color-mix(in srgb,var(--tp2) 52%,var(--tp1)),color-mix(in srgb,var(--tp2) 52%,var(--tp1))) padding-box,
+linear-gradient(160deg,var(--rl) 0%,var(--rim) 32%,var(--rim) 64%,var(--rd) 100%) border-box!important;
+box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.28),0 0 0 2px #101010,0 4px 0 2px #101010,0 8px 10px rgba(0,0,0,.2)!important;text-shadow:0 1px 0 rgba(0,0,0,.35);margin-bottom:5px}
+#app:not(.game) .top button{margin-bottom:0}
+#app.home .menu #sd::before,#app.home .menu button.gold::before{display:none}
+/* botón dorado */
+#app:not(.game) button.gold{border:3px solid transparent!important;border-radius:18px;margin-bottom:5px;
+background:
+linear-gradient(180deg,rgba(255,255,255,.5) 0,rgba(255,255,255,.1) 46%,rgba(255,255,255,0) 50%) padding-box,
+linear-gradient(180deg,#f2cf6a 0%,#e1b040 50%,#d3a132 100%) padding-box,
+linear-gradient(160deg,#fff3c4 0%,#f0cd6a 35%,#e1b040 65%,#b88620 100%) border-box!important;
+box-shadow:inset 0 0 0 1.5px rgba(60,36,2,.3),0 0 0 2px #2c1c04,0 5px 0 2px #2c1c04,0 10px 12px rgba(0,0,0,.22)!important}
+/* pulsado */
+#app:not(.game) .top button.pr,#app:not(.game) .nav button.pr,#app.home .menu button.ghost.pr,#app.home .menu #sd.pr,#app:not(.game) .top button:active,#app:not(.game) .nav button:active,#app.home .menu button.ghost:active,#app.home .menu #sd:active{
+box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.28),0 0 0 2px #101010,0 1px 0 2px #101010,0 3px 5px rgba(0,0,0,.2)!important;transform:translateY(3px)!important;filter:none!important}
+#app:not(.game) button.gold.pr,#app:not(.game) button.gold:active:not(:disabled){
+box-shadow:inset 0 0 0 1.5px rgba(60,36,2,.3),0 0 0 2px #2c1c04,0 1px 0 2px #2c1c04,0 3px 5px rgba(0,0,0,.25)!important;transform:translateY(4px)!important;filter:none!important}
+#app:not(.game) .card button.ghost.pr,.ov.c .mp button.ghost.pr,#app:not(.game) .card button.ghost:active,.ov.c .mp button.ghost:active,
+#app:not(.game) .card button:not(.ghost):not(.med):not(.slotb):not(.avb):not(.gold):not([data-id]):not([data-e]):not(.hq):not(.csel):active,.ov.c .mp .row button:not(.ghost):active,.ov.c .mp .row button:not(.ghost).pr{
+box-shadow:0 1px 0 rgba(0,0,0,.45)!important;transform:translateY(2px)!important;filter:none!important}
+/* opciones del desplegable */
+button.csopt:not(.on){box-shadow:inset 0 1.5px 0 rgba(255,255,255,.28),0 2px 0 rgba(0,0,0,.4)!important;margin-bottom:2px}
+button.csopt.on{box-shadow:inset 0 1.5px 0 rgba(255,255,255,.5),0 2px 0 #5a3b0a!important;margin-bottom:2px}
+#app.home #mp,#app.profile .top button{--tp1:#1b2a58}
+/* --- barra de progreso: tubo con brillo --- */
+.bar{height:10px!important;border-radius:6px!important;box-shadow:inset 0 1px 2px rgba(0,0,0,.35)}
+.bar i{border-radius:6px!important;box-shadow:inset 0 2px 0 rgba(255,255,255,.4)}
 </style>
 </head>
 <body>
