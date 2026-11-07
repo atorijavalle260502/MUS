@@ -6,7 +6,7 @@
   "start_url": "/MUS/",
   "scope": "/MUS/",
   "display": "standalone",
-  "orientation": "any",
+  "orientation": "portrait",
   "background_color": "#1f5a3a",
   "theme_color": "#1f5a3a",
   "lang": "es",

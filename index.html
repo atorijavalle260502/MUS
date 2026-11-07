@@ -978,6 +978,38 @@ box-shadow:0 0 0 3px #1a1006,0 0 0 5px rgba(224,176,74,.9),0 0 0 7px #1a1006,0 1
 .vb-half{--pt:72px}.vsi.am .vb-half{--pt:106px}
 @media (max-height:700px){.vs-logo{width:104px;height:104px}.vb-line{width:calc(50% - 73px)}.vb-half{--pt:64px}.vsi.am .vb-half{--pt:96px}}
 </style>
+<style id="vs-fit">
+/* VS: el contenido nunca se sale de su mitad (banderines completos) y las varillas no se pisan */
+.vb-in{justify-content:flex-start}
+.vb-tw{margin-top:auto}
+.vb-ps{margin-bottom:auto;gap:22px}
+.vb-rod{left:-2px;right:-2px}
+@media (max-height:650px){
+.vb-half{--pt:62px}.vsi.am .vb-half{--pt:92px}
+.vb-in{gap:6px}.vb-half.t .vb-in{padding-bottom:calc(8px + env(safe-area-inset-top,0px))}.vb-half.b .vb-in{padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+.vb-tf{padding:6px 34px;font-size:15px}
+.vb-pf{padding:10px 6px 24px;gap:4px}
+.vb-av .av{--s:42px!important}
+.vb-nm{font-size:16px}
+.vb-lg{font-size:10px}.vb-lg>*:first-child{transform:none;margin:-2px 0}
+.vb-tr{padding:2px 9px 2px 5px;font-size:14px}
+}
+@media (max-height:570px){
+.vb-in{gap:4px}
+.vb-tf{padding:4px 32px;font-size:14px}
+.vb-pf{padding:8px 4px 22px;gap:2px}
+.vb-av .av{--s:36px!important}
+.vb-nm{font-size:15px}
+}
+@media (max-height:700px){
+.vsi.am .vb-half{--pt:86px}.vsi.am .vb-in{gap:4px}
+.vsi.am .vb-tf{padding:5px 32px;font-size:14px}
+.vsi.am .vb-pf{padding:8px 4px 22px;gap:2px}
+.vsi.am .vb-av .av{--s:38px!important}
+.vsi.am .vb-nm{font-size:15px}
+}
+@media (max-height:570px){.vsi.am .vb-av .av{--s:34px!important}.vsi.am .vb-half{--pt:80px}}
+</style>
 <style id="vic-3d">
 /* ===== Panel de victoria: marcos y letra más gruesa ===== */
 .vic .mp{border:5px solid transparent;
@@ -1032,6 +1064,46 @@ background:linear-gradient(180deg,var(--c1),var(--c2)) left/9px 100% no-repeat,l
 .vic .tchip{display:inline-flex;align-items:center;gap:10px;padding:4px 16px;border-radius:999px;border:2px solid var(--cl);font:800 11px Literata,Georgia,serif;letter-spacing:.2em;text-transform:uppercase;color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.6);
 background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,0) 50%),linear-gradient(180deg,var(--c1),var(--c2));box-shadow:inset 0 0 0 1px rgba(0,0,0,.4),0 2px 0 rgba(0,0,0,.4)}
 .vic .tchip i{width:8px;height:8px;background:#fff;opacity:.9;transform:rotate(45deg);box-shadow:0 0 0 1px rgba(0,0,0,.4)}
+</style>
+<style id="vic-clean">
+/* ===== Victoria / derrota: solo avatares y amarracos ganados o perdidos ===== */
+.vic .vp{gap:12px;padding:26px 14px 22px!important}
+.vic .vg{display:flex;gap:10px;justify-content:center;align-items:stretch;width:100%;max-width:320px}
+.vic .vk{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:5px;padding:10px 6px 9px;
+border:2px solid #c9962b;border-radius:13px;background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,0) 50%),rgba(0,0,0,.28);
+box-shadow:inset 0 2px 5px rgba(0,0,0,.45),inset 0 0 0 2px rgba(0,0,0,.25),0 2px 0 rgba(0,0,0,.35)}
+.vic .vk-av{display:flex;justify-content:center;filter:drop-shadow(0 3px 4px rgba(0,0,0,.5))}
+.vic .vk-av .av{--s:clamp(46px,9vh,64px)!important;margin:0}
+.vic .vk-nm{max-width:100%;color:#fff6dc;font:800 clamp(14px,4.2vw,17px)/1.12 Literata,Georgia,serif;overflow-wrap:anywhere;text-shadow:0 1px 0 rgba(0,0,0,.55)}
+.vic .vk-d{display:flex;align-items:center;justify-content:center;gap:5px;color:#d9ceb4}
+.vic .vk-d b{font:900 clamp(22px,7vw,28px)/1 Literata,Georgia,serif;text-shadow:0 2px 0 rgba(0,0,0,.5)}
+.vic .vk-d.up b{color:#8fe3a0}.vic .vk-d.dn b{color:#ff9a8d}
+.vic .vk-md{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border:1.5px solid #e0b04a;border-radius:999px;font:800 11px/1.2 Literata,Georgia,serif;letter-spacing:.02em;color:#ffe9a8;text-align:center;white-space:nowrap;
+background:linear-gradient(180deg,rgba(255,226,140,.24),rgba(255,226,140,.07)),rgba(0,0,0,.3);box-shadow:0 0 10px rgba(224,176,74,.3),inset 0 0 0 1px rgba(0,0,0,.35);text-shadow:0 1px 0 rgba(0,0,0,.6)}
+.vic .vk-md::before{content:'★';color:#f0cf7c}
+.vic .vp.def .vk{border-color:#78838f;background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,0) 50%),rgba(0,0,0,.33)}
+.vic .vp.def .vk-nm{color:#e6ebf1}
+.vic .vp.def .vk-md{border-color:#9aa5b3;color:#dfe5ec;background:linear-gradient(180deg,rgba(190,200,214,.18),rgba(190,200,214,.05)),rgba(0,0,0,.35);box-shadow:inset 0 0 0 1px rgba(0,0,0,.35)}
+.vic .vp.def .vk-md::before{color:#c3ccd7}
+@media (max-height:700px){
+.vic .vp{gap:8px;padding:22px 12px 18px!important}
+.vic .vk{gap:3px;padding:7px 5px 7px}
+.vic .vk-md{font-size:10.5px;padding:2px 8px}
+}
+</style>
+<style id="mobile-fit">
+/* Senda: el nombre de liga no se parte por letras (se reduce para caber) */
+.nd .nm{overflow-wrap:normal!important;word-break:normal!important}
+/* Menús de la partida (elegir puntos, menú, órdago): caben en móviles de poca altura */
+@media (max-height:640px){
+.ov.gpn{padding:12px 14px;gap:10px}
+.ov.gpn:not(.c):not(.vic):not(.vsi) .mp{padding:10px 12px;gap:6px;min-height:0}
+.ov.gpn .mp>b{font-size:15px;line-height:1.15}
+.ov.gpn .mp button{padding:7px 8px;font-size:15px}
+.ov.gpn .opts{gap:6px}
+.ov.gpn .opts.g5{gap:5px}.ov.gpn .opts.g5 button{padding:6px 0}
+}
+@media (max-height:540px){.ov.gpn{padding:8px 12px;gap:8px}.ov.gpn:not(.c):not(.vic):not(.vsi) .mp{padding:7px 10px;gap:4px}.ov.gpn .mp button{padding:5px 6px;font-size:14px}.ov.gpn .opts.g5 button{padding:3px 0}.ov.gpn .opts.g5{gap:4px}}
 </style>
 </head>
 <body>
@@ -1349,6 +1421,8 @@ function senda(){
   const list='<div class="rm" data-r="3">'+rooms[3]+'</div>'+[2,1,0].map(r=>'<div class="rm" data-r="'+r+'">'+rooms[r]+'</div>').join('');
   app.innerHTML='<div class="top"><button id="b">‹ Inicio</button><h2>Senda del Órdago</h2></div><div class="sd">'+list+'</div>';
   $('#b').onclick=()=>go('home');
+  const fitNm=()=>app.querySelectorAll('.nd .nm').forEach(el=>{el.style.removeProperty('font-size');let fs=parseFloat(getComputedStyle(el).fontSize);while(el.scrollWidth>el.clientWidth+0.5&&fs>11){fs-=.5;el.style.setProperty('font-size',fs+'px','important')}});
+  fitNm();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{if(view==='senda')fitNm()});
   const goHere=()=>{const m=app.querySelector('.pm')||app.querySelector('.nd.cur');if(m)m.scrollIntoView({block:'center'})};
   goHere();requestAnimationFrame(goHere);setTimeout(goHere,150);
 }
@@ -1487,7 +1561,7 @@ function wire(){
 function game(){
   const g=S.game;g.mesa=g.mesa||{};
   const cells=LAN.map(([l])=>'<div class="slot"><svg class="slotd" aria-hidden="true"><rect x="0" y="0" width="100%" height="100%" rx="13" fill="none" stroke="rgba(224,176,74,.9)" stroke-width="4" stroke-dasharray="16 10"/></svg><b class="cn" data-pick="'+l+'">'+l+'</b><b class="cn r rot" data-pick="'+l+'">'+l+'</b>'+(g.mesa[l]?chipHTML(l,g.mesa[l]):'<span class="plus" data-pick="'+l+'">'+lanceIcon(l,28)+'</span>')+'</div>').join('');
-  app.innerHTML='<div class="table">'+half(1)+'<div class="mid">'+strip(1)+'<div class="mesa"><button class="sm" id="b" aria-label="Menú de la partida">'+EXIT+'</button>'+cells+'</div>'+strip(0)+'</div>'+half(0)+'</div>'+(pick?'<div class="ov">'+pickPanel(1)+pickPanel(0)+'</div>':'')+(menu?'<div class="ov">'+menuPanel(1)+menuPanel(0)+'</div>':'')+(ordOpen?'<div class="ov">'+ordPanel(1)+ordPanel(0)+'</div>':'');
+  app.innerHTML='<div class="table">'+half(1)+'<div class="mid">'+strip(1)+'<div class="mesa"><button class="sm" id="b" aria-label="Menú de la partida">'+EXIT+'</button>'+cells+'</div>'+strip(0)+'</div>'+half(0)+'</div>'+(pick?'<div class="ov gpn">'+pickPanel(1)+pickPanel(0)+'</div>':'')+(menu?'<div class="ov gpn">'+menuPanel(1)+menuPanel(0)+'</div>':'')+(ordOpen?'<div class="ov gpn">'+ordPanel(1)+ordPanel(0)+'</div>':'');
   wire();
   $('#b').onclick=()=>{menu=true;pick=null;sel=null;game()};
 }
@@ -1539,13 +1613,14 @@ function vsIntro(){
   d.onclick=out;
 }
 function victory(rec,i,A,B){
-  const d=document.createElement('div'),nm=rec.t[i].map(x=>esc(fname(x))).join(' y ');d.className='ov vic';
-  const rowsOf=ids=>rec.am?ids.map(id=>'<div class="vr"><span>'+esc(fname(id))+'</span></div>').join('')+'<div class="vu">Partida amistosa · sin cambios en los amarracos</div>':ids.map(id=>{const a=A[id]||blank(),b=B[id],dl=b.tr-a.tr,L=b.last||{};
-    const ex=L.win&&(L.bi||L.bp)?' <small>racha +'+L.bi+' · pareja +'+L.bp+'</small>':'';
-    return '<div class="vr"><span>'+esc(fname(id))+ex+'</span><b style="color:'+(dl>0?'#8fe3a0':dl<0?'#ff9a8d':'#d9ceb4')+'">'+(dl>0?'+'+dl:dl<0?'−'+Math.abs(dl):'0')+'</b><span class="vt">'+trIcon(14)+fmt(b.tr)+'</span></div>'+(b.lg>a.lg?'<div class="vu">▲ '+esc(fname(id))+' asciende a '+LEAGUES[b.lg][0]+'</div>':'')}).join('');
-  const gotMedal=id=>{const a=A[id]||blank(),b=B[id];if(!b)return false;return FAM.some(m=>lvl(b,m.id)>lvl(a,m.id))||SEC.some(m=>b.sec[m.id]&&!a.sec[m.id])};
-  const newsOf=ids=>{if(rec.am)return'';const w=ids.filter(gotMedal).map(id=>esc(fname(id)));return w.length?'<div class="vm" style="justify-content:center"><span>'+w.join(' y ')+(w.length>1?' han ganado medallas':' ha ganado medallas')+'</span></div>':''};
-  const pn=r=>{const ids=rec.t[r],nw=newsOf(ids),won=r===i,pnm=ids.map(x=>esc(fname(x))).join(' y ');return '<div class="mp vp '+(r?'tred':'tblue')+(won?'':' def')+(r?' rot':'')+'">'+corners(40,45)+'<small>'+(won?'¡Victoria!':'Derrota')+'</small><h2>'+pnm+'</h2><div class="tchip"><i></i>'+(r?'Equipo rojo':'Equipo azul')+'<i></i></div>'+(rec.tn&&rec.tn[r]?'<div class="sub">'+esc(rec.tn[r])+'</div>':'')+'<div class="vl">'+rowsOf(ids)+'</div>'+(nw?'<div class="vl">'+nw+'</div>':'')+'</div>'};
+  const d=document.createElement('div');d.className='ov vic';
+  const nMed=id=>{const a=A[id]||blank(),b=B[id];if(!b)return 0;return FAM.filter(m=>lvl(b,m.id)>lvl(a,m.id)).length+SEC.filter(m=>b.sec[m.id]&&!a.sec[m.id]).length};
+  const tile=id=>{const f=S.friends.find(x=>x.id===id)||{},a=A[id]||blank(),b=B[id]||blank(),dl=b.tr-a.tr,nm=rec.am?0:nMed(id);
+    return '<div class="vk"><div class="vk-av">'+avatarHTML(f,b,64)+'</div><div class="vk-nm">'+esc(fname(id))+'</div>'
+    +(rec.am?'':'<div class="vk-d '+(dl>0?'up':dl<0?'dn':'')+'"><b>'+(dl>0?'+'+dl:dl<0?'−'+Math.abs(dl):'0')+'</b>'+trIcon(20)+'</div>')
+    +(nm?'<div class="vk-md">'+(nm>1?nm+' medallas':'Medalla')+'</div>':'')+'</div>'};
+  const pn=r=>{const ids=rec.t[r],won=r===i;
+    return '<div class="mp vp'+(won?'':' def')+(r?' rot':'')+'"><small>'+(won?'¡Victoria!':'Derrota')+'</small><div class="vg">'+ids.map(tile).join('')+'</div>'+(rec.am?'<div class="vu">Partida amistosa · sin cambios en los amarracos</div>':'')+'</div>'};
   d.innerHTML=pn(1)+'<div class="row">'+(rec.am?'':'<button id="vs" style="background:var(--gold);color:#1d2a44">Compartir resultado</button>')+'<button id="vx" style="background:var(--card);color:var(--ink)">Cerrar</button></div>'+pn(0);
   document.body.appendChild(d);rain(d,34,true);
   d.querySelector('#vx').onclick=()=>d.remove();
@@ -1611,6 +1686,18 @@ draw();
   setTimeout(function(){busy=false},0)}
  new MutationObserver(sync).observe(app,{childList:true,attributes:true,attributeFilter:['class']});sync();
 })();
+</script>
+<style id="rotlock-css">
+/* Solo vertical: en móvil apaisado se tapa la app con un aviso */
+#rotlock{display:none;position:fixed;inset:0;z-index:2147483647;background:#101010;color:#f0cf7c;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;font:700 20px Literata,Georgia,serif;padding:20px}
+#rotlock svg{width:56px;height:56px;animation:rotlk 2.4s ease-in-out infinite}
+@keyframes rotlk{0%,25%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
+@media (orientation:landscape) and (max-height:500px) and (pointer:coarse){#rotlock{display:flex}}
+</style>
+<div id="rotlock" aria-live="polite"><svg viewBox="0 0 48 48" fill="none" stroke="#f0cf7c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="14" y="5" width="20" height="38" rx="4"/><path d="M22 38h4"/></svg><span>Gira el móvil</span><small style="font:600 14px Literata,Georgia,serif;color:#d9ceb4">Mus se juega en vertical</small></div>
+<script>
+/* Bloqueo de orientación: donde el navegador lo permite (app instalada en Android); si no, queda el aviso de arriba */
+try{if(screen.orientation&&screen.orientation.lock){screen.orientation.lock('portrait').catch(function(){})}}catch(e){}
 </script>
 </body>
 </html>
