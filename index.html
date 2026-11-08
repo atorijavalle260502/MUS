@@ -899,6 +899,15 @@ html body .ov.c .csbar>button.csback:active{box-shadow:inset 0 0 0 1.5px rgba(0,
 .stt.wide{grid-column:1/-1}
 .stt .nm{font-size:22px;line-height:1.35;padding:1px 0 3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;max-width:100%}
 #app.profile .stt small{color:#e8c566;font:700 16px/1.1 Literata,Georgia,serif;letter-spacing:.3px;text-align:center;white-space:nowrap;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+
+/* ===== Iconos discretos en los botones del inicio (Senda y Amigos) ===== */
+#app.home .menu .hico{color:#e0b04a;flex:0 0 auto}
+#app.home .menu .nav #fr{display:flex;align-items:center;justify-content:center;gap:9px}
+#app.home .menu .nav #fr .hico{width:20px;height:20px;margin:0}
+#app.home .menu .nav #mp{display:flex;align-items:center;justify-content:center;gap:9px}
+#app.home .menu .nav #mp .hico{width:20px;height:20px;margin:0;color:#d9d4c4}
+#app.home .menu #sd .hbox{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:36px;height:36px;display:flex;align-items:center;justify-content:center;z-index:1}
+#app.home .menu #sd .hbox svg{width:30px;height:30px}
 </style>
 <style id="setup-jugadores">
 /* ===== Nueva partida: ficha de cada jugador ===== */
@@ -1445,10 +1454,13 @@ function mpBadge(){
   return n?'<span class="mbadge" aria-label="'+n+(n===1?' medalla pendiente':' medallas pendientes')+'"></span>':'';
 }
 let profBack='home';
+const ICO_ME='<svg class="hico" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="8" r="3.9" fill="currentColor"/><path d="M4.5 20c0-4.1 3.2-6.6 7.5-6.6s7.5 2.5 7.5 6.6z" fill="currentColor"/></svg>';
+const ICO_FR='<svg class="hico" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="9" cy="8" r="3.4" fill="currentColor"/><circle cx="17" cy="9" r="2.6" fill="currentColor"/><path d="M2.5 19.5c0-3.7 2.9-6 6.5-6s6.5 2.3 6.5 6z" fill="currentColor"/><path d="M16.2 13.3c3.1-.2 5.3 1.6 5.3 4.7v1.5h-3.9c0-2.4-.6-4.4-1.4-6.2z" fill="currentColor"/></svg>';
+const ICO_AMR='<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke-width="1.7"/><circle cx="12" cy="12" r="7.3" stroke-width=".9" opacity=".7"/><path d="M7.8 16.4V8l4.2 5.6L16.2 8v8.4M6.4 16.4h2.9M14.7 16.4h2.9" stroke-width="1.6"/></svg>';
 function home(){
   app.innerHTML='<div class="hsuits">'+['o','c','e','b'].map(k=>suit(k,k==='o'?50:64)).join('')+'</div>'+'<div class="logo">MUS</div>'+fan()+'<div class="menu">'+(S.game?'<button class="gold" style="width:100%" id="cont">Continuar partida</button>':'')+'<button class="'+(S.game?'ghost" style="width:100%;background:var(--card)':'gold" style="width:100%')+'" id="go">Iniciar partida</button>'
-  +'<button class="ghost" id="sd" style="width:100%;background:var(--card)">Senda del Órdago'+help('senda')+'</button>'
-  +'<div class="nav" style="margin-top:0"><button id="fr">Amigos</button><button id="mp">Mi perfil'+mpBadge()+'</button></div></div>';
+  +'<button class="ghost" id="sd" style="width:100%;background:var(--card)"><span class="hico hbox">'+ICO_AMR+'</span>Senda del Órdago'+help('senda')+'</button>'
+  +'<div class="nav" style="margin-top:0"><button id="fr">'+ICO_FR+'Amigos</button><button id="mp">'+ICO_ME+'Mi perfil'+mpBadge()+'</button></div></div>';
   $('#go').onclick=()=>{if(live().length<4){dlg('Añade al menos 4 amigos en la biblioteca para empezar una partida.',{},()=>go('friends'))}else go('setup')};
   if($('#cont'))$('#cont').onclick=()=>go('game');
   $('#sd').onclick=()=>ensureMe(()=>go('senda'));
@@ -1888,7 +1900,7 @@ draw();
 @media (orientation:landscape) and (max-height:500px) and (pointer:coarse){#rotlock{display:flex}}
 
 /* ===== Perfil: recuadro único (avatar + nombre + título + liga + estadísticas) ===== */
-.pcard .phd{display:flex;align-items:center;gap:14px}
+.pcard .phd{display:flex;align-items:center;gap:28px}
 .pcard .pav{display:flex;flex-direction:column;align-items:center;gap:8px;flex:0 0 auto}
 #app.profile #avc{padding:6px 14px;font-size:13px;width:100%}
 .pcard .pid{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px}
@@ -1908,6 +1920,30 @@ html body #app .pcard .plg .nd.cur[data-l]{position:relative;z-index:1;box-shado
 .pcard .plg .nd .nt{gap:12px!important;padding-right:14px}
 .pcard .plg .nd .tro b{font-size:24px!important}
 .pcard .plg .nd .ntl{font-size:15px!important}
+
+/* ===== Relleno verde botella detrás del símbolo central de las ligas 1-6: cada vez más oscuro (la 6 = el verde más oscuro) ===== */
+.nd[data-l="0"] .emb .av.lge{--e1:#62a077;--e2:#519066;--e3:#407c52}
+.nd[data-l="1"] .emb .av.lge{--e1:#58976e;--e2:#488560;--e3:#37704a}
+.nd[data-l="2"] .emb .av.lge{--e1:#4f8e66;--e2:#3f7b56;--e3:#2f6642}
+.nd[data-l="3"] .emb .av.lge{--e1:#3a6c4f;--e2:#2c5a3e;--e3:#224932}
+.nd[data-l="4"] .emb .av.lge{--e1:#336448;--e2:#265239;--e3:#1d422d}
+.nd[data-l="5"] .emb .av.lge{--e1:#2c5c41;--e2:#1f4a33;--e3:#173a29}
+.nd:is([data-l="0"],[data-l="1"],[data-l="2"],[data-l="3"],[data-l="4"],[data-l="5"]) .emb .av.lge{position:relative}
+.nd:is([data-l="0"],[data-l="1"],[data-l="2"],[data-l="3"],[data-l="4"],[data-l="5"]) .emb .av.lge::before{content:'';position:absolute;inset:12%;border-radius:50%;background:radial-gradient(circle at 50% 40%,var(--e1) 0,var(--e2) 65%,var(--e3) 100%);box-shadow:inset 0 0 8px rgba(0,0,0,.45)}
+
+/* ===== Inicio: propuesta 1 (MUS dorado + palos como divisor + abanico) ===== */
+#app.home .logo{order:1;background:linear-gradient(180deg,#fff4cf 0%,#f0c24a 48%,#b8851f 100%);-webkit-background-clip:text;background-clip:text;color:transparent!important;-webkit-text-fill-color:transparent;text-shadow:none!important;filter:drop-shadow(0 3px 0 #5a3d08) drop-shadow(0 0 14px rgba(224,176,74,.45));letter-spacing:.14em;padding-left:.14em;font-size:clamp(56px,calc(15*var(--vh)),118px)!important;margin:0!important;line-height:1.05}
+#app.home.hc .logo{font-size:clamp(50px,calc(12*var(--vh)),104px)!important}
+#app.home .hsuits{order:2;display:flex!important;align-items:center;justify-content:center;gap:3vw;width:86%!important;margin:calc(.8*var(--vh)) auto 0!important;padding:0!important;position:relative!important;left:auto!important;right:auto!important;top:auto!important}
+#app.home .hsuits::before,#app.home .hsuits::after{content:'';flex:1 1 0;min-width:0;height:1.5px;background:linear-gradient(90deg,transparent,#e0b04a)}
+#app.home .hsuits::after{transform:scaleX(-1)}
+#app.home .hsuits svg{flex:0 0 auto;width:10vw!important;max-width:none!important;height:12vw!important}
+#app.home .fan{order:3;transform:none!important;margin-top:calc(-3.3*var(--vh))!important}
+#app.home.hc .fan{margin-top:calc(-3.3*var(--vh))!important;margin-bottom:calc(3.1*var(--vh))!important}
+#app.home .menu{order:9}
+#app.home .logo{margin-top:auto!important}
+#app.home .fan{margin-bottom:calc(3.1*var(--vh))!important}
+#app.home .menu{margin-top:auto!important;margin-bottom:0!important}
 </style>
 <div id="rotlock" aria-live="polite"><svg viewBox="0 0 48 48" fill="none" stroke="#f0cf7c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="14" y="5" width="20" height="38" rx="4"/><path d="M22 38h4"/></svg><span>Gira el móvil</span><small style="font:600 14px Literata,Georgia,serif;color:#d9ceb4">Mus se juega en vertical</small></div>
 <script>
