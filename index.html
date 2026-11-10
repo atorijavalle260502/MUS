@@ -947,6 +947,21 @@ html body .ov.c .csbar>button.csback:active{box-shadow:inset 0 0 0 1.5px rgba(0,
 .frc{background:#173a28;border:1.5px solid #c9a24e;border-radius:12px;padding:6px 13px 8px;gap:3px;box-shadow:none}
 .frc small{color:#fff;font-size:11px;font-weight:800;letter-spacing:.09em}
 .frc .frg,.frc .frmn{color:#f6efdc}.frc .frms{color:#d8cfae}
+/* Amigos: Liga actual y Mejor compañero siempre lado a lado (móvil) */
+#list .fr{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;column-gap:8px}
+#list .fr>.frl{display:contents}
+#list .fr .frh{grid-column:1;grid-row:1;min-width:0;padding:4px 0}
+#list .fr>.frs{grid-column:2;grid-row:1}
+#list .fr .frk{grid-column:1/-1;grid-row:2;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;margin-top:6px}
+#list .fr .frc{min-width:0;padding:5px 8px 6px;gap:2px;box-sizing:border-box}
+#list .fr .frc small{font-size:10px;letter-spacing:.03em;white-space:nowrap}
+#list .fr .frg{font-size:14px;gap:5px;min-width:0;line-height:1.15}
+#list .fr .frg>span:not(.frmn):not(.frms):not(.lge){min-width:0;overflow-wrap:anywhere}
+#list .fr .frg>.lge{flex:0 0 auto;min-width:auto;overflow-wrap:normal;--s:26px!important}
+#list .fr .frmn{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+#list .fr .frm{min-width:0;max-width:100%}
+#list .fr .frms{font-size:11px;white-space:nowrap}
+@media (max-width:350px){#list .fr .frc small{font-size:9px;letter-spacing:0}#list .fr .frg,#list .fr .frmn{font-size:13px}#list .fr .frms{font-size:10px}}
 #app:not(.game) .card .fr>button.frs.frs.frs.frs.frs.frs.frs.frs.frs.frs,.fr>button.frs{background:#2c6347!important;background-image:none!important;color:#fff!important;border:0!important;box-shadow:none!important;text-shadow:none!important;border-radius:10px}
 /* Amigos: borde blanco en el botón Estadísticas */
 #app:not(.game) .card .fr>button.frs.frs.frs.frs.frs.frs.frs.frs.frs.frs.frs,.fr>button.frs.frs{border:1.5px solid #fff!important}
