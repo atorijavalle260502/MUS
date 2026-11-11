@@ -28,10 +28,10 @@
 html,body{margin:0;height:100%;background:#172b1f}
 #boot{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:#172b1f;opacity:1;transition:opacity .35s ease}
 #boot.off{opacity:0;pointer-events:none}
-#boot .bs{display:flex;align-items:center;justify-content:center;gap:3vw;width:calc((min(100vw,520px) - 44px)*.86)}
+#boot .bs{display:flex;align-items:center;justify-content:center;gap:min(3vw,15.6px);width:calc((min(100vw,520px) - 44px)*.86)}
 #boot .bs::before,#boot .bs::after{content:'';flex:1 1 0;min-width:0;height:1.5px;background:linear-gradient(90deg,transparent,#e0b04a)}
 #boot .bs::after{transform:scaleX(-1)}
-#boot .bs svg{display:block;flex:0 0 auto;width:10vw;height:12vw;transform:translateX(1.15vw);filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+#boot .bs svg{display:block;flex:0 0 auto;width:min(10vw,52px);height:min(12vw,62.4px);transform:translateX(min(1.15vw,6px));filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
 html.bt::before,html.bt::after{background:#172b1f!important}
 html::before,html::after{transition:background-color .35s ease}
 </style>
@@ -2159,6 +2159,20 @@ html body #app .pcard .plg .nd.cur[data-l]{position:relative;z-index:1;box-shado
 #app.home .menu{margin-top:auto!important;margin-bottom:0!important}
 .frh{flex-wrap:nowrap}.fra svg,.fra .av{--s:40px}.frn{font-size:15px}.frt{padding:3px 8px 3px 5px;font-size:15px}.frh{gap:6px}
 .fr>button.frs.frs{padding:6px 10px;font-size:13px}
+
+/* ===== Móviles muy bajos (≈568px o menos): compactar la partida para que no se corte arriba ===== */
+@media (max-height:600px){
+#app.game .half{padding:6px 8px;gap:4px}
+#app.game .half .big{font-size:38px}
+#app.game .half .btns{gap:5px}
+#app.game .half .btns button{padding:3px 0;font-size:16px}
+#app.game .half .mini{gap:4px}
+#app.game .half .mini button{padding:2px 0;font-size:12px}
+#app.game .table{gap:4px}
+#app.game .mid{gap:4px}
+#app.game .slot{height:46px}#app.game .sm{flex-basis:36px}#app.game .half .big{font-size:32px}#app.game .half{padding:4px 8px;gap:3px}
+#app.game .half .ord{padding:6px 12px}
+}
 </style>
 <div id="rotlock" aria-live="polite"><svg viewBox="0 0 48 48" fill="none" stroke="#f0cf7c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="14" y="5" width="20" height="38" rx="4"/><path d="M22 38h4"/></svg><span>Gira el móvil</span><small style="font:600 14px Literata,Georgia,serif;color:#d9ceb4">Mus se juega en vertical</small></div>
 <script>
