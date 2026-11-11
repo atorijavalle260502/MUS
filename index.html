@@ -2020,7 +2020,27 @@ function victory(rec,i,A,B){
   document.body.appendChild(d);rain(d,34,true,i===1);
   const fit=()=>fitBox(d,'.mp.vp','.vc-fit',false);fit();window.addEventListener('resize',fit);
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);
-  d.querySelector('#vx').onclick=()=>{window.removeEventListener('resize',fit);d.remove();go('home')};
+  d.querySelector('#vx').onclick=()=>{window.removeEventListener('resize',fit);bootTo(()=>{d.remove();go('home')})};
+}
+
+/* Pantalla de carga al volver al inicio: aparece con fundido, cambia a inicio por debajo y se retira */
+function bootTo(fn){
+  const de=document.documentElement;
+  if(document.getElementById('boot')){fn();return}
+  const b=document.createElement('div');b.id='boot';b.className='off';b.setAttribute('aria-hidden','true');
+  b.innerHTML='<div class="bs"><svg viewBox="0 0 48 48"><use href="#su-o"/></svg><svg viewBox="0 0 48 48"><use href="#su-c"/></svg><svg viewBox="0 0 48 48"><use href="#su-e"/></svg><svg viewBox="0 0 48 48"><use href="#su-b"/></svg></div>';
+  de.classList.add('bt');document.body.appendChild(b);
+  const t0=Date.now();
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    b.classList.remove('off');
+    setTimeout(()=>{
+      try{fn()}catch(e){console.error(e)}
+      setTimeout(()=>requestAnimationFrame(()=>{
+        b.classList.add('off');de.classList.remove('bt');
+        setTimeout(()=>{if(b.parentNode)b.parentNode.removeChild(b)},450);
+      }),Math.max(0,1000-(Date.now()-t0)));
+    },380);
+  }));
 }
 
 if(S.game&&S.game.pts)view='home';
