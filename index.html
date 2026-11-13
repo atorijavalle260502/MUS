@@ -1490,8 +1490,9 @@ function progress(hist){
     live().forEach(f=>{const q=get(f.id);q.soc=nF;f.since=f.since||Date.now();const r=q.md.soc||(q.md.soc={lvl:0,t:[],w:[]});
       while(r.lvl<mS.goals.length&&nF>=mS.goals[r.lvl]){r.t.push(f.since);r.w.push(null);r.lvl++}})}
   if(PRUEBA_MEDALLAS){const _t=live().find(f=>f.name==='Tori')||live()[0];
-    if(_t){const q=get(_t.id),LS={rc:6,vw:5,pr:4,od:2,vd:1,paz:3,rev:3,soc:2};
-      FAM.forEach(m=>{const n=LS[m.id]||0;q.md[m.id]={lvl:n,t:Array(n).fill(Date.now()),w:Array(n).fill(null)}})}}
+    if(_t){const q=get(_t.id);
+      FAM.forEach(m=>{const n=m.goals.length;q.md[m.id]={lvl:n,t:Array(n).fill(Date.now()),w:Array(n).fill(null)}});
+      SEC.forEach(m=>{q.sec[m.id]={t:Date.now()}})}}
   if(PRUEBA_TROFEOS){const _u=live().find(f=>f.name==='Tori')||live()[0];
     if(_u){const q=get(_u.id);q.tr=Math.max(q.tr,3500);q.peak=Math.max(q.peak,q.tr);q.lg=lgOf(q.tr);q.floor=LEAGUES[q.lg][1]}}
   if(PRUEBA_LIGAS){const _T=[1500,800,2400,150,450,1100,3100,260];live().forEach((f,i)=>{const q=get(f.id);q.tr=Math.max(q.tr,_T[i%_T.length]);q.peak=Math.max(q.peak,q.tr);q.lg=lgOf(q.tr);q.floor=LEAGUES[q.lg][1]})}
@@ -1612,7 +1613,7 @@ function ensureClaims(P){
 }
 function pruebaReclamo(){
   if(!PRUEBA_RECLAMO)return;const t=live().find(f=>f.id===meId())||live()[0];
-  if(t){S.claim=S.claim||{};S.claim[t.id]={rc:3,vw:4,pr:0,od:2,vd:1,paz:0,rev:1,soc:0};save()}
+  if(t){S.claim=S.claim||{};const c={};FAM.forEach(m=>{c[m.id]=m.goals.length});SEC.forEach(m=>{c[m.id]=1});S.claim[t.id]=c;save()}
 }
 /* Nivel que se muestra: en mi perfil, el reclamado; en el de los demás, el conseguido */
 function effLvl(f,p,id){const n=lvl(p,id);if(!f||f.id!==meId())return n;return Math.min(n,((S.claim||{})[f.id]||{})[id]||0)}
