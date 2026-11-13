@@ -236,7 +236,7 @@ box-shadow:inset 0 0 0 4px #101010,inset 0 0 0 7px #d9a93a,inset 0 0 0 9px #1010
 .ms-od{background-image:url(img/ms-od.webp)}
 .ms-vd{background-image:url(img/ms-vd.webp)}
 .ms-xrem{background-image:url(img/ms-xrem.webp)}
-.mfS{background-image:url(img/mf-s.webp?v=2)}
+.mfS{background-image:url(img/mf-s.webp?v=3)}
 .ms-prim{background-image:url(img/ms-prim.webp)}
 .ms-noct{background-image:url(img/ms-noct.webp)}
 .ms-rev{background-image:url(img/ms-rev.webp)}
@@ -1517,7 +1517,7 @@ const medalSVG=(m,l,s)=>{const c=TIERC[Math.max(0,l-1)];
   return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 48 48" aria-hidden="true" style="flex:0 0 auto'+(l?'':';filter:grayscale(1) brightness(.7);opacity:.5')+'"><path d="M15 30l-4 16 9-4 4 5 4-5 9 4-4-16z" fill="'+c[1]+'"/><circle cx="24" cy="21" r="18" fill="'+c[0]+'" stroke="'+c[1]+'" stroke-width="2.5"/><circle cx="24" cy="21" r="14" fill="rgba(255,255,255,.22)" stroke="'+c[1]+'" stroke-width="1.400" stroke-dasharray="2 2"/><g transform="translate(24 21) scale(.84) translate(-12 -12)">'+MG[m.id]+'</g></svg>'};
 const MPOS=[[49.73, 58.95, 42.76], [49.9, 53.71, 40.63], [49.79, 60.99, 38.92], [50.04, 56.08, 38.3], [49.86, 55.94, 39.02], [49.73, 55.47, 32.01]],MSYM=['rc','vw','pr','od','vd','soc','paz','rev'];
 /* Medallas especiales con marco propio (escudo con dragones): el símbolo va DEBAJO del marco y se coloca en su hueco central */
-const SPECIMG={prim:'left:37.65%;top:43.59%;width:24.76%;height:24.76%',noct:'left:37.65%;top:43.59%;width:24.76%;height:24.76%',res:'left:37.65%;top:43.59%;width:24.76%;height:24.76%',pal:'left:37.65%;top:43.59%;width:24.76%;height:24.76%',rom:'left:37.65%;top:43.59%;width:24.76%;height:24.76%'};
+const SPECIMG={prim:'left:28%;top:30.8%;width:44%;height:44%',noct:'left:28%;top:30.8%;width:44%;height:44%',res:'left:28%;top:30.8%;width:44%;height:44%',pal:'left:28%;top:30.8%;width:44%;height:44%',rom:'left:28%;top:30.8%;width:44%;height:44%'};
 const medal=(m,l,s)=>{
   if(SPECIMG[m.id])return '<span class="mdl'+(l?'':' off')+'" style="width:'+s+'px;height:'+s+'px" aria-hidden="true"><i class="ms-'+m.id+'" style="'+SPECIMG[m.id]+'"></i><i class="mf mfS"></i></span>';
   if(!MSYM.includes(m.id))return medalSVG(m,l,s);
