@@ -1974,22 +1974,23 @@ const col=i=>i?'var(--a)':'var(--b)',colF=i=>i?'var(--af)':'var(--bf)';
 const tname=i=>{const t=(S.game&&S.game.tn||[])[i];return t||(i?'Equipo rojo':'Equipo azul')};
 const pair=i=>esc(fname(S.game.p[i*2]))+' y '+esc(fname(S.game.p[i*2+1]));
 const ul=n=>String(n).replace(/[69]/g,d=>'<u class="u'+(d==='9'?' n9':'')+'">'+d+'</u>');
+const pn=k=>'<small class="pn"><span>'+pair(k)+'</span></small>';
 function half(i){
   const g=S.game,c=S.cfg,soon=c.meta-g.pts[i]<=5;
+  const jv=k=>'<span class="jv">J '+ul(g.jg[k])+(g.inf?'':' · V '+ul(g.vc[k]))+'</span>';
   return '<div class="half team'+(i?' rot':'')+'" data-t="'+i+'" style="--c:'+col(i)+';border-color:'+(soon?'var(--gold);box-shadow:0 0 14px var(--gold)':colF(i))+'">'
-  +'<div class="fr"><b style="color:'+col(i)+'">'+pair(i)+'</b><span class="riv" style="--r:'+col(1-i)+'"><small>Rival</small><b>'+ul(g.pts[1-i])+'</b><span class="rjv"><i>J '+ul(g.jg[1-i])+'</i>'+(g.inf?'':'<i>V '+ul(g.vc[1-i])+'</i>')+'</span></span></div>'
-  +'<div class="fr" style="flex-wrap:nowrap"><div class="big" style="--c:'+col(i)+'">'+ul(g.pts[i])+'<small style="font:14px Literata,system-ui;color:var(--mute)"> de '+c.meta+'</small></div><button class="ord" data-ord="1">Órdago</button></div>'
-  +'<div class="btns" style="--c:'+col(i)+'"><button data-t="'+i+'" data-n="1">+1</button><button data-t="'+i+'" data-n="5">+5</button><button data-t="'+i+'" data-n="-1" style="background:none;color:'+col(i)+';border:1.5px solid '+col(i)+'">−1</button></div>'
-  +'<div class="mini" style="--c:'+col(i)+'">'+[2,3,4,7,10].map(n=>'<button data-t="'+i+'" data-n="'+n+'">+'+n+'</button>').join('')+'</div></div>';
+    +'<div class="sc"><div class="mi">'+pn(i)+'<div class="big">'+ul(g.pts[i])+'</div>'+jv(i)+'</div><div class="ri">'+pn(1-i)+'<div class="big">'+ul(g.pts[1-i])+'</div>'+jv(1-i)+'</div></div>'
+  +'<div class="btns b2" style="--c:'+col(i)+'"><button data-t="'+i+'" data-n="1">+1</button><button data-t="'+i+'" data-n="5">+5</button></div>'
+  +'<div class="b3"><span class="btns" style="display:contents;--c:'+col(i)+'"><button data-t="'+i+'" data-n="-1">−1</button></span><button class="ord" data-ord="1">Órdago</button></div></div>';
 }
 function strip(i){
   const g=S.game,c=S.cfg,soon=c.meta-g.pts[i]<=5,n=Math.ceil(c.meta/5);let d='';
   for(let k=0;k<n;k++){const f=Math.max(0,Math.min(5,g.pts[i]-k*5));
     d+='<div class="grp'+(k===n-1?' last'+(soon?' soon':''):'')+'">'+[0,1,2,3,4].map(j=>'<i class="dot'+(j<f?' on':'')+'"></i>').join('')+'</div>'}
-  return '<div class="strip'+(i?' rot':'')+'" style="--c:'+colF(i)+'"><div class="dots">'+d+'</div><div class="cnt"><span>J '+ul(g.jg[i])+'</span>'+(g.inf?'':'<span>V '+ul(g.vc[i])+'</span>')+'</div></div>';
+  return '<div class="strip'+(i?' rot':'')+'" style="--c:'+colF(i)+'"><div class="dots">'+d+'</div></div>';
 }
 const LAN=[['G','Grande'],['C','Chica'],['P','Pares'],['J','Juego']];
-let pick=null,sel=null;
+let pick=null,sel=null,betTmp=null;
 const snap=g=>JSON.stringify({pts:g.pts,jg:g.jg,vc:g.vc,mesa:g.mesa||{}});
 const LI={
 G:'<defs><linearGradient id="lgold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbe6a0"/><stop offset=".5" stop-color="#d9a82e"/><stop offset="1" stop-color="#8a5f12"/></linearGradient><linearGradient id="livory" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffaf0"/><stop offset="1" stop-color="#e6d9b4"/></linearGradient></defs><path d="M3 18L2 7l5 4.5L12 4l5 7.5L22 7l-1 11z" fill="url(#lgold)" stroke="#5e400c" stroke-width="1.2" stroke-linejoin="round"/><rect x="3" y="18" width="18" height="3.2" rx="1.2" fill="url(#lgold)" stroke="#5e400c" stroke-width="1.1"/><path d="M5 16.5L4.2 9.5l3 2.6" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="1" stroke-linecap="round"/><circle cx="12" cy="13.2" r="1.9" fill="#c0392b" stroke="#5e400c" stroke-width=".7"/><circle cx="2.2" cy="7" r="1.3" fill="#fff1b8" stroke="#5e400c" stroke-width=".6"/><circle cx="12" cy="4" r="1.3" fill="#fff1b8" stroke="#5e400c" stroke-width=".6"/><circle cx="21.8" cy="7" r="1.3" fill="#fff1b8" stroke="#5e400c" stroke-width=".6"/>',
@@ -2012,11 +2013,19 @@ function pickPanel(rot){
   const b=Array.from({length:19},(_,i)=>i+2).map(n=>'<button data-amt="'+n+'">'+ul(n)+'</button>').join('')+'<button class="ghost" data-amt="x" aria-label="Cancelar">✕</button>'+(g.mesa[l]?'<button class="ghost" style="grid-column:span 5" data-amt="0">Quitar</button>':'');
   return '<div class="mp'+(rot?' rot':'')+'"><b>'+nm+': ¿cuántos puntos?</b><div class="opts g5">'+b+'</div></div>';
 }
+function betPanel(){
+  const l=pick,nm=LAN.find(x=>x[0]===l)[1],n=betTmp==null?2:betTmp;
+  return '<div class="mp bp"><h3>'+lanceIcon(l,28)+'<span>'+nm+'</span></h3><div class="num">'+ul(n)+'</div><div class="row3"><button class="neg" data-bet="-1">−1</button><button data-bet="1">+1</button><button data-bet="5">+5</button></div><div class="row2b"><button class="back" data-bet="back">‹ Atrás</button><button class="ok" data-bet="x">Listo</button></div></div>';
+}
 function setChip(l,n){const g=S.game;g.hist.push(snap(g));g.mesa={...g.mesa};if(n)g.mesa[l]=n;else delete g.mesa[l];pick=null;save();game()}
 function send(l,t){const g=S.game,n=g.mesa[l];if(!n)return;sel=null;add(t,n,l)}
 function wire(){
   app.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>add(+b.dataset.t,+b.dataset.n));
-  app.querySelectorAll('[data-pick]').forEach(e=>e.onclick=()=>{pick=e.dataset.pick;sel=null;game()});
+  app.querySelectorAll('[data-pick]').forEach(e=>e.onclick=()=>{pick=e.dataset.pick;sel=null;betTmp=S.game.mesa[pick]||2;game()});
+  app.querySelectorAll('[data-bet]').forEach(b=>b.onclick=()=>{const v=b.dataset.bet,g=S.game;
+    if(v==='back'){pick=null;betTmp=null;game();return}
+    if(v==='x'){g.hist.push(snap(g));g.mesa={...g.mesa};g.mesa[pick]=betTmp;pick=null;betTmp=null;save();game();return}
+    betTmp=Math.max(1,Math.min(60,betTmp+ +v));game()});
   app.querySelectorAll('[data-amt]').forEach(b=>b.onclick=()=>{const v=b.dataset.amt;if(v==='x'){pick=null;game()}else setChip(pick,+v)});
   app.querySelectorAll('[data-ord]').forEach(b=>b.onclick=()=>{ordOpen=true;game()});
   app.querySelectorAll('[data-od]').forEach(b=>b.onclick=()=>{const v=b.dataset.od,g=S.game;ordOpen=false;
@@ -2046,7 +2055,7 @@ function wire(){
 function game(){
   const g=S.game;g.mesa=g.mesa||{};
   const cells=LAN.map(([l])=>'<div class="slot"><svg class="slotd" aria-hidden="true"><rect x="0" y="0" width="100%" height="100%" rx="13" fill="none" stroke="rgba(224,176,74,.9)" stroke-width="4" stroke-dasharray="16 10"/></svg><b class="cn" data-pick="'+l+'">'+l+'</b><b class="cn r rot" data-pick="'+l+'">'+l+'</b>'+(g.mesa[l]?chipHTML(l,g.mesa[l]):'<span class="plus" data-pick="'+l+'">'+lanceIcon(l,28)+'</span>')+'</div>').join('');
-  app.innerHTML='<div class="table">'+half(1)+'<div class="mid">'+strip(1)+'<div class="mesa"><button class="sm" id="b" aria-label="Menú de la partida">'+EXIT+'</button>'+cells+'</div>'+strip(0)+'</div>'+half(0)+'</div>'+(pick?'<div class="ov gpn">'+pickPanel(1)+pickPanel(0)+'</div>':'')+(menu?'<div class="ov gpn">'+menuPanel(1)+menuPanel(0)+'</div>':'')+(ordOpen?'<div class="ov gpn">'+ordPanel(1)+ordPanel(0)+'</div>':'');
+  app.innerHTML='<div class="table">'+half(1)+'<div class="mid">'+strip(1)+'<div class="mesa"><button class="sm" id="b" aria-label="Menú de la partida">'+EXIT+'</button>'+cells+'</div>'+strip(0)+'</div>'+half(0)+'</div>'+(pick?'<div class="ov gpn bet">'+betPanel()+'</div>':'')+(menu?'<div class="ov gpn">'+menuPanel(1)+menuPanel(0)+'</div>':'')+(ordOpen?'<div class="ov gpn">'+ordPanel(1)+ordPanel(0)+'</div>':'');
   wire();
   $('#b').onclick=()=>{menu=true;pick=null;sel=null;game()};
 }
@@ -2301,6 +2310,67 @@ html body #app .pcard .plg .nd.cur[data-l]{position:relative;z-index:1;box-shado
 #app.game .mid{gap:4px}
 #app.game .slot{height:46px}#app.game .sm{flex-basis:36px}#app.game .half .big{font-size:32px}#app.game .half{padding:4px 8px;gap:3px}
 #app.game .half .ord{padding:6px 12px}
+}
+
+/* ===== Contador: marcador grande, +1/+5 y apuestas en el centro ===== */
+#app.game .half.team{gap:8px;padding:12px 14px}
+#app.game .half .nm{justify-content:center}
+#app.game .half .nm b{font-size:16px;text-align:center;width:100%;color:#f6efdc!important}
+#app.game .sc{position:relative;display:grid;grid-template-columns:1fr 1fr;border-radius:12px;overflow:hidden;flex:1 1 auto;min-height:0}
+#app.game .sc::after{content:'';position:absolute;inset:0;border-radius:12px;pointer-events:none;box-shadow:inset 0 0 0 1.5px #101010,inset 0 0 0 3.5px #c9a24e,inset 0 0 0 5px #101010}
+#app.game .sc>div{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px 6px}
+#app.game .sc small{font:700 11px Literata,Georgia,serif;letter-spacing:.14em;text-transform:uppercase;color:#f6efdc;opacity:.85}
+#app.game .half .sc .big{font-size:74px;line-height:1;color:#fff3d6;text-shadow:0 2px 0 rgba(0,0,0,.35);display:block}
+#app.game .sc .jv{font:700 14px Literata,Georgia,serif;color:#f0e2bd}
+#app.game .half[data-t="0"] .sc .mi,#app.game .half[data-t="1"] .sc .ri{background:#2c64a0}
+#app.game .half[data-t="1"] .sc .mi,#app.game .half[data-t="0"] .sc .ri{background:#a5443a}
+#app.game .half .b2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#app.game .half .b2 button{height:58px;padding:0;font:700 30px Literata,Georgia,serif;border-radius:14px}
+#app.game .half .b3{display:grid;grid-template-columns:1fr 1.4fr;gap:10px}
+#app.game .half .b3 button{height:38px;padding:0;font:700 17px Literata,Georgia,serif;border-radius:12px}
+.ov.bet{justify-content:center;align-items:center}
+.ov.bet .mp{flex:0 0 auto;width:100%;max-width:320px;align-items:center;text-align:center;gap:12px}
+.bp h3{display:flex;align-items:center;gap:10px;font:700 24px Literata,Georgia,serif;letter-spacing:.16em;text-transform:uppercase;color:#f0cf7c;margin:0}
+.bp .num{font:700 112px/1 Literata,Georgia,serif;color:#fff3d6;text-shadow:0 3px 0 rgba(0,0,0,.4)}
+.bp .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%}
+.bp .row2 button{height:76px;padding:0;border:0;border-radius:16px;font:700 34px Literata,Georgia,serif;color:#2a1a14;background:linear-gradient(180deg,#fbf3dc 0%,#efe4c6 48%,#d8c9a2 100%);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.9),inset 0 -3px 6px rgba(120,86,24,.35),0 3px 0 #9d8f68,0 6px 9px rgba(0,0,0,.45)}
+.bp .done{width:100%;height:42px;padding:0;font:700 16px Literata,Georgia,serif;color:#f6efdc;background:none;border:1.5px solid rgba(201,162,78,.65);border-radius:12px}
+
+/* ===== Contador: fondo del marcador (como la pantalla VS), botones y cuadro de apuesta ===== */
+#app.game .half[data-t="0"] .sc .mi,#app.game .half[data-t="1"] .sc .ri{background-color:#2f6ba3;background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.07) 0 2px,transparent 2px 14px),repeating-linear-gradient(-45deg,rgba(0,0,0,.08) 0 2px,transparent 2px 14px),radial-gradient(ellipse 85% 75% at 50% 40%,#3a78b2 0%,#2f6ba3 55%,#295f95 100%)}
+#app.game .half[data-t="1"] .sc .mi,#app.game .half[data-t="0"] .sc .ri{background-color:#a33a2e;background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.07) 0 2px,transparent 2px 14px),repeating-linear-gradient(-45deg,rgba(0,0,0,.08) 0 2px,transparent 2px 14px),radial-gradient(ellipse 85% 75% at 50% 40%,#b04336 0%,#a33a2e 55%,#95312a 100%)}
+#app.game .half.team{gap:10px}
+#app.game .half .b2{gap:12px}
+#app.game .half .b2 button{height:52px;font-size:28px;border-radius:13px}
+#app.game .half .b3{gap:12px}
+#app.game .half .b3 button{height:34px;font-size:16px;border-radius:11px}
+#app.game .strip{justify-content:center}
+.bp .row3{display:grid;grid-template-columns:.8fr 1fr 1fr;gap:10px;width:100%}
+.bp .row3 button{height:68px;font-size:30px;border-radius:15px}
+.bp .row3 button.neg{background:none;color:#f6efdc;border:1.5px solid rgba(246,239,220,.75);box-shadow:none}
+.bp .row2b{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
+.bp .row2b button{height:44px;padding:0;font:700 17px Literata,Georgia,serif;border-radius:12px}
+.bp .row2b .back{color:#f6efdc;background:none;border:1.5px solid rgba(201,162,78,.65)}
+.bp .row2b .ok{border:0;color:#2a1c06;background:linear-gradient(180deg,#f0cd6a 0%,#d4a63c 50%,#a97c1f 100%);box-shadow:inset 0 1.5px 0 rgba(255,246,200,.85),0 0 0 1.5px #3a2606,0 3px 0 #6a4609}
+
+#app.game .sc small.pn{display:flex;flex-direction:column;align-items:center;max-width:100%;font:700 15px/1.15 Literata,Georgia,serif;letter-spacing:0;text-transform:none;opacity:1;color:#f6efdc;text-shadow:0 1px 0 rgba(0,0,0,.4)}
+#app.game .sc small.pn span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 4px;box-sizing:border-box}
+
+#app.game .sc small.pn span{white-space:normal;text-align:center;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
+
+@media (max-height:760px){
+#app.game .half .sc .big{font-size:60px}
+#app.game .sc small.pn{font-size:13px}
+#app.game .sc .jv{font-size:13px}
+#app.game .half .b2 button{height:46px;font-size:24px}
+#app.game .half .b3 button{height:30px;font-size:15px}
+#app.game .half.team{gap:7px;padding:10px 12px}
+.bp .num{font-size:90px}.bp .row3 button{height:58px}
+}
+@media (max-height:640px){
+#app.game .half .sc .big{font-size:46px}
+#app.game .half .b2 button{height:40px;font-size:22px}
+#app.game .half .b3 button{height:28px}
 }
 </style>
 <div id="rotlock" aria-live="polite"><svg viewBox="0 0 48 48" fill="none" stroke="#f0cf7c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="14" y="5" width="20" height="38" rx="4"/><path d="M22 38h4"/></svg><span>Gira el móvil</span><small style="font:600 14px Literata,Georgia,serif;color:#d9ceb4">Mus se juega en vertical</small></div>
