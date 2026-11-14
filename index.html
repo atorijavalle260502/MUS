@@ -538,15 +538,15 @@ box-shadow:inset 0 0 0 2px #101010,inset 0 0 0 4px #c9a24e,inset 0 0 0 5.5px #10
 /* ===== Partida amistosa ===== */
 .amis{flex-direction:row!important;align-items:center;gap:14px!important;color:var(--ink)!important;font-size:16px!important}
 .amis b{display:block;font-size:17px;margin-bottom:3px}.amis small{display:block;font-size:13px;line-height:1.35;color:var(--mute)}
-#am{-webkit-appearance:none;appearance:none;flex:0 0 30px;width:30px;height:30px;padding:0;margin:0;border:2px solid #c9a24e;border-radius:9px;background:rgba(0,0,0,.3);box-shadow:none}
-#am:checked{background:#c9a24e url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='%231d2a44' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/20px no-repeat}
+#am,#inf{-webkit-appearance:none;appearance:none;flex:0 0 30px;width:30px;height:30px;padding:0;margin:0;border:2px solid #c9a24e;border-radius:9px;background:rgba(0,0,0,.3);box-shadow:none}
+#am:checked,#inf:checked{background:#c9a24e url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='%231d2a44' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/20px no-repeat}
 #app.setup>*{flex-shrink:0}
 .vsi .vs-am{position:absolute;left:50%;top:calc(50% + 40px);transform:translateX(-50%);z-index:3;max-width:86%;text-align:center;color:#f6efdc;font:700 12px Literata,Georgia,serif;letter-spacing:.08em;text-transform:uppercase;padding:6px 12px;border:1.5px solid #c9a24e;border-radius:8px;background:rgba(0,0,0,.4)}
 /* ===== Senda: cinta superior fija ===== */
 #app.senda{padding-top:0}
 #app.senda .top{position:sticky;top:0;z-index:20;margin:0 -22px;padding:12px 22px;background:var(--tp2);border-bottom:3px solid #c9a24e;box-shadow:0 3px 0 #101010,0 7px 12px rgba(0,0,0,.45)}
 #app.senda .sd{padding-top:26px}
-#app #am:checked{background-color:#c9a24e!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='%231d2a44' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")!important;background-position:center!important;background-size:20px!important;background-repeat:no-repeat!important}
+#app #am:checked,#app #inf:checked{background-color:#c9a24e!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='%231d2a44' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")!important;background-position:center!important;background-size:20px!important;background-repeat:no-repeat!important}
 
 /* ===== Botones del contador con relieve: luz arriba, sombra abajo ===== */
 .half .btns button:not([data-n="-1"]){border:0;background:linear-gradient(180deg,#fbf3dc 0%,#efe4c6 48%,#d8c9a2 100%);color:#2a1a14;text-shadow:0 1px 0 rgba(255,255,255,.7);
@@ -982,6 +982,15 @@ html body .ov.c .csbar>button.csback:active{box-shadow:inset 0 0 0 1.5px rgba(0,
 #app.home .menu .nav #mp .hico{width:20px;height:20px;margin:0;color:#d9d4c4}
 #app.home .menu #sd .hbox{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:36px;height:36px;display:flex;align-items:center;justify-content:center;z-index:1}
 #app.home .menu #sd .hbox svg{width:30px;height:30px}
+
+/* Senda: título + barra de progreso + amarracos (sesión iniciada) */
+#app.home .menu #sd:has(.sdp){display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+#app.home .menu #sd .sdt{line-height:1.1}
+#app.home .menu #sd .sdp{display:flex;flex-direction:column;align-items:center;gap:5px;width:150px;max-width:55%}
+#app.home .menu #sd .sdb{display:block;width:100%;height:7px;border-radius:5px;background:rgba(0,0,0,.4);box-shadow:inset 0 1px 2px rgba(0,0,0,.65),0 0 0 1px rgba(199,161,82,.4)}
+#app.home .menu #sd .sdb em{display:block;height:100%;border-radius:5px;background:linear-gradient(#ffe08a,#c8932a);box-shadow:0 0 6px rgba(255,214,110,.6)}
+#app.home .menu #sd .sdn{display:flex;align-items:center;gap:5px;font-size:15px;line-height:1;color:#f3d27a;text-shadow:0 1px 0 rgba(0,0,0,.6)}
+#app.home .menu #sd .sdn b{font-weight:700}
 
 /* Amigos: nombre arriba; debajo avatar a la izquierda y liga/amarracos destacados */
 .frl{flex:1;min-width:0;cursor:pointer;padding:4px 0}
@@ -1655,10 +1664,16 @@ let profBack='home';
 const ICO_ME='<svg class="hico" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="8" r="3.9" fill="currentColor"/><path d="M4.5 20c0-4.1 3.2-6.6 7.5-6.6s7.5 2.5 7.5 6.6z" fill="currentColor"/></svg>';
 const ICO_FR='<svg class="hico" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="9" cy="8" r="3.4" fill="currentColor"/><circle cx="17" cy="9" r="2.6" fill="currentColor"/><path d="M2.5 19.5c0-3.7 2.9-6 6.5-6s6.5 2.3 6.5 6z" fill="currentColor"/><path d="M16.2 13.3c3.1-.2 5.3 1.6 5.3 4.7v1.5h-3.9c0-2.4-.6-4.4-1.4-6.2z" fill="currentColor"/></svg>';
 const ICO_AMR='<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke-width="1.7"/><circle cx="12" cy="12" r="7.3" stroke-width=".9" opacity=".7"/><path d="M7.8 16.4V8l4.2 5.6L16.2 8v8.4M6.4 16.4h2.9M14.7 16.4h2.9" stroke-width="1.6"/></svg>';
+/* Amarracos bajo «Senda del Órdago»: barra hacia la siguiente liga y cifra */
+function sdProg(){
+  const p=live().find(f=>f.id===S.me);if(!p)return'';
+  const t=p.tr||0,k=lgOf(t),nx=LEAGUES[k+1],pct=nx?Math.max(0,Math.min(100,(t-LEAGUES[k][1])/(nx[1]-LEAGUES[k][1])*100)):100;
+  return '<span class="sdp"><span class="sdb"><em style="width:'+pct.toFixed(1)+'%"></em></span><span class="sdn">'+trIcon(22)+'<b>'+fmt(t)+'</b></span></span>';
+}
 function home(){
   const G=AUTH==='guest';
   app.innerHTML='<div class="hsuits">'+['o','c','e','b'].map(k=>suit(k,k==='o'?50:64)).join('')+'</div>'+'<div class="logo">MUS</div>'+fan()+'<div class="menu">'+(S.game?'<button class="gold" style="width:100%" id="cont">Continuar partida</button>':'')+'<button class="'+(S.game?'ghost" style="width:100%;background:var(--card)':'gold" style="width:100%')+'" id="go">Iniciar partida</button>'
-  +'<button class="ghost'+(G?' glk':'')+'" id="sd"'+(G?' aria-disabled="true"':'')+' style="width:100%;background:var(--card)"><span class="hico hbox">'+ICO_AMR+'</span>Senda del Órdago'+help('senda')+(G?PLK:'')+'</button>'
+  +'<button class="ghost'+(G?' glk':'')+'" id="sd"'+(G?' aria-disabled="true"':'')+' style="width:100%;background:var(--card)"><span class="hico hbox">'+ICO_AMR+'</span><span class="sdt">Senda del Órdago</span>'+(G?'':sdProg())+help('senda')+(G?PLK:'')+'</button>'
   +'<div class="nav" style="margin-top:0"><button id="fr"'+(G?' class="glk" aria-disabled="true"':'')+'>'+ICO_FR+'Amigos'+(G?PLK:'')+'</button><button id="mp"'+(G?' class="glk" aria-disabled="true"':'')+'>'+ICO_ME+'Mi perfil'+(G?PLK:mpBadge())+'</button></div></div>';
   $('#go').onclick=()=>go('setup');
   if($('#cont'))$('#cont').onclick=()=>go('game');
@@ -1888,7 +1903,7 @@ function setup(){
   const G=AUTH==='guest',P=G?{}:progress(),me=meId();
   const gens=[2,3,4].map(n=>S.friends.find(f=>!f.deleted&&f.gen===n)),amigos=G?[]:live().filter(f=>!f.gen&&f.id!==me);
   /* Invitado: cuatro genéricos fijos. Con sesión: hueco 0 = el perfil (fijo); huecos 1-3 = su genérico por defecto, sustituible por un amigo */
-  const fixed=(i,fid,name)=>'<label class="pl fx"><input type="hidden" id="p'+i+'" value="'+fid+'"><button type="button" class="csel" tabindex="-1" aria-disabled="true">'+esc(name)+'</button><div id="sb'+i+'" class="sbx"></div></label>';
+  const fixed=(i,fid,name)=>'<label class="pl fj"><input type="hidden" id="p'+i+'" value="'+fid+'"><button type="button" class="csel" tabindex="-1" aria-disabled="true">'+esc(name)+'</button><div id="sb'+i+'" class="sbx"></div></label>';
   const slot=i=>{
     if(G)return fixed(i,'inv'+(i+1),'Jugador '+(i+1));
     if(i===0){const f=S.friends.find(x=>x.id===me);return fixed(0,me,f?f.name:'Jugador 1')}
@@ -2258,11 +2273,12 @@ try{if(screen.orientation&&screen.orientation.lock){screen.orientation.lock('por
 /* Acceso: pantalla inicial, secciones bloqueadas y jugadores fijos */
 .wnote{margin:2px 0 0;text-align:center;font-size:13px;line-height:1.35;color:rgba(246,239,220,.74)}
 button.glk{position:relative;filter:saturate(.5) brightness(.8)}
-button.glk .plk{position:absolute;top:9px;right:10px;width:15px;height:15px;color:#f6efdc;pointer-events:none}
-#app.home .menu #sd.glk .plk{top:12px;right:14px;width:17px;height:17px}
-#app.setup label.pl.fx input[type=hidden]{display:none!important}
-#app.setup label.pl.fx button.csel{pointer-events:none;background-size:0 0,auto,auto!important}
-#app.setup label.pl.has.fx button.csel{padding:12px 10px}
+button.glk .plk{position:static;flex:0 0 auto;width:17px;height:17px;color:#f6efdc;pointer-events:none}
+#app.home .menu #sd.glk .plk{position:absolute;top:50%;right:14px;transform:translateY(-50%);width:19px;height:19px}
+#app.home .menu #sd.glk .hq{right:46px}
+#app.setup label.pl.fj input[type=hidden]{display:none!important}
+#app.setup label.pl.fj button.csel{pointer-events:none;background-size:0 0,auto,auto!important}
+#app.setup label.pl.has.fj button.csel{padding:12px 10px}
 .vsi.inv .vb-lg,.vsi.inv .vb-tr{display:none}
 </style>
 </body>
