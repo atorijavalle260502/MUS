@@ -2378,6 +2378,12 @@ html body #app .pcard .plg .nd.cur[data-l]{position:relative;z-index:1;box-shado
 #app.game .sc small.pn span{padding:0 4px 3px}
 @media (max-height:760px){.ov.bet .mp{gap:6px;padding:12px 16px}.bp h3{font-size:20px}.bp .num{font-size:72px}.bp .row3 button{height:50px;font-size:26px}.bp .row2b button{height:38px}}
 @media (max-height:640px){.bp .num{font-size:54px}.bp .row3 button{height:42px;font-size:22px}.bp .row2b button{height:34px;font-size:15px}.bp h3{font-size:17px}}
+
+/* cuadro de apuesta: dentro del área de juego (respeta muesca y barra inferior) y sombra en los iconos */
+.ov.bet{top:calc(env(safe-area-inset-top,0px) + 13px);bottom:calc(env(safe-area-inset-bottom,0px) + 13px);padding:10px 12px}
+.bp h3 svg{filter:drop-shadow(0 3px 3px rgba(0,0,0,.6))}
+/* números de los botones: centrado óptico (la cifra pesa más que el signo y se veía corrida a la derecha) */
+#app.game .half .b2 button,#app.game .half .b3 button[data-n],.bp .row3 button{padding:0 .14em 0 0!important}
 </style>
 <div id="rotlock" aria-live="polite"><svg viewBox="0 0 48 48" fill="none" stroke="#f0cf7c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="14" y="5" width="20" height="38" rx="4"/><path d="M22 38h4"/></svg><span>Gira el móvil</span><small style="font:600 14px Literata,Georgia,serif;color:#d9ceb4">Mus se juega en vertical</small></div>
 <script>
