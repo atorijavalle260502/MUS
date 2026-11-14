@@ -991,6 +991,7 @@ html body .ov.c .csbar>button.csback:active{box-shadow:inset 0 0 0 1.5px rgba(0,
 #app.home .menu #sd .sdb em{display:block;height:100%;border-radius:5px;background:linear-gradient(#ffe08a,#c8932a);box-shadow:0 0 6px rgba(255,214,110,.6)}
 #app.home .menu #sd .sdn{display:flex;align-items:center;gap:5px;font-size:15px;line-height:1;color:#f3d27a;text-shadow:0 1px 0 rgba(0,0,0,.6)}
 #app.home .menu #sd .sdn b{font-weight:700}
+#app.home .menu #sd .sdn img{filter:none!important}
 
 /* Amigos: nombre arriba; debajo avatar a la izquierda y liga/amarracos destacados */
 .frl{flex:1;min-width:0;cursor:pointer;padding:4px 0}
@@ -1424,6 +1425,22 @@ if(!t){t={id:'fj'+Date.now().toString(36)+'t',name:'Tori',medals:[]};S.friends.u
 S.me=t.id}
 /* Jugadores genéricos (Jugador 2, 3 y 4): puestos por defecto en las partidas con sesión. No son amigos: no salen en Amigos (f.gen = su número) */
 [2,3,4].forEach(n=>{const nm='Jugador '+n;let g=S.friends.find(f=>!f.deleted&&f.gen===n)||S.friends.find(f=>!f.deleted&&!f.gen&&f.name===nm);if(!g){g={id:'fj'+Date.now().toString(36)+n,name:nm};S.friends.push(g)}g.gen=n});
+/* SOLO PRUEBAS: amigos de ejemplo con partidas contra el perfil (pareja y rival) para ver niveles, victorias y derrotas. Se crea una sola vez. Poner false para quitarlo */
+const PRUEBA_AMIGOS=true;
+if(PRUEBA_AMIGOS&&!S.seedAm){
+  const T={Hugo:[12,3,5,4],Crespo:[8,6,7,5],Valls:[4,9,3,10],Godoy:[2,2,1,3],'Álvaro':[6,5,6,6],Alberto:[3,1,2,2],'Ángela':[9,2,4,3],Patri:[1,4,5,1]};
+  const nm=Object.keys(T),me=S.me,id={};
+  nm.forEach(n=>{let f=S.friends.find(x=>!x.deleted&&!x.gen&&x.name.toLowerCase()===n.toLowerCase());if(!f){f={id:'fa_'+n.toLowerCase().replace(/[^a-z]/g,''),name:n,medals:[]};S.friends.push(f)}id[n]=f.id});
+  const G=[];let day=0;
+  const oth=(n,k)=>{const r=nm.filter(x=>x!==n);return[r[k%r.length],r[(k+3)%r.length]]};
+  nm.forEach((n,ni)=>{const [wp,lp,wr,lr]=T[n];
+    for(let k=0;k<wp+lp;k++){const [a,b]=oth(n,k+ni);G.push({t:[[me,id[n]],[id[a],id[b]]],w:k<wp?0:1,k:k*7+ni})}
+    for(let k=0;k<wr+lr;k++){const [a,b]=oth(n,k+ni+1);G.push({t:[[me,id[a]],[id[n],id[b]]],w:k<wr?0:1,k:k*5+ni})}});
+  G.sort((x,y)=>x.k-y.k);
+  const t0=Date.now()-G.length*86400000/2;
+  G.forEach((g,i)=>S.hist.push({id:'seed'+i,t:g.t,w:g.w,cfg:{meta:30,juegos:3,vacas:1},fecha:t0+i*43200000,o:[]}));
+  S.seedAm=1;
+}
 S.friends.forEach(f=>{delete f.coins;delete f.cards;if(!Array.isArray(f.medals))f.medals=[]});delete S.bet;delete S.shopBuyer;
 try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 const SV={"o": "<circle cx=\"24\" cy=\"24\" r=\"21.5\" fill=\"#e8b83a\" stroke=\"#1d2a44\" stroke-width=\"2.2\"/><circle cx=\"24\" cy=\"24\" r=\"17.4\" fill=\"#f6d869\" stroke=\"#1d2a44\" stroke-width=\"1.3\"/><circle cx=\"24\" cy=\"24\" r=\"11.6\" fill=\"none\" stroke=\"#b5801a\" stroke-width=\"2.4\" stroke-dasharray=\"2.3 2.7\"/><circle cx=\"24\" cy=\"24\" r=\"6.2\" fill=\"#e8b83a\" stroke=\"#1d2a44\" stroke-width=\"1.6\"/>", "c": "<path d=\"M9.6 7.6H38.4C38.4 19.4 32.8 25.4 24 25.4S9.6 19.4 9.6 7.6Z\" fill=\"#c1403a\" stroke=\"#1d2a44\" stroke-width=\"2.2\" stroke-linejoin=\"round\"/>\n<path d=\"M11.2 13.6C18 17.4 30 17.4 36.8 13.6\" fill=\"none\" stroke=\"#f1c24a\" stroke-width=\"2.6\" stroke-linecap=\"round\"/>\n<ellipse cx=\"24\" cy=\"7.6\" rx=\"14.4\" ry=\"3.3\" fill=\"#f1c24a\" stroke=\"#1d2a44\" stroke-width=\"2\"/>\n<path d=\"M21.2 25 H26.8 L26.2 36.6 H21.8Z\" fill=\"#f1c24a\" stroke=\"#1d2a44\" stroke-width=\"2\" stroke-linejoin=\"round\"/>\n<ellipse cx=\"24\" cy=\"30.4\" rx=\"5.8\" ry=\"2.4\" fill=\"#f1c24a\" stroke=\"#1d2a44\" stroke-width=\"1.9\"/>\n<path d=\"M12.4 44C12.4 39.4 17.4 36.4 24 36.4S35.6 39.4 35.6 44Z\" fill=\"#f1c24a\" stroke=\"#1d2a44\" stroke-width=\"2.2\" stroke-linejoin=\"round\"/>", "e": "<path d=\"M24 1.8C25.6 6.6 27.2 11 27.2 16.6V32H20.8V16.6C20.8 11 22.4 6.6 24 1.8Z\" fill=\"#d9e0ea\" stroke=\"#1d2a44\" stroke-width=\"2.2\" stroke-linejoin=\"round\"/>\n<path d=\"M24 9V29\" stroke=\"#8c97a8\" stroke-width=\"1.6\" stroke-linecap=\"round\"/>\n<path d=\"M11 30.6C13.6 35.8 20 35.4 24 33.6 28 35.4 34.4 35.8 37 30.6\" fill=\"none\" stroke=\"#1d2a44\" stroke-width=\"6.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M11 30.6C13.6 35.8 20 35.4 24 33.6 28 35.4 34.4 35.8 37 30.6\" fill=\"none\" stroke=\"#f1c24a\" stroke-width=\"3.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<rect x=\"21.9\" y=\"34.4\" width=\"4.2\" height=\"8\" rx=\"1.2\" fill=\"#9a6428\" stroke=\"#1d2a44\" stroke-width=\"2\"/>\n<circle cx=\"24\" cy=\"44.6\" r=\"2.6\" fill=\"#f1c24a\" stroke=\"#1d2a44\" stroke-width=\"2\"/>", "b": "<g transform=\"translate(24 0) scale(1.12 1) translate(-24 0)\"><clipPath id=\"CPID\"><path d=\"M24 2.2C26.2 10 29.6 20 31.2 29.6 32.4 38 29.2 46 24 46 18.8 46 15.6 38 16.8 29.6 18.4 20 21.8 10 24 2.2Z\"/></clipPath>\n<path d=\"M24 2.2C26.2 10 29.6 20 31.2 29.6 32.4 38 29.2 46 24 46 18.8 46 15.6 38 16.8 29.6 18.4 20 21.8 10 24 2.2Z\" fill=\"#b07a40\"/>\n<g clip-path=\"url(#CPID)\"><path d=\"M12 21L36 14V21L12 28Z\" fill=\"#f1c24a\" stroke=\"#1d2a44\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><path d=\"M12 34.4L36 27.4V34.4L12 41.4Z\" fill=\"#c1403a\" stroke=\"#1d2a44\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/></g>\n<path d=\"M24 2.2C26.2 10 29.6 20 31.2 29.6 32.4 38 29.2 46 24 46 18.8 46 15.6 38 16.8 29.6 18.4 20 21.8 10 24 2.2Z\" fill=\"none\" stroke=\"#1d2a44\" stroke-width=\"2.2\" stroke-linejoin=\"round\"/>\n<path d=\"M22 12C21 19 19.6 25 19.4 31\" fill=\"none\" stroke=\"#d9a468\" stroke-width=\"1.6\" stroke-linecap=\"round\"/>\n<path d=\"M26.8 14.6C29.4 12 33 12 34.8 13.8 32.8 16.2 29.4 16.6 27 15.8Z\" fill=\"#6aa23c\" stroke=\"#1d2a44\" stroke-width=\"1.6\" stroke-linejoin=\"round\"/>\n<path d=\"M20.6 24.6C18 22.4 14.6 22.6 12.8 24.4 14.8 26.8 18.2 27.2 20.6 26.4Z\" fill=\"#6aa23c\" stroke=\"#1d2a44\" stroke-width=\"1.6\" stroke-linejoin=\"round\"/></g>"};
@@ -1666,8 +1683,8 @@ const ICO_FR='<svg class="hico" viewBox="0 0 24 24" width="20" height="20" aria-
 const ICO_AMR='<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke-width="1.7"/><circle cx="12" cy="12" r="7.3" stroke-width=".9" opacity=".7"/><path d="M7.8 16.4V8l4.2 5.6L16.2 8v8.4M6.4 16.4h2.9M14.7 16.4h2.9" stroke-width="1.6"/></svg>';
 /* Amarracos bajo «Senda del Órdago»: barra hacia la siguiente liga y cifra */
 function sdProg(){
-  const p=live().find(f=>f.id===S.me);if(!p)return'';
-  const t=p.tr||0,k=lgOf(t),nx=LEAGUES[k+1],pct=nx?Math.max(0,Math.min(100,(t-LEAGUES[k][1])/(nx[1]-LEAGUES[k][1])*100)):100;
+  const id=meId(),q=id&&progress()[id];if(!q)return'';
+  const t=q.tr||0,k=lgOf(t),nx=LEAGUES[k+1],pct=nx?Math.max(0,Math.min(100,(t-LEAGUES[k][1])/(nx[1]-LEAGUES[k][1])*100)):100;
   return '<span class="sdp"><span class="sdb"><em style="width:'+pct.toFixed(1)+'%"></em></span><span class="sdn">'+trIcon(22)+'<b>'+fmt(t)+'</b></span></span>';
 }
 function home(){
