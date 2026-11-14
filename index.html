@@ -2013,9 +2013,9 @@ function pickPanel(rot){
   const b=Array.from({length:19},(_,i)=>i+2).map(n=>'<button data-amt="'+n+'">'+ul(n)+'</button>').join('')+'<button class="ghost" data-amt="x" aria-label="Cancelar">✕</button>'+(g.mesa[l]?'<button class="ghost" style="grid-column:span 5" data-amt="0">Quitar</button>':'');
   return '<div class="mp'+(rot?' rot':'')+'"><b>'+nm+': ¿cuántos puntos?</b><div class="opts g5">'+b+'</div></div>';
 }
-function betPanel(){
+function betPanel(rot){
   const l=pick,nm=LAN.find(x=>x[0]===l)[1],n=betTmp==null?2:betTmp;
-  return '<div class="mp bp"><h3>'+lanceIcon(l,28)+'<span>'+nm+'</span></h3><div class="num">'+ul(n)+'</div><div class="row3"><button class="neg" data-bet="-1">−1</button><button data-bet="1">+1</button><button data-bet="5">+5</button></div><div class="row2b"><button class="back" data-bet="back">‹ Atrás</button><button class="ok" data-bet="x">Listo</button></div></div>';
+  return '<div class="mp bp'+(rot?' rot':'')+'"><h3>'+lanceIcon(l,28)+'<span>'+nm+'</span></h3><div class="num">'+ul(n)+'</div><div class="row3"><button class="neg" data-bet="-1">−1</button><button data-bet="1">+1</button><button data-bet="5">+5</button></div><div class="row2b"><button class="back" data-bet="back">‹ Atrás</button><button class="ok" data-bet="x">Listo</button></div></div>';
 }
 function setChip(l,n){const g=S.game;g.hist.push(snap(g));g.mesa={...g.mesa};if(n)g.mesa[l]=n;else delete g.mesa[l];pick=null;save();game()}
 function send(l,t){const g=S.game,n=g.mesa[l];if(!n)return;sel=null;add(t,n,l)}
@@ -2055,7 +2055,7 @@ function wire(){
 function game(){
   const g=S.game;g.mesa=g.mesa||{};
   const cells=LAN.map(([l])=>'<div class="slot"><svg class="slotd" aria-hidden="true"><rect x="0" y="0" width="100%" height="100%" rx="13" fill="none" stroke="rgba(224,176,74,.9)" stroke-width="4" stroke-dasharray="16 10"/></svg><b class="cn" data-pick="'+l+'">'+l+'</b><b class="cn r rot" data-pick="'+l+'">'+l+'</b>'+(g.mesa[l]?chipHTML(l,g.mesa[l]):'<span class="plus" data-pick="'+l+'">'+lanceIcon(l,28)+'</span>')+'</div>').join('');
-  app.innerHTML='<div class="table">'+half(1)+'<div class="mid">'+strip(1)+'<div class="mesa"><button class="sm" id="b" aria-label="Menú de la partida">'+EXIT+'</button>'+cells+'</div>'+strip(0)+'</div>'+half(0)+'</div>'+(pick?'<div class="ov gpn bet">'+betPanel()+'</div>':'')+(menu?'<div class="ov gpn">'+menuPanel(1)+menuPanel(0)+'</div>':'')+(ordOpen?'<div class="ov gpn">'+ordPanel(1)+ordPanel(0)+'</div>':'');
+  app.innerHTML='<div class="table">'+half(1)+'<div class="mid">'+strip(1)+'<div class="mesa"><button class="sm" id="b" aria-label="Menú de la partida">'+EXIT+'</button>'+cells+'</div>'+strip(0)+'</div>'+half(0)+'</div>'+(pick?'<div class="ov gpn bet">'+betPanel(1)+betPanel(0)+'</div>':'')+(menu?'<div class="ov gpn">'+menuPanel(1)+menuPanel(0)+'</div>':'')+(ordOpen?'<div class="ov gpn">'+ordPanel(1)+ordPanel(0)+'</div>':'');
   wire();
   $('#b').onclick=()=>{menu=true;pick=null;sel=null;game()};
 }
@@ -2328,8 +2328,8 @@ html body #app .pcard .plg .nd.cur[data-l]{position:relative;z-index:1;box-shado
 #app.game .half .b2 button{height:58px;padding:0;font:700 30px Literata,Georgia,serif;border-radius:14px}
 #app.game .half .b3{display:grid;grid-template-columns:1fr 1.4fr;gap:10px}
 #app.game .half .b3 button{height:38px;padding:0;font:700 17px Literata,Georgia,serif;border-radius:12px}
-.ov.bet{justify-content:center;align-items:center}
-.ov.bet .mp{flex:0 0 auto;width:100%;max-width:320px;align-items:center;text-align:center;gap:12px}
+.ov.bet{justify-content:center;align-items:stretch;gap:12px}
+.ov.bet .mp{flex:1 1 0;min-height:0;width:auto;max-width:none;justify-content:center;align-items:center;text-align:center;gap:10px}
 .bp h3{display:flex;align-items:center;gap:10px;font:700 24px Literata,Georgia,serif;letter-spacing:.16em;text-transform:uppercase;color:#f0cf7c;margin:0}
 .bp .num{font:700 112px/1 Literata,Georgia,serif;color:#fff3d6;text-shadow:0 3px 0 rgba(0,0,0,.4)}
 .bp .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%}
@@ -2372,6 +2372,12 @@ html body #app .pcard .plg .nd.cur[data-l]{position:relative;z-index:1;box-shado
 #app.game .half .b2 button{height:40px;font-size:22px}
 #app.game .half .b3 button{height:28px}
 }
+
+#app.game .half.team::after{display:none}
+#app.game .sc small.pn{line-height:1.3}
+#app.game .sc small.pn span{padding:0 4px 3px}
+@media (max-height:760px){.ov.bet .mp{gap:6px;padding:12px 16px}.bp h3{font-size:20px}.bp .num{font-size:72px}.bp .row3 button{height:50px;font-size:26px}.bp .row2b button{height:38px}}
+@media (max-height:640px){.bp .num{font-size:54px}.bp .row3 button{height:42px;font-size:22px}.bp .row2b button{height:34px;font-size:15px}.bp h3{font-size:17px}}
 </style>
 <div id="rotlock" aria-live="polite"><svg viewBox="0 0 48 48" fill="none" stroke="#f0cf7c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="14" y="5" width="20" height="38" rx="4"/><path d="M22 38h4"/></svg><span>Gira el móvil</span><small style="font:600 14px Literata,Georgia,serif;color:#d9ceb4">Mus se juega en vertical</small></div>
 <script>
