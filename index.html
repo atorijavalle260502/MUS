@@ -1467,7 +1467,7 @@ const fan=()=>'<div class="fan">'+['oros','copas','espadas','bastos'].map((n,i)=
 const suit=(k,s)=>'<svg width="'+s+'" height="'+s+'" viewBox="0 0 48 48" aria-hidden="true">'+art(k)+'</svg>';
 const suits=s=>'<span style="display:inline-flex;gap:12px">'+['o','c','e','b'].map(k=>suit(k,s)).join('')+'</span>';
 const fmt=n=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
-const LEAGUES=[['Novato',0],['Aprendiz',100],['Aficionado',250],['Jugador',450],['Veterano',700],['Experto',1000],['Maestro',1350],['Gran Maestro',1750],['Leyenda',2250],['Leyenda del Mus',3000]];
+const LEAGUES=[['Novato',0],['Aprendiz',70],['Aficionado',190],['Jugador',360],['Veterano',570],['Experto',830],['Maestro',1150],['Gran Maestro',1500],['Leyenda',1900],['Leyenda del Mus',2400]];
 const LCOL=['#9a7b5a','#6f9a68','#4a9ccf','#3f6fd0','#8a5cd0','#d0703a','#c0392b','#c89a2b','#2cb0a4','#e8b81c'];
 const lgOf=t=>{let k=0;LEAGUES.forEach((l,i)=>{if(t>=l[1])k=i});return k};
 const IND=[0,0,3,5,7,10,12],PAR=[0,0,2,4,6,8,10],bon=(T,n)=>T[Math.min(n,6)]||0;
@@ -1478,21 +1478,21 @@ const lgBadge=(i,s)=>lgEmblem(i,Math.round(s*1.7));
 const rankHTML=(p,s)=>'<span class="rk">'+lgBadge(p.lg,s)+'<span>'+LEAGUES[p.lg][0]+'</span><span class="tr">'+trIcon(s-4)+fmt(p.tr)+'</span></span>';
 const LV=['Bronce','Plata','Oro','Rubí','Diamante','Leyenda'],SPEC=7;
 const FAM=[
-{id:'rc',name:'Rachas',desc:'Victorias seguidas sin perder.',goals:[5,10,15,20,30,50],val:s=>s.best,req:g=>'Gana '+g+' partidas seguidas'},
-{id:'vw',name:'Victorias',desc:'Cada victoria cuenta.',goals:[10,50,100,500,1000,2500],val:s=>s.w,req:g=>'Gana '+g+' partidas en total'},
-{id:'pr',name:'Parejas',desc:'Juntos llegan más lejos.',goals:[3,5,10,15,25,50],val:s=>s.pairW,req:g=>'Gana '+g+' partidas con la misma pareja'},
-{id:'od',name:'Órdagos',desc:'Todo o nada.',goals:[1,5,25,50,100,250],val:s=>s.ord,req:g=>'Gana '+g+(g>1?' órdagos':' órdago')},
-{id:'vd',name:'Verdugo',desc:'Un rival que no se te escapa.',goals:[3,5,10,15,25,50],val:s=>s.oppW,req:g=>'Vence '+g+' veces al mismo rival'},
-{id:'paz',name:'Palizón',desc:'Una vaca sin ceder ni un juego.',goals:[1,3,5,10,25,50],val:s=>s.paz,req:g=>'Gana '+g+(g>1?' vacas':' vaca')+' dejando al rival en 0 juegos*',nota:'Mínimo 3 juegos en la vaca'},
-{id:'rev',name:'Revancha',desc:'Lo que se pierde, se recupera.',goals:[1,3,5,10,25,50],val:s=>s.rev,req:g=>'Gana '+g+(g>1?' veces':' vez')+' a una pareja que te ganó en tu partida anterior'},
-{id:'soc',name:'Social',desc:'Con amigos se juega mejor.',goals:[5,10,15,20,30,50],val:s=>s.soc,req:g=>'Ten '+g+' amigos en la biblioteca'}];
+{id:'rc',name:'Rachas',desc:'Qué alguien me pare',goals:[2,3,5,6,8,10],val:s=>s.best,req:g=>'Gana '+g+' partidas seguidas'},
+{id:'vw',name:'Victorias',desc:'Cada victoria cuenta.',goals:[3,10,25,50,100,150],val:s=>s.w,req:g=>'Gana '+g+' partidas'},
+{id:'pr',name:'Parejas',desc:'Juntos somos imparables',goals:[3,8,20,35,60,90],val:s=>s.pairW,req:g=>'Gana '+g+' partidas con la misma pareja'},
+{id:'od',name:'Órdagos',desc:'Todo o nada',goals:[1,3,8,15,30,50],val:s=>s.ord,req:g=>'Gana '+g+(g>1?' órdagos':' órdago')},
+{id:'vd',name:'Verdugo',desc:'No es nada personal',goals:[3,8,20,40,75,110],val:s=>s.oppW,req:g=>'Vence '+g+' veces al mismo rival'},
+{id:'paz',name:'Palizón',desc:'Nunca hubo opción',goals:[1,3,6,12,20,35],val:s=>s.paz,req:g=>'Gana '+g+(g>1?' vacas':' vaca')+' dejando al rival en 0 juegos*',nota:'Mínimo 3 juegos en la vaca'},
+{id:'rev',name:'Revancha',desc:'Lo que sube, baja',goals:[2,5,10,20,40,60],val:s=>s.rev,req:g=>'Gana '+g+(g>1?' veces':' vez')+' a la pareja que te ganó la partida anterior'},
+{id:'soc',name:'Social',desc:'Cuantos más, mejor',goals:[1,3,5,8,12,15],val:s=>s.soc,req:g=>'Ten '+g+(g>1?' amigos':' amigo')+' en la biblioteca'}];
 const VER_PISTAS=true; // true = modo recordatorio (se ve cómo se consigue cada medalla especial); false = versión final (solo huecos vacíos)
 const SEC=[
-{id:'prim',name:'Primera partida',desc:'Todo gran jugador empezó por una primera mano.',req:'Gana tu primera partida'},
+{id:'prim',name:'Primera partida',desc:'El comienzo de todo gran jugador',req:'Gana tu primera partida'},
 {id:'noct',name:'Noctámbulo',desc:'Las mejores partidas son de madrugada.',req:'Gana una partida entre las 00:00 y las 08:00'},
-{id:'res',name:'Resurrección',desc:'Nadie te daba por vivo.',req:'Gana un juego yendo con 0 puntos y el rival a 1 punto de ganar*',nota:'El juego debe ser de 30 puntos como mínimo'},
-{id:'pal',name:'¿Hay rival?',desc:'Un juego sin que los rivales marquen.',req:'Gana un juego con la otra pareja a cero'},
-{id:'rom',name:'Rompe rachas',desc:'Nadie gana para siempre.',req:'Gana a una pareja que llevaba 3 o más victorias seguidas'}];
+{id:'res',name:'Resurrección',desc:'No estaba muerto',req:'Gana un juego yendo con 5 puntos o menos y el rival a 5 puntos o menos de ganar*',nota:'El juego debe ser de 30 puntos como mínimo'},
+{id:'pal',name:'¿Hay rival?',desc:'Así me aburro',req:'Gana un juego dejando al rival en 0 puntos'},
+{id:'rom',name:'Rompe rachas',desc:'Para que os relajéis',req:'Gana a una pareja que llevaba 5 o más victorias seguidas'}];
 const lvl=(p,k)=>(p.md[k]||{lvl:0}).lvl;
 const featured=(f,p)=>[...new Set((f.medals||[]).map(id=>String(id).replace(/\d+$/,'')))].map(id=>FAM.find(m=>m.id===id)).filter(m=>m&&effLvl(f,p,m.id)>0).slice(0,4);
 const blank=()=>({tr:0,floor:0,lg:0,peak:0,streak:0,best:0,bestPair:0,w:0,l:0,g:0,pt:{},op:{},people:new Set(),days:{},ord:0,md:{},sec:{},paz:0,rev:0,soc:0,prev:null,last:null});
@@ -1521,7 +1521,7 @@ function progress(hist){
         p.tr=Math.max(p.floor,p.tr+d);p.peak=Math.max(p.peak,p.tr);p.lg=Math.max(p.lg,lgOf(p.tr));p.floor=LEAGUES[p.lg][1];
         p.last={d,bi,bp,win}}
         const un=k=>{if(!p.sec[k])p.sec[k]={t:h.fecha}},ok=keys[1-i];
-        if(win&&!h.inc){if(new Date(h.fecha).getHours()<8)un('noct');if(p.prev&&!p.prev.win&&p.prev.opp===ok)p.rev++;if(pre[1-i]>=3)un('rom')}
+        if(win&&!h.inc){if(new Date(h.fecha).getHours()<8)un('noct');if(p.prev&&!p.prev.win&&p.prev.opp===ok)p.rev++;if(pre[1-i]>=5)un('rom')}
         if(!h.inc)p.prev={win,opp:ok};
         if(win&&!h.inc)un('prim');if(h.pl&&h.pl[i]>0)un('pal');if(h.rs&&h.rs[i]>0)un('res');if(h.pz&&h.pz[i]>0)p.paz+=h.pz[i];
         const st=stat(p);
@@ -2084,7 +2084,7 @@ function add(i,n,rec){
   g.hist.push(snap(g));
   let ev=null;if(rec){g.mesa={...g.mesa};delete g.mesa[rec]}
   g.pts=[...g.pts];g.pts[i]=Math.max(0,g.pts[i]+n);
-  if(c.meta>=30){g.rsf=[...(g.rsf||[false,false])];[0,1].forEach(k=>{if(g.pts[k]===0&&g.pts[1-k]===c.meta-1)g.rsf[k]=true})}
+  if(c.meta>=30){g.rsf=[...(g.rsf||[false,false])];[0,1].forEach(k=>{if(g.pts[k]<=5&&g.pts[1-k]>=c.meta-5)g.rsf[k]=true})}
   if(g.pts[i]>=c.meta){
     if(g.rsf&&g.rsf[i]){g.rs=[...(g.rs||[0,0])];g.rs[i]++}g.rsf=[false,false];
     if(g.pts[1-i]===0){g.pal=[...(g.pal||[0,0])];g.pal[i]++}
