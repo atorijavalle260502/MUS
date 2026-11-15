@@ -27,10 +27,10 @@
 <!-- Precarga de lo que se ve en la portada (el abanico de ases y la tipografía de uso inmediato) para que aparezca sin parpadeos -->
 <link rel="preload" href="fonts/literata-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/literata-700.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="img/as-oros.webp?v=2" as="image" type="image/webp">
-<link rel="preload" href="img/as-copas.webp?v=2" as="image" type="image/webp">
-<link rel="preload" href="img/as-espadas.webp?v=2" as="image" type="image/webp">
-<link rel="preload" href="img/as-bastos.webp?v=2" as="image" type="image/webp">
+<link rel="preload" href="img/as-oros.webp?v=3" as="image" type="image/webp">
+<link rel="preload" href="img/as-copas.webp?v=3" as="image" type="image/webp">
+<link rel="preload" href="img/as-espadas.webp?v=3" as="image" type="image/webp">
+<link rel="preload" href="img/as-bastos.webp?v=3" as="image" type="image/webp">
 <style id="boot-css">
 html,body{margin:0;height:100%;background:#172b1f}
 #boot{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:#172b1f;opacity:1;transition:opacity .35s ease}
@@ -1409,7 +1409,7 @@ background:linear-gradient(180deg,rgba(255,226,140,.24),rgba(255,226,140,.07)),r
 #app.senda .top h2{font-size:clamp(17px,5.8vw,24px);white-space:nowrap}
 </style>
 <script>
-const ASES=['img/as-oros.webp?v=2','img/as-copas.webp?v=2','img/as-espadas.webp?v=2','img/as-bastos.webp?v=2'];
+const ASES=['img/as-oros.webp?v=3','img/as-copas.webp?v=3','img/as-espadas.webp?v=3','img/as-bastos.webp?v=3'];
 const HELP={senda:'Diez ligas que subes ganando amarracos en tus partidas.',medallas:'Premios por tus logros. Suben de nivel según avanzas.',especiales:'Medallas ocultas que se logran con hazañas concretas.',amistosa:'No cambia amarracos, historial, rachas ni medallas.',infinita:'Sin vacas: solo puntos por juego. Al terminar la partida gana quien vaya por delante y cuenta como victoria o derrota.'};
 const help=k=>'<span class="hq" role="button" tabindex="0" data-help="'+k+'" aria-label="Ayuda">?</span>';
 (function(){let pop=null;const close=()=>{if(pop){pop.remove();pop=null}};
@@ -1828,7 +1828,7 @@ const glyph=i=>{const g=GLY[i];if(g)return g;
   if(i===2)return art('c');if(i===3)return '<g transform="translate(-4 -2) scale(2.100)">'+LI.P+'</g>';if(i===4)return art('e');if(i===6)return art('o');
   if(i===7)return '<g transform="scale(2)">'+TICON+'</g>';return '<g transform="scale(2)">'+LI.G+'</g>'};
 const FRAMES=["img/marco-0.webp","img/marco-1.webp","img/marco-2.webp","img/marco-3.webp","img/marco-4.webp","img/marco-5.webp","img/marco-6.webp","img/marco-7.webp","img/marco-8.webp","img/marco-9.webp"];
-const AVIMG=["img/avatar-as-oros.webp?v=2","img/avatar-as-copas.webp?v=2","img/avatar-as-espadas.webp?v=2","img/avatar-as-bastos.webp?v=2"];
+const AVIMG=["img/avatar-as-oros.webp?v=3","img/avatar-as-copas.webp?v=3","img/avatar-as-espadas.webp?v=3","img/avatar-as-bastos.webp?v=3"];
 const ACES=['o','c','e','b'],ACEN=['Oros','Copas','Espadas','Bastos'];
 const PRUEBA_MARCOS=true; // SOLO PRUEBAS: desbloquea los 10 marcos para elegirlos. Poner false para quitarlo
 const lgCap=p=>PRUEBA_MARCOS?9:p.lg;
@@ -2426,6 +2426,20 @@ html body #app.game .half.team::after{display:none!important}
 .ov.gpn .mp .opts.g1>button.ghost{background:linear-gradient(180deg,#58b97c,#3b9560)!important;border:1px solid #d3f2dc!important;color:#10281a!important;text-shadow:none;font-weight:800}
 .ov.gpn .mp .opts.g1>button:active{filter:brightness(.88);transform:none}
 @media (max-height:600px){.ov.gpn .mp .opts.g1{gap:5px}.ov.gpn .mp .opts.g1>button{padding:6px;font-size:14px}}
+/* 2b · Menú de partida (v4): dentro del marco, centrado y con colores suaves */
+html body .ov.gpn{top:calc(env(safe-area-inset-top,0px) + 13px);bottom:calc(env(safe-area-inset-bottom,0px) + 13px);padding:16px 18px;gap:14px;background:rgba(8,18,12,.78)}
+html body .ov.gpn:not(.c):not(.vic):not(.vsi) .mp{flex:1 1 0;min-height:0;align-items:stretch;justify-content:center;gap:12px;padding:20px 22px;text-align:center}
+html body .ov.gpn .mp>b{display:block;width:100%;text-align:center;font:700 19px/1.2 Literata,Georgia,serif;letter-spacing:.14em;text-transform:uppercase;color:#f0cf7c;text-shadow:0 1px 0 rgba(0,0,0,.45);margin:0}
+html body .ov.gpn .mp .opts.g1{width:100%;gap:9px;flex:0 1 auto;align-content:center}
+html body .ov.gpn .mp .opts.g1>button{width:100%;padding:12px 10px;font:600 17px/1.15 Literata,Georgia,serif;border:0!important;border-radius:12px;color:#2a1a14!important;text-shadow:0 1px 0 rgba(255,255,255,.6);
+background:linear-gradient(180deg,#fbf3dc 0%,#efe4c6 48%,#d8c9a2 100%)!important;
+box-shadow:inset 0 1.5px 0 rgba(255,255,255,.9),inset 0 -3px 6px rgba(120,86,24,.3),0 3px 0 #9d8f68,0 6px 9px rgba(0,0,0,.4)!important}
+html body .ov.gpn .mp .opts.g1>button.ghost{font-weight:800;color:#2a1c06!important;text-shadow:0 1px 0 rgba(255,240,190,.6);
+background:linear-gradient(180deg,#f0cd6a 0%,#d9ac45 52%,#b98a26 100%)!important;
+box-shadow:inset 0 1.5px 0 rgba(255,246,200,.85),inset 0 -3px 6px rgba(90,56,4,.35),0 3px 0 #6a4609,0 6px 9px rgba(0,0,0,.4)!important}
+html body .ov.gpn .mp .opts.g1>button:active{filter:none;transform:translateY(3px);box-shadow:inset 0 3px 7px rgba(0,0,0,.35),0 1px 0 rgba(0,0,0,.4)!important}
+@media (max-height:700px){html body .ov.gpn:not(.c):not(.vic):not(.vsi) .mp{padding:12px 18px;gap:8px}html body .ov.gpn .mp>b{font-size:16px}html body .ov.gpn .mp .opts.g1{gap:6px}html body .ov.gpn .mp .opts.g1>button{padding:8px;font-size:15px}}
+@media (max-height:560px){html body .ov.gpn .mp .opts.g1>button{padding:5px;font-size:14px}html body .ov.gpn{padding:10px 14px;gap:8px}}
 /* 3 · Pantalla final: marco inferior despegado del borde */
 .ov.vic{padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));padding-top:max(30px,calc(env(safe-area-inset-top,0px) + 16px));padding-bottom:max(30px,calc(env(safe-area-inset-bottom,0px) + 22px))}
 /* 5 · Nombres del modo invitado */
@@ -2433,6 +2447,34 @@ html body #app.game .half.team::after{display:none!important}
 /* 6 · VS de invitado: solo avatar y nombre */
 .vsi.inv .vb-lg,.vsi.inv .vb-tr{display:none!important}
 .vsi.inv .vb-nm{font-size:clamp(20px,3.4vh,26px)!important;margin-top:10px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Ases: la carta acaba en el marco dorado; el borde suave va dentro de la propia imagen */
+.fan .ac img{border-radius:0!important;box-shadow:none!important}
+</style>
+<style id="marcador-v2">
+/* ===== Marcador v2: rayas verticales suaves, brillo central y nombres centrados ===== */
+/* Fondo: base + rayas verticales muy finas + resplandor tras los puntos + viñeta suave en los bordes */
+html body #app.game .half[data-t="0"] .sc .mi,html body #app.game .half[data-t="1"] .sc .ri{
+background-color:#2c649b;
+background-image:
+radial-gradient(ellipse 72% 52% at 50% 54%,rgba(190,225,255,.34) 0%,rgba(150,200,245,.14) 48%,rgba(150,200,245,0) 78%),
+repeating-linear-gradient(90deg,rgba(255,255,255,.055) 0 2px,rgba(255,255,255,0) 2px 11px),
+radial-gradient(ellipse 120% 100% at 50% 52%,#3573ae 0%,#2c649b 60%,#235588 100%)}
+html body #app.game .half[data-t="1"] .sc .mi,html body #app.game .half[data-t="0"] .sc .ri{
+background-color:#9c372c;
+background-image:
+radial-gradient(ellipse 72% 52% at 50% 54%,rgba(255,205,185,.32) 0%,rgba(250,170,150,.13) 48%,rgba(250,170,150,0) 78%),
+repeating-linear-gradient(90deg,rgba(255,255,255,.055) 0 2px,rgba(255,255,255,0) 2px 11px),
+radial-gradient(ellipse 120% 100% at 50% 52%,#ad4235 0%,#9c372c 60%,#862b22 100%)}
+html body #app.game .sc .ri{box-shadow:inset 1px 0 0 rgba(0,0,0,.28)}
+
+/* Columna: nombres arriba (alto fijo de 2 líneas), puntos como protagonistas en el centro, J·V abajo */
+html body #app.game .sc>div{justify-content:flex-start;align-items:center;padding:16px 14px 12px;gap:0}
+html body #app.game .sc small.pn{box-sizing:border-box;width:100%;min-height:2.7em;display:flex;align-items:center;justify-content:center;padding:0 6%;margin:0;line-height:1.3;text-align:center}
+html body #app.game .sc small.pn span{display:-webkit-box;max-width:100%;padding:0;text-align:center;text-wrap:balance;overflow-wrap:break-word;word-break:normal;hyphens:manual;-webkit-line-clamp:2}
+html body #app.game .half .sc .big{flex:1 1 auto;display:flex;align-items:center;justify-content:center;width:100%;font-size:80px;text-shadow:0 2px 0 rgba(0,0,0,.32),0 0 24px rgba(255,240,205,.30)}
+html body #app.game .sc .jv{letter-spacing:.06em;opacity:.92;margin:0;padding-top:2px}
+@media (max-height:760px){html body #app.game .half .sc .big{font-size:64px}html body #app.game .sc>div{padding:12px 12px 9px}}
+@media (max-height:640px){html body #app.game .half .sc .big{font-size:48px}html body #app.game .sc>div{padding:9px 10px 7px}}
 </style>
 
 </body>
