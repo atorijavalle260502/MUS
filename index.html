@@ -1430,7 +1430,7 @@ const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 S.hist.forEach((h,i)=>{if(!h.id)h.id='h'+h.fecha+'x'+i});
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const $=s=>document.querySelector(s), app=$('#app');
-const fname=id=>{const f=S.friends.find(x=>x.id===id);if(f)return f.name;const m=/^inv([1-4])$/.exec(id);return m?'Jugador '+m[1]:'(borrado)'}; // inv1..inv4: jugadores del modo invitado (no son amigos)
+const fname=id=>{const f=S.friends.find(x=>x.id===id);if(f)return f.name;const m=/^inv([1-4])$/.exec(id);return m?((S.invNames&&S.invNames[id])||'Jugador '+m[1]):'(borrado)'}; // inv1..inv4: jugadores del modo invitado (no son amigos)
 const live=()=>S.friends.filter(f=>!f.deleted);
 {const c=S.cfg||{};if(!S.cfg||(+c.meta===40&&+c.juegos===3&&+c.vacas===3))S.cfg={meta:30,juegos:3,vacas:1};
 {let t=S.friends.find(f=>!f.deleted&&f.id===S.me)||S.friends.find(f=>!f.deleted&&f.name.toLowerCase()==='tori');
@@ -1704,12 +1704,12 @@ function sdProg(){
 function home(){
   const G=AUTH==='guest';
   app.innerHTML='<div class="hsuits">'+['o','c','e','b'].map(k=>suit(k,k==='o'?50:64)).join('')+'</div>'+'<div class="logo">MUS</div>'+fan()+'<div class="menu">'+(S.game?'<button class="gold" style="width:100%" id="cont">Continuar partida</button>':'')+'<button class="'+(S.game?'ghost" style="width:100%;background:var(--card)':'gold" style="width:100%')+'" id="go">Iniciar partida</button>'
-  +'<button class="ghost'+(G?' glk':'')+'" id="sd"'+(G?' aria-disabled="true"':'')+' style="width:100%;background:var(--card)"><span class="hico hbox">'+ICO_AMR+'</span><span class="sdt">Senda del Órdago</span>'+(G?'':sdProg())+help('senda')+(G?PLK:'')+'</button>'
-  +'<div class="nav" style="margin-top:0"><button id="fr"'+(G?' class="glk" aria-disabled="true"':'')+'>'+ICO_FR+'Amigos'+(G?PLK:'')+'</button><button id="mp"'+(G?' class="glk" aria-disabled="true"':'')+'>'+ICO_ME+'Mi perfil'+(G?PLK:mpBadge())+'</button></div></div>';
+  +'<button class="ghost'+(G?' glk':'')+'" id="sd"'+(G?' aria-disabled="true"':'')+' style="width:100%;background:var(--card)"><span class="hico hbox">'+ICO_AMR+'</span><span class="sdt">Senda del Órdago</span>'+help('senda')+(G?PLK:'')+'</button>'
+  +'<div class="nav" style="margin-top:0"><button id="fr"'+(G?' class="glk" aria-disabled="true"':'')+'>'+ICO_FR+'Amigos'+(G?PLK:'')+'</button><button id="mp">'+ICO_ME+(G?'Iniciar sesión':'Mi perfil')+(G?'':mpBadge())+'</button></div></div>';
   $('#go').onclick=()=>go('setup');
   if($('#cont'))$('#cont').onclick=()=>go('game');
   $('#sd').onclick=()=>G?lockMsg('la Senda del Órdago'):ensureMe(()=>go('senda'));
-  $('#mp').onclick=()=>G?lockMsg('Mi perfil'):ensureMe(()=>{S.profile=S.me;profBack='home';go('profile')});
+  $('#mp').onclick=()=>G?login():ensureMe(()=>{S.profile=S.me;profBack='home';go('profile')});
   $('#fr').onclick=()=>G?lockMsg('Amigos'):go('friends');
 }
 
@@ -1934,7 +1934,7 @@ function setup(){
   const G=AUTH==='guest',P=G?{}:progress(),me=meId();
   const gens=[1,2,3,4].map(n=>S.friends.find(f=>!f.deleted&&f.gen===n)),amigos=G?[]:live().filter(f=>!f.gen&&f.id!==me),yo=S.friends.find(x=>x.id===me);
   /* Invitado: cuatro genéricos fijos. Con sesión: hueco 0 = el perfil (fijo); huecos 1-3 = su genérico por defecto, sustituible por un amigo */
-  const fixed=(i,fid,name)=>'<label class="pl fj"><input type="hidden" id="p'+i+'" value="'+fid+'"><button type="button" class="csel" tabindex="-1" aria-disabled="true">'+esc(name)+'</button><div id="sb'+i+'" class="sbx"></div></label>';
+  const fixed=(i,fid,name)=>'<label class="pl fj"><input type="hidden" id="p'+i+'" value="'+fid+'"><input type="text" class="gname" id="gn'+i+'" maxlength="16" autocomplete="off" enterkeyhint="done" aria-label="Nombre del jugador '+(i+1)+'" placeholder="Jugador '+(i+1)+'" value="'+esc((S.invNames&&S.invNames[fid])||'')+'"><div id="sb'+i+'" class="sbx"></div></label>';
   const slot=i=>{
     if(G)return fixed(i,'inv'+(i+1),'Jugador '+(i+1));
     /* Todos los huecos se pueden cambiar: 1.º el genérico («Jugador N», sin la app), luego el perfil y luego los amigos */
@@ -1963,6 +1963,9 @@ function setup(){
   $('#ok').onclick=()=>{
     const p=[0,1,2,3].map(i=>$('#p'+i).value);
     if(p.some(x=>!x)||new Set(p).size<4){dlg('Elige cuatro jugadores distintos.',{});return}
+    if(G){const nm=[0,1,2,3].map(i=>$('#gn'+i).value.trim().replace(/\s+/g,' ')||('Jugador '+(i+1)));
+      if(new Set(nm.map(x=>x.toLowerCase())).size<4){dlg('Elige cuatro nombres distintos.',{});return}
+      S.invNames={};nm.forEach((x,i)=>{if(x!=='Jugador '+(i+1))S.invNames['inv'+(i+1)]=x})}
     const n=k=>Math.max(1,parseInt($(k).value)||1);
     S.cfg={meta:Math.max(5,n('#meta')),juegos:n('#jv'),vacas:n('#vc')};
     S.tnames=S.tnames||{};const tn=[0,1].map(i=>{const v=$('#tn'+i).value.trim().slice(0,20),k=tkey(i);if(k){if(v)S.tnames[k]=v;else delete S.tnames[k]}return v});
@@ -1977,9 +1980,9 @@ const ul=n=>String(n).replace(/[69]/g,d=>'<u class="u'+(d==='9'?' n9':'')+'">'+d
 const pn=k=>'<small class="pn"><span>'+pair(k)+'</span></small>';
 function half(i){
   const g=S.game,c=S.cfg,soon=c.meta-g.pts[i]<=5;
-  const jv=k=>'<span class="jv">J '+ul(g.jg[k])+(g.inf?'':' · V '+ul(g.vc[k]))+'</span>';
+  const jv=k=>'<span class="jv">J '+g.jg[k]+(g.inf?'':' · V '+g.vc[k])+'</span>';
   return '<div class="half team'+(i?' rot':'')+'" data-t="'+i+'" style="--c:'+col(i)+';border-color:'+(soon?'var(--gold);box-shadow:0 0 14px var(--gold)':colF(i))+'">'
-    +'<div class="sc"><div class="mi">'+pn(i)+'<div class="big">'+ul(g.pts[i])+'</div>'+jv(i)+'</div><div class="ri">'+pn(1-i)+'<div class="big">'+ul(g.pts[1-i])+'</div>'+jv(1-i)+'</div></div>'
+    +'<div class="sc"><div class="mi">'+pn(i)+'<div class="big">'+g.pts[i]+'</div>'+jv(i)+'</div><div class="ri">'+pn(1-i)+'<div class="big">'+g.pts[1-i]+'</div>'+jv(1-i)+'</div></div>'
   +'<div class="btns b2" style="--c:'+col(i)+'"><button data-t="'+i+'" data-n="1">+1</button><button data-t="'+i+'" data-n="5">+5</button></div>'
   +'<div class="b3"><span class="btns" style="display:contents;--c:'+col(i)+'"><button data-t="'+i+'" data-n="-1">−1</button></span><button class="ord" data-ord="1">Órdago</button></div></div>';
 }
@@ -2116,8 +2119,8 @@ function vsIntro(){
     return '<div class="vb-pw"><div class="vb-p"><div class="vb-pf"><div class="vb-av">'+avatarHTML(f,p,88)+'</div><div class="vb-nm">'+esc(fname(id))+'</div><div class="vb-lg">'+lgBadge(p.lg,16)+'<span>'+LEAGUES[p.lg][0]+'</span></div><div class="vb-tr">'+trIcon(18)+'<b>'+fmt(p.tr)+'</b></div></div></div></div>'};
   const grp=i=>{const ids=g.p.slice(i*2,i*2+2);
     return '<div class="vb-half '+(i?'t':'b')+' k'+i+'"><div class="vb-in"><div class="vb-fit"><div class="vb-tw"><div class="vb-t"><div class="vb-tf"><span>'+esc(tname(i))+'</span></div></div></div><div class="vb-ps"><i class="vb-rod"></i>'+player(ids[0])+player(ids[1])+'</div></div></div></div>'};
-  if(g.am||g.guest)d.classList.add('am');if(g.guest)d.classList.add('inv');
-  d.innerHTML=grp(1)+grp(0)+'<div class="vb-seam"></div><i class="vb-line l"></i><i class="vb-line r"></i><div class="vs-logo"><img src="'+VS_IMG[VS_LOGO]+'" alt="VS" draggable="false"></div>'+(g.guest?'<div class="vs-am">Partida de invitado</div>':g.am?'<div class="vs-am">Partida amistosa · sin amarracos</div>':'');
+  if(g.am&&!g.guest)d.classList.add('am');if(g.guest)d.classList.add('inv');
+  d.innerHTML=grp(1)+grp(0)+'<div class="vb-seam"></div><i class="vb-line l"></i><i class="vb-line r"></i><div class="vs-logo"><img src="'+VS_IMG[VS_LOGO]+'" alt="VS" draggable="false"></div>'+(g.guest?'':g.am?'<div class="vs-am">Partida amistosa · sin amarracos</div>':'');
   document.body.appendChild(d);
   const fit=()=>fitBox(d,'.vb-in','.vb-fit',true);fit();window.addEventListener('resize',fit);
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);
@@ -2143,7 +2146,7 @@ function victory(rec,i,A,B){
     +((rec.am||rec.inv||rec.inc)?'':'<div class="vk-d '+(dl>0?'up':dl<0?'dn':'')+'"><b>'+(dl>0?'+'+dl:dl<0?'−'+Math.abs(dl):'0')+'</b>'+trIcon(20)+'</div>')
     +(nm?'<div class="vk-md">'+(nm>1?nm+' medallas':'Medalla')+'</div>':'')+'</div>'};
   const pn=r=>{const ids=rec.t[r],won=r===i;
-    return '<div class="mp vp'+(won?'':' def')+(r?' rot':'')+'"><div class="vc-fit"><small>'+(rec.inc?(won?'Iban ganando':'Iban perdiendo'):(won?'¡Victoria!':'Derrota'))+'</small><div class="vg">'+ids.map(tile).join('')+'</div>'+(rec.inv?'<div class="vu">Partida de invitado · no se guarda en las estadísticas</div>':rec.am?'<div class="vu">Partida amistosa · sin cambios en los amarracos</div>':rec.inc?'<div class="vu">Partida terminada · no cuenta como victoria ni derrota</div>':'')+'</div></div>'};
+    return '<div class="mp vp'+(won?'':' def')+(r?' rot':'')+'"><div class="vc-fit"><small>'+(rec.inc?(won?'Iban ganando':'Iban perdiendo'):(won?'¡Victoria!':'Derrota'))+'</small><div class="vg">'+ids.map(tile).join('')+'</div>'+(rec.inv?'':rec.am?'<div class="vu">Partida amistosa · sin cambios en los amarracos</div>':rec.inc?'<div class="vu">Partida terminada · no cuenta como victoria ni derrota</div>':'')+'</div></div>'};
   d.innerHTML=pn(1)+'<div class="row vrow"><button id="vx" type="button">Volver a inicio</button></div>'+pn(0);
   document.body.appendChild(d);rain(d,34,true,i===1);
   const fit=()=>fitBox(d,'.mp.vp','.vc-fit',false);fit();window.addEventListener('resize',fit);
@@ -2403,5 +2406,34 @@ button.glk .plk{position:static;flex:0 0 auto;width:17px;height:17px;color:#f6ef
 #app.setup label.pl.has.fj button.csel{padding:12px 10px}
 .vsi.inv .vb-lg,.vsi.inv .vb-tr{display:none}
 </style>
+<style>
+/* ===== Ajustes v3 ===== */
+/* 1 · Inicio sin scroll y Senda compacta */
+html body #app.home,html body #app.home.hc{overflow:hidden!important}
+html body #app.home .menu #sd{padding:clamp(13px,calc(2.6*var(--vh)),20px) 14px!important;display:block!important}
+html body #app.home .menu{gap:clamp(7px,calc(1.2*var(--vh)),11px)}
+@media (max-height:640px){html body #app.home .menu button.gold{padding:10px 12px!important}html body #app.home .menu #sd{padding:11px 12px!important;font-size:18px!important}html body #app.home .menu .nav button{padding:9px!important}html body #app.home .logo{font-size:clamp(38px,calc(9*var(--vh)),60px)!important}}
+/* 2 · Partida: un solo marco en los cuadros de contar */
+html body #app.game .half.team,html body #app.game .half.team[style]{box-shadow:inset 0 0 0 1.5px #101010,inset 0 0 0 3px var(--rim),inset 0 0 0 4.5px #101010,0 4px 10px rgba(0,0,0,.4)!important}
+html body #app.game .half.team[style*="border-color:var(--gold)"]{box-shadow:inset 0 0 0 1.5px #101010,inset 0 0 0 3px var(--rim),inset 0 0 0 4.5px #101010,0 0 16px rgba(242,201,76,.8)!important}
+html body #app.game .half.team::before{display:none!important}
+html body #app.game .half.team::after{display:none!important}
+/* 2 · Menú de partida: verde con marco fino y ajustado a la pantalla */
+.ov.gpn{box-sizing:border-box;overflow:hidden}
+.ov.gpn:not(.c):not(.vic):not(.vsi) .mp{flex:1 1 0;min-height:0;overflow:hidden;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center}
+.ov.gpn .mp .opts.g1{display:flex;flex-direction:column;gap:7px;min-height:0}
+.ov.gpn .mp .opts.g1>button{flex:0 1 auto;min-height:0;padding:9px 8px;font-size:16px;line-height:1.15;border-radius:10px;color:#f2ecd6!important;text-shadow:0 1px 0 rgba(0,0,0,.4);background:linear-gradient(180deg,#2f7a4f,#1d5a39)!important;border:1px solid #8fd0a6!important;box-shadow:none!important}
+.ov.gpn .mp .opts.g1>button.ghost{background:linear-gradient(180deg,#58b97c,#3b9560)!important;border:1px solid #d3f2dc!important;color:#10281a!important;text-shadow:none;font-weight:800}
+.ov.gpn .mp .opts.g1>button:active{filter:brightness(.88);transform:none}
+@media (max-height:600px){.ov.gpn .mp .opts.g1{gap:5px}.ov.gpn .mp .opts.g1>button{padding:6px;font-size:14px}}
+/* 3 · Pantalla final: marco inferior despegado del borde */
+.ov.vic{padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));padding-top:max(30px,calc(env(safe-area-inset-top,0px) + 16px));padding-bottom:max(30px,calc(env(safe-area-inset-bottom,0px) + 22px))}
+/* 5 · Nombres del modo invitado */
+#app.setup label.pl.fj input.gname{display:block;width:100%;box-sizing:border-box;min-width:0;text-align:left;font-weight:600;font-size:16px;padding:12px 14px;border-radius:12px;pointer-events:auto}
+/* 6 · VS de invitado: solo avatar y nombre */
+.vsi.inv .vb-lg,.vsi.inv .vb-tr{display:none!important}
+.vsi.inv .vb-nm{font-size:clamp(20px,3.4vh,26px)!important;margin-top:10px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+</style>
+
 </body>
 </html>
