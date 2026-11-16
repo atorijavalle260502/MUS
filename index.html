@@ -1024,7 +1024,7 @@ button.csopt .cstag{display:inline-block;margin-left:8px;padding:1px 7px;border-
 .vsr{margin:14px 0}.vsh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}.vsh span{font-size:13px;color:var(--mute)}
 .vsbar{display:flex;height:30px;border-radius:15px;overflow:hidden;gap:2px;background:rgba(128,128,128,.18)}
 .vsbar i{display:flex;align-items:center;justify-content:center;font-style:normal;font-weight:800;font-size:15px;color:#fff;min-width:0}
-.vw{background:#2f6fd1}.vl{background:#d0443a}
+.vsbar i.vsw,.vsl u.vsw{background:#2f6fd1}.vsbar i.vsd,.vsl u.vsd{background:#d0443a}
 .vsl{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font-size:13px;font-weight:600}
 .vsl u{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;text-decoration:none}
 
@@ -1755,12 +1755,12 @@ function vsStats(fid){
   const P=progress(),mid=meId(),me=P[mid]||blank(),z={g:0,w:0,l:0};
   const nm=esc(fname(fid));
   const row=(t,r,la,lb)=>{const pc=r.g?Math.round(100*r.w/r.g):0;
-    return '<div class="vsr"><div class="vsh"><b>'+t+'</b><span>'+(r.g?r.g+(r.g===1?' partida':' partidas'):'Sin partidas')+'</span></div>'
-    +(r.g?'<div class="vsbar"><i class="vw" style="flex:'+r.w+'">'+(r.w?r.w:'')+'</i><i class="vl" style="flex:'+r.l+'">'+(r.l?r.l:'')+'</i></div><div class="vsl"><span><u class="vw"></u>'+la(r.w)+' · '+pc+'%</span><span><u class="vl"></u>'+lb(r.l)+'</span></div>'
+    return '<div class="vsr"><div class="vsh"><b>'+t+'</b></div>'
+    +(r.g?'<div class="vsbar"><i class="vsw" style="flex:'+r.w+'">'+(r.w?r.w:'')+'</i><i class="vsd" style="flex:'+r.l+'">'+(r.l?r.l:'')+'</i></div><div class="vsl"><span><u class="vsw"></u>'+la+'</span><span><u class="vsd"></u>'+lb+'</span></div>'
     :'<div class="vsbar vse"></div>')+'</div>'};
-  const vic=n=>n+(n===1?' victoria':' victorias'),pt=me.pt[fid]||z,op=me.op[fid]||z;
+  const pt=me.pt[fid]||z,op=me.op[fid]||z;
   const d=overlay('<h2 style="text-align:center">Tú y '+esc(fname(fid))+'</h2>'
-    +row('Como pareja',pt,n=>'Ganadas juntos: '+n,n=>'Perdidas juntos: '+n)+row('Como rivales',op,n=>'Tú: '+vic(n),n=>nm+': '+vic(n))
+    +row('Como pareja',pt,'Victorias','Derrotas')+row('Como rivales',op,'Tú (victorias)',nm+' (victorias)')
     +'<button id="dk">Cerrar</button>');
   d.querySelector('#dk').onclick=()=>d.remove();
 }
