@@ -2486,5 +2486,14 @@ html body #app.game .sc small.pn{font-size:min(15px,8cqh)}
 html body #app.game .sc .jv{align-self:end;white-space:nowrap;font-size:min(14px,8cqh);line-height:1.2;padding-top:0}
 </style>
 
+<style id="marcador-v4">
+/* Marcador v4: columnas con ancho explícito (contenido centrado), sin recortes en nombres ni en J · V */
+html body #app.game .sc{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+html body #app.game .sc>div{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;justify-items:stretch;align-items:center;width:100%;min-width:0;box-sizing:border-box;text-align:center;padding:min(12px,3.5cqh) 12px min(18px,6cqh)}
+html body #app.game .sc small.pn{display:flex;justify-content:center;align-items:center;width:100%;min-width:0;min-height:3em;padding:0 4px;margin:0;line-height:1.4;text-align:center}
+html body #app.game .sc small.pn span{display:-webkit-box;width:100%;max-width:100%;padding:0 0 .3em;line-height:1.4;text-align:center;overflow:hidden}
+html body #app.game .half .sc .big{justify-self:center;justify-content:center;width:100%;text-align:center}
+html body #app.game .sc .jv{justify-self:center;display:block;width:100%;text-align:center;line-height:1.5;padding:0 0 .25em .06em;overflow:visible}
+</style>
 </body>
 </html>
