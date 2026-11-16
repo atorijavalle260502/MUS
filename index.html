@@ -1815,7 +1815,7 @@ function secInfo(m,p,CL){
 function pickSlot(f,p,i){
   const cur=featured(f,p).map(m=>m.id);
   const opts=FAM.filter(m=>effLvl(f,p,m.id)>0&&(!cur.includes(m.id)||cur[i]===m.id));
-  const d=overlay('<b>Elige una medalla destacada</b>'+(opts.length?'<div class="mg">'+opts.map(m=>'<button class="med" data-a="'+m.id+'">'+medal(m,effLvl(f,p,m.id),54)+'<span>'+esc(m.name)+'</span><small>'+medalLbl(m,effLvl(f,p,m.id))+'</small></button>').join('')+'</div>':'<span style="color:var(--mute)">Aún no tienes medallas. Gana partidas para conseguirlas.</span>')+'<div class="row">'+(cur[i]?'<button class="ghost" id="rm">Quitar</button>':'')+'<button class="ghost" id="cx">Cancelar</button></div>');
+  const d=overlay('<b>Elige una medalla destacada</b>'+(opts.length?'<div class="mg">'+opts.map(m=>'<button class="med" data-a="'+m.id+'">'+medal(m,effLvl(f,p,m.id),54)+'<span>'+esc(m.name)+'</span><small>'+medalLbl(m,effLvl(f,p,m.id))+'</small></button>').join('')+'</div>':'<span style="color:var(--mute)">Aún no tienes medallas. Gana partidas para conseguirlas.</span>')+'<div class="row">'+(cur[i]?'<button class="ghost cr2" id="rm">Quitar</button>':'')+'<button class="ghost cr2" id="cx">Cancelar</button></div>');
   const done=n=>{f.medals=n.slice(0,4);save();d.remove();profile()};
   d.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const n=cur.slice();if(i<n.length)n[i]=b.dataset.a;else n.push(b.dataset.a);done(n)});
   if(d.querySelector('#rm'))d.querySelector('#rm').onclick=()=>{const n=cur.slice();n.splice(i,1);done(n)};
@@ -2520,6 +2520,16 @@ html body .ov.c .mp button.cr2.cr2.cr2{padding:12px 10px;font:600 17px/1.15 Lite
 background:linear-gradient(180deg,#3f7a58 0%,#2c5a40 52%,#1f4430 100%)!important;
 box-shadow:inset 0 1.5px 0 rgba(255,255,255,.28),inset 0 -3px 6px rgba(0,0,0,.3),0 3px 0 #0f2418,0 6px 9px rgba(0,0,0,.4)!important}
 html body .ov.c .mp button.cr2.cr2.cr2:active,html body .ov.c .mp button.cr2.cr2.cr2.pr{filter:none!important;transform:translateY(3px)!important;box-shadow:inset 0 3px 7px rgba(0,0,0,.45),0 1px 0 rgba(0,0,0,.4)!important}
+
+/* Cancelar en Mi perfil: azul de la sección con filo dorado (en la partida sigue en verde) */
+html[data-v="profile"] body .ov.c .mp button.cr2.cr2.cr2,html[data-v="profile"] .ov.c .mp button.cr2.cr2.cr2{border-color:#cea953!important;
+background:linear-gradient(180deg,#2a3f82 0%,#1b2b5c 52%,#111c40 100%)!important;
+box-shadow:inset 0 1.5px 0 rgba(255,255,255,.28),inset 0 -3px 6px rgba(0,0,0,.3),0 3px 0 #060b1e,0 6px 9px rgba(0,0,0,.4)!important}
+/* Amigos y Mi perfil: cinta superior fija, igual que la Senda del Órdago */
+#app.friends,#app.profile{padding-top:0}
+#app.friends .top,#app.profile .top{position:sticky;top:0;z-index:20;flex-shrink:0;margin:0 -22px;padding:12px 22px;background:var(--tp2);border-bottom:3px solid #c9a24e;box-shadow:0 3px 0 #101010,0 7px 12px rgba(0,0,0,.45)}
+#app.profile .top{background:#0f1a3a;border-bottom-color:#cea953}
+#app.friends>.top+*,#app.profile>.top+*{margin-top:14px}
 </style>
 </body>
 </html>
