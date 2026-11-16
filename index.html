@@ -2477,5 +2477,14 @@ html body #app.game .sc .jv{letter-spacing:.06em;opacity:.92;margin:0;padding-to
 @media (max-height:640px){html body #app.game .half .sc .big{font-size:48px}html body #app.game .sc>div{padding:9px 10px 7px}}
 </style>
 
+<style id="marcador-v3">
+/* Marcador v3: el contenido se adapta a la altura disponible y J · V nunca queda tapado */
+html body #app.game .sc{flex:1 1 0;min-height:0;container-type:size}
+html body #app.game .sc>div{display:grid;grid-template-rows:auto minmax(0,1fr) auto;justify-items:center;align-items:center;min-height:0;height:100%;box-sizing:border-box;padding:min(16px,5cqh) 10px min(12px,4cqh);gap:0}
+html body #app.game .half .sc .big{display:flex;align-items:center;justify-content:center;min-height:0;max-height:100%;width:100%;overflow:visible;font-size:80px;font-size:min(80px,38cqh);line-height:1}
+html body #app.game .sc small.pn{font-size:min(15px,8cqh)}
+html body #app.game .sc .jv{align-self:end;white-space:nowrap;font-size:min(14px,8cqh);line-height:1.2;padding-top:0}
+</style>
+
 </body>
 </html>
