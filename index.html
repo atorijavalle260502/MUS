@@ -1413,7 +1413,7 @@ background:linear-gradient(180deg,rgba(255,226,140,.24),rgba(255,226,140,.07)),r
 </style>
 <script>
 const ASES=['img/as-oros.webp?v=3','img/as-copas.webp?v=3','img/as-espadas.webp?v=3','img/as-bastos.webp?v=3'];
-const HELP={senda:'Diez ligas que subes ganando amarracos en tus partidas.',medallas:'Premios por tus logros. Suben de nivel según avanzas.',especiales:'Medallas ocultas que se logran con hazañas concretas.',amistosa:'No cambia amarracos, historial, rachas ni medallas.',infinita:'Sin vacas: solo puntos por juego. Al terminar la partida gana quien vaya por delante y cuenta como victoria o derrota.'};
+const HELP={senda:'Vence rivales. Gana amarracos. Asciende por 10 ligas.',medallas:'Premios por tus logros. Suben de nivel según avanzas.',especiales:'Medallas ocultas que se logran con hazañas concretas.',amistosa:'No cambia amarracos, historial, rachas ni medallas.',infinita:'Jugad hasta que os canseis.'};
 const help=k=>'<span class="hq" role="button" tabindex="0" data-help="'+k+'" aria-label="Ayuda">?</span>';
 (function(){let pop=null;const close=()=>{if(pop){pop.remove();pop=null}};
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.hq');
@@ -1491,7 +1491,7 @@ const FAM=[
 {id:'paz',name:'Palizón',desc:'Nunca hubo opción',goals:[1,3,6,12,20,35],val:s=>s.paz,req:g=>'Gana '+g+(g>1?' vacas':' vaca')+' dejando al rival en 0 juegos*',nota:'Mínimo 3 juegos en la vaca'},
 {id:'rev',name:'Revancha',desc:'Lo que sube, baja',goals:[2,5,10,20,40,60],val:s=>s.rev,req:g=>'Gana '+g+(g>1?' veces':' vez')+' a la pareja que te ganó la partida anterior'},
 {id:'soc',name:'Social',desc:'Cuantos más, mejor',goals:[1,3,5,8,12,15],val:s=>s.soc,req:g=>'Ten '+g+(g>1?' amigos':' amigo')+' en la biblioteca'}];
-const VER_PISTAS=true; // true = modo recordatorio (se ve cómo se consigue cada medalla especial); false = versión final (solo huecos vacíos)
+const VER_PISTAS=false; // true = modo recordatorio (se ve cómo se consigue cada medalla especial); false = versión final (solo huecos vacíos)
 const SEC=[
 {id:'prim',name:'Primera partida',desc:'El comienzo de todo gran jugador',req:'Gana tu primera partida'},
 {id:'noct',name:'Noctámbulo',desc:'Las mejores partidas son de madrugada.',req:'Gana una partida entre las 00:00 y las 08:00'},
@@ -1803,8 +1803,8 @@ function secInfo(m,p,CL){
   const draw=anim=>{
     const u=p.sec[m.id],pd=!!u&&!!CL&&!CL[m.id],von=!!u&&!pd;
     const head=anim?'<div class="mhd sp lg"><span class="mold">'+medal(m,0,132)+'</span><span class="mnew">'+medal(m,SPEC,132)+'</span></div>':'<div class="mhd sp lg'+(pd?' hp':'')+'">'+medal(m,von?SPEC:0,132)+'</div>';
-    d.querySelector('.mpi').classList.add('mdet');d.querySelector('.mpi').innerHTML='<div class="mtop"><div class="mtl">'+head+'<b>Medalla especial</b></div><div class="mtr"><h2>'+esc(m.name)+'</h2><div class="mph">'+esc(m.desc)+'</div><div class="mhow"><small>Cómo se consigue</small>'+esc(m.req)+'</div></div></div>'
-      +(pd?'<button class="rcl lat" data-rc="'+m.id+'"'+rclStyle(6)+'>Reclamar medalla</button>':'')+'<button id="dk" class="cr">Cerrar</button>'+(m.nota?'<div class="mnota">* '+esc(m.nota)+'</div>':'');
+    d.querySelector('.mpi').classList.add('mdet');d.querySelector('.mpi').innerHTML='<div class="mtop"><div class="mtl">'+head+'<b>Medalla especial</b></div><div class="mtr"><h2>'+esc(m.name)+'</h2><div class="mph">'+esc(m.desc)+'</div><div class="mhow"><small>Cómo se consigue</small>'+(u?esc(m.req):'?')+'</div></div></div>'
+      +(pd?'<button class="rcl lat" data-rc="'+m.id+'"'+rclStyle(6)+'>Reclamar medalla</button>':'')+'<button id="dk" class="cr">Cerrar</button>'+(m.nota&&u?'<div class="mnota">* '+esc(m.nota)+'</div>':'');
     d.querySelector('#dk').onclick=()=>{if(d._fly)d._fly.remove();d.remove();if(claimed)profile()};
     if(anim)flyMedal(d,d.querySelector('.mhd'),medal(m,SPEC,d.querySelector('.mhd').offsetWidth),false);
     const rc=d.querySelector('[data-rc]');
@@ -1918,8 +1918,8 @@ function profile(){
   +'<div class="stt wide"><small>Mejor pareja</small><div class="sr"><img src="'+STAT_IMG_P+'" alt="" draggable="false"><b class="nm">'+(bm&&bm[1].w>0?esc(fname(bm[0])):'—')+'</b></div></div></div>'
   +'</div>'
   +'<div class="card"><b>Medallas destacadas</b><div class="slots">'+[0,1,2,3].map(i=>'<button class="slotb" data-slot="'+i+'" aria-label="Elegir medalla"'+(mine?'':' disabled style="opacity:1"')+'>'+(fe[i]?medal(fe[i],effLvl(f,p,fe[i].id),54):(mine?'<span>+</span>':''))+'</button>').join('')+'</div></div>'
-  +'<div class="card"><div class="hh"><b>Medallas · '+got+'/'+real.length+'</b>'+help('medallas')+'</div><div class="mg">'+FAM.map(m=>'<button class="med'+(pendF(m)?' pend':'')+'" data-a="'+m.id+'">'+medal(m,shown(m),58)+'<span>'+esc(m.name)+'</span><small>'+medalLbl(m,shown(m))+'</small></button>').join('')+'</div></div>'
-  +'<div class="card"><div class="hh"><b>Medallas especiales · '+SEC.filter(m=>p.sec[m.id]).length+'/'+SEC.length+'</b>'+help('especiales')+'</div><div class="mg sp">'+SEC.map(m=>{const on=!!p.sec[m.id],pd=on&&CL&&!CL[m.id],von=on&&!pd;return on||VER_PISTAS?'<button class="med'+(pd?' pend':'')+'" data-s="'+m.id+'">'+medal(m,von?SPEC:0,62)+'<span>'+esc(m.name)+'</span><small>'+(von?'Conseguida':'Pista visible')+'</small></button>':'<div class="med"><div class="slotb" style="width:62px;height:62px;border-radius:50%"></div></div>'}).join('')+'</div></div>'
+  +'<div class="card"><div class="hh"><b>Medallas</b>'+help('medallas')+'</div><div class="mg">'+FAM.map(m=>'<button class="med'+(pendF(m)?' pend':'')+'" data-a="'+m.id+'">'+medal(m,shown(m),58)+'<span>'+esc(m.name)+'</span><small>'+medalLbl(m,shown(m))+'</small></button>').join('')+'</div></div>'
+  +'<div class="card"><div class="hh"><b>Medallas especiales</b>'+help('especiales')+'</div><div class="mg sp">'+SEC.map(m=>{const on=!!p.sec[m.id],pd=on&&CL&&!CL[m.id],von=on&&!pd;return '<button class="med'+(pd?' pend':'')+(on?'':' lkd')+'" data-s="'+m.id+'">'+medal(m,von?SPEC:0,62)+'<span>'+esc(m.name)+'</span><small>'+(on?'Conseguida':'Bloqueada')+'</small></button>'}).join('')+'</div></div>'
   +'<div class="card"><div class="fr"><b>Mis parejas</b>'+(mates.length?'<button class="ghost" id="ap" style="padding:7px 12px;font-size:14px">Todas las parejas</button>':'')+'</div>'+(mates.length?mtab([bm]):'<span style="color:var(--mute)">Todavía no ha jugado con ninguna pareja.</span>')+'</div>';
   if(mine&&profBack==='home'){const lo=document.createElement('button');lo.type='button';lo.id='lo';lo.textContent='Cerrar sesión';lo.style.cssText='flex:0 0 auto;border:1.5px solid rgba(200,160,80,.6);color:#eae2cc;background:rgba(0,0,0,.25)';app.appendChild(lo);lo.onclick=()=>dlg('¿Cerrar sesión?',{cancel:1,ok:'Cerrar sesión',cr:1},logout)}
   $('#b').onclick=()=>go(profBack);
@@ -2546,6 +2546,9 @@ background:linear-gradient(180deg,rgba(255,255,255,.16) 0,rgba(255,255,255,0) 52
 border:1.5px solid #fff!important;
 box-shadow:inset 0 1px 0 rgba(255,255,255,.3),inset 0 -2px 3px rgba(0,0,0,.22),0 2px 0 #123122,0 3px 5px rgba(0,0,0,.3)!important}
 html body #app #list .fr>button.frs.frs.frs.frs.frs.frs.frs.frs.frs.frs.frs.frs.frs.frs:active{box-shadow:inset 0 2px 4px rgba(0,0,0,.35),0 1px 0 #123122!important}
+/* Medallas especiales bloqueadas: diseño muy oscurecido, apenas se distingue */
+.mg.sp .mdl.off,.mhd.sp .mdl.off{filter:grayscale(1) brightness(.3) contrast(.85) blur(.6px);opacity:.75}
+.mg.sp .med.lkd span,.mg.sp .med.lkd small{opacity:.7}
 </style>
 </body>
 </html>
