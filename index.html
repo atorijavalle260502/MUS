@@ -1632,7 +1632,7 @@ function tryImport(t,auto){
 }
 function dlg(text,o,cb){
   const d=document.createElement('div');d.className='ov c';
-  d.innerHTML='<div class="mp"><b></b>'+(o.input!==undefined?(o.area?'<textarea id="dl" rows="7"></textarea>':'<input id="dl">'):'')+'<div class="row">'+(o.cancel?'<button class="ghost" id="dc">Cancelar</button>':'')+'<button id="dk"'+(o.cr?' class="cr"':'')+'>'+(o.ok||'Aceptar')+'</button></div></div>';
+  d.innerHTML='<div class="mp"><b></b>'+(o.input!==undefined?(o.area?'<textarea id="dl" rows="7"></textarea>':'<input id="dl">'):'')+'<div class="row">'+(o.cancel?'<button class="ghost'+(o.cr?' cr2':'')+'" id="dc">Cancelar</button>':'')+'<button id="dk"'+(o.cr?' class="cr"':'')+'>'+(o.ok||'Aceptar')+'</button></div></div>';
   d.querySelector('b').textContent=text;
   const inp=d.querySelector('#dl');if(inp)inp.value=o.input;
   document.body.appendChild(d);
@@ -1848,7 +1848,7 @@ const avatarHTML=(f,p,s)=>{const v=avOf(f,p);return avFrame(v.f,aceImg(v.a),s)};
 function pickAvatar(f,p){
   const cur=avOf(f,p);let sel={a:cur.a,f:cur.f};
   const lock='<svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" style="flex:0 0 auto"><rect x="5" y="11" width="14" height="10" rx="2" fill="currentColor"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.4"/></svg>';
-  const d=overlay('<b>Tu avatar</b><div id="apv" style="display:flex;justify-content:center"></div><b style="font-size:14px">As</b><div class="apk" id="apa"></div><b style="font-size:14px">Marco</b><div class="fpk" id="apf"></div><div id="apm" style="min-height:16px;font-size:12.5px;color:var(--mute);text-align:center"></div><div class="row"><button class="ghost" id="cx">Cancelar</button><button id="ok" class="cr">Guardar</button></div>');
+  const d=overlay('<b>Tu avatar</b><div id="apv" style="display:flex;justify-content:center"></div><b style="font-size:14px">As</b><div class="apk" id="apa"></div><b style="font-size:14px">Marco</b><div class="fpk" id="apf"></div><div id="apm" style="min-height:16px;font-size:12.5px;color:var(--mute);text-align:center"></div><div class="row"><button class="ghost cr2" id="cx">Cancelar</button><button id="ok" class="cr">Guardar</button></div>');
   const q=x=>d.querySelector(x);
   const draw=()=>{
     q('#apv').innerHTML=avFrame(sel.f,aceImg(sel.a),128);
@@ -2514,6 +2514,12 @@ html body .ov.c .mp button.cr.cr.cr:active,html body .ov.c .mp button.cr.cr.cr.p
 html body .ov.c .mp:has(button.cr){padding-bottom:30px}
 html body .ov.c .mp .mpi:has(button.cr):not(.mdet){padding:3px 6px 12px}
 html body .ov.c .mp .mpi.mdet:has(button.cr){padding-bottom:26px}
+
+/* Cancelar a juego con los botones crema: misma letra, forma y relieve, en verde con filo dorado */
+html body .ov.c .mp button.cr2.cr2.cr2{padding:12px 10px;font:600 17px/1.15 Literata,Georgia,serif;border:1.5px solid #c9a24e!important;border-radius:12px;color:#f6efdc!important;text-shadow:0 1px 0 rgba(0,0,0,.5);margin:0;transform:none;
+background:linear-gradient(180deg,#3f7a58 0%,#2c5a40 52%,#1f4430 100%)!important;
+box-shadow:inset 0 1.5px 0 rgba(255,255,255,.28),inset 0 -3px 6px rgba(0,0,0,.3),0 3px 0 #0f2418,0 6px 9px rgba(0,0,0,.4)!important}
+html body .ov.c .mp button.cr2.cr2.cr2:active,html body .ov.c .mp button.cr2.cr2.cr2.pr{filter:none!important;transform:translateY(3px)!important;box-shadow:inset 0 3px 7px rgba(0,0,0,.45),0 1px 0 rgba(0,0,0,.4)!important}
 </style>
 </body>
 </html>
