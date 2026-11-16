@@ -1021,10 +1021,10 @@ button.csopt .cstag{display:inline-block;margin-left:8px;padding:1px 7px;border-
 
 .frs{align-self:flex-start;padding:6px 9px;font-size:13px}
 .frh{gap:8px}.frn{white-space:nowrap;font-size:16px}.frt{white-space:nowrap}.frh .frt{margin-left:2px}
-.vsr{margin:14px 0}.vsh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}.vsh span{font-size:13px;color:var(--mute)}
-.vsbar{display:flex;height:36px;border-radius:18px;overflow:hidden;gap:3px;padding:3px;box-sizing:border-box;background:#0a1d13;box-shadow:inset 0 2px 5px rgba(0,0,0,.65),0 1px 0 rgba(255,255,255,.13)}
-.vsbar i{display:flex;align-items:center;justify-content:center;font-style:normal;font-weight:800;font-size:15px;color:#fff;min-width:0;border-radius:15px 3px 3px 15px;text-shadow:0 1px 2px rgba(0,0,0,.55)}
-.vsbar i:last-child{border-radius:3px 15px 15px 3px}.vsbar i:only-child{border-radius:15px}
+.vsr{margin:14px 0}.vsh{display:flex;justify-content:flex-start;align-items:baseline;gap:8px;margin-bottom:6px}.vsh span{font-size:13px;color:var(--mute)}
+.vsbar{display:flex;height:36px;border-radius:18px;overflow:hidden;gap:2px;padding:1.5px;box-sizing:border-box;background:#0a1d13;box-shadow:inset 0 2px 5px rgba(0,0,0,.65),0 1px 0 rgba(255,255,255,.13)}
+.vsbar i{display:flex;align-items:center;justify-content:center;font-style:normal;font-weight:800;font-size:15px;color:#fff;min-width:0;border-radius:16px 3px 3px 16px;text-shadow:0 1px 2px rgba(0,0,0,.55)}
+.vsbar i:last-child{border-radius:3px 16px 16px 3px}.vsbar i:only-child{border-radius:16px}
 .vsbar i.vsw{background:linear-gradient(180deg,#4b8ee8,#2f6fd1 55%,#1b4a99);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 -2px 3px rgba(0,0,0,.3),0 2px 4px rgba(0,0,0,.4)}
 .vsbar i.vsd{background:linear-gradient(180deg,#e5645a,#d0443a 55%,#962a22);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 -2px 3px rgba(0,0,0,.3),0 2px 4px rgba(0,0,0,.4)}
 .vsl u.vsw{background:#2f6fd1}.vsl u.vsd{background:#d0443a}
@@ -1427,6 +1427,8 @@ document.addEventListener('scroll',close,true);
 document.addEventListener('keydown',e=>{if(e.key==='Escape')close();const b=e.target.closest&&e.target.closest('.hq');if(b&&(e.key==='Enter'||e.key===' ')){e.preventDefault();b.click()}});
 })();
 const KEY='mus-v2';
+const NAME_MAX=14,TEAM_MAX=18,META_MAX=40; // longitudes máximas: nombre de jugador/perfil, nombre de equipo y puntos por juego
+
 let S={friends:[],hist:[],cfg:{meta:30,juegos:3,vacas:1},game:null};
 try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
@@ -1585,7 +1587,7 @@ const LINK='https://claude.ai/artifact/FoGPeowTnPteSYA5siL7xE';
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const enc=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 const dec=t=>JSON.parse(decodeURIComponent(escape(atob(t.replace(/-/g,'+').replace(/_/g,'/')))));
-const cfgOf=c=>({meta:+(c||{}).meta||40,juegos:+(c||{}).juegos||3,vacas:+(c||{}).vacas||3});
+const cfgOf=c=>({meta:Math.min(META_MAX,+(c||{}).meta||40),juegos:+(c||{}).juegos||3,vacas:+(c||{}).vacas||3});
 function showLink(url){
   const d=document.createElement('div');d.className='ov c';
   d.innerHTML='<div class="mp"><textarea id="dl" rows="5"></textarea><div class="row"><button class="ghost" id="dc">Cerrar</button><button id="dk">Copiar texto</button></div></div>';
@@ -1608,7 +1610,7 @@ function importBackup(o){
     save();go('home')});
 }
 const ordIn=x=>(Array.isArray(x)?x:[]).filter(e=>Array.isArray(e)&&e.length===4).map(e=>{const d=e.map(friendId);return{w:[d[0],d[1]],l:[d[2],d[3]]}});
-function friendId(n){n=String(n).trim().slice(0,16)||'Jugador';let f=S.friends.find(x=>x.name.toLowerCase()===n.toLowerCase());if(!f){f={id:'f'+uid(),name:n,medals:[]};S.friends.push(f)}else f.deleted=false;return f.id}
+function friendId(n){n=String(n).trim().slice(0,NAME_MAX)||'Jugador';let f=S.friends.find(x=>x.name.toLowerCase()===n.toLowerCase());if(!f){f={id:'f'+uid(),name:n,medals:[]};S.friends.push(f)}else f.deleted=false;return f.id}
 function tryImport(t,auto){
   let o;try{o=dec(String(t).trim().split(/\s+/).pop().split('#').pop())}catch(e){}
   if(o&&o.k==='b'){importBackup(o);return}
@@ -1625,12 +1627,12 @@ function tryImport(t,auto){
     dlg('Te han pasado una partida: '+nm[0]+' y '+nm[1]+' contra '+nm[2]+' y '+nm[3]+'.'+(S.game?' Sustituirá la partida que tienes ahora.':''),{cancel:1,ok:'Cargar'},()=>{
       const d=nm.map(friendId),n2=a=>[0,1].map(i=>+(a||[])[i]||0),mesa={};
       ['G','C','P','J'].forEach(l=>{const v=+(o.s.mesa||{})[l];if(v>0)mesa[l]=v});
-      S.cfg=cfgOf(o.c);S.game={id:String(o.i),p:d,pts:n2(o.s.pts),jg:n2(o.s.jg),vc:n2(o.s.vc),mesa,hist:[],ord:ordIn(o.x),am:o.a?1:0,tn:Array.isArray(o.tn)?o.tn.slice(0,2).map(x=>String(x).slice(0,20)):['','']};mark();save();go('game')});
+      S.cfg=cfgOf(o.c);S.game={id:String(o.i),p:d,pts:n2(o.s.pts),jg:n2(o.s.jg),vc:n2(o.s.vc),mesa,hist:[],ord:ordIn(o.x),am:o.a?1:0,tn:Array.isArray(o.tn)?o.tn.slice(0,2).map(x=>String(x).slice(0,TEAM_MAX)):['','']};mark();save();go('game')});
   }
 }
 function dlg(text,o,cb){
   const d=document.createElement('div');d.className='ov c';
-  d.innerHTML='<div class="mp"><b></b>'+(o.input!==undefined?(o.area?'<textarea id="dl" rows="7"></textarea>':'<input id="dl">'):'')+'<div class="row">'+(o.cancel?'<button class="ghost" id="dc">Cancelar</button>':'')+'<button id="dk">'+(o.ok||'Aceptar')+'</button></div></div>';
+  d.innerHTML='<div class="mp"><b></b>'+(o.input!==undefined?(o.area?'<textarea id="dl" rows="7"></textarea>':'<input id="dl">'):'')+'<div class="row">'+(o.cancel?'<button class="ghost" id="dc">Cancelar</button>':'')+'<button id="dk"'+(o.cr?' class="cr"':'')+'>'+(o.ok||'Aceptar')+'</button></div></div>';
   d.querySelector('b').textContent=text;
   const inp=d.querySelector('#dl');if(inp)inp.value=o.input;
   document.body.appendChild(d);
@@ -1758,13 +1760,13 @@ function vsStats(fid){
   const P=progress(),mid=meId(),me=P[mid]||blank(),z={g:0,w:0,l:0};
   const nm=esc(fname(fid));
   const row=(t,r,la,lb)=>{const pc=r.g?Math.round(100*r.w/r.g):0;
-    return '<div class="vsr"><div class="vsh"><b>'+t+'</b></div>'
+    return '<div class="vsr"><div class="vsh"><b>'+t+'</b>'+(r.g?'<span>('+pc+'% de victorias)</span>':'')+'</div>'
     +(r.g?'<div class="vsbar"><i class="vsw" style="flex:'+r.w+'">'+(r.w?r.w:'')+'</i><i class="vsd" style="flex:'+r.l+'">'+(r.l?r.l:'')+'</i></div><div class="vsl"><span><u class="vsw"></u>'+la+'</span><span><u class="vsd"></u>'+lb+'</span></div>'
     :'<div class="vsbar vse"></div>')+'</div>'};
   const pt=me.pt[fid]||z,op=me.op[fid]||z;
   const d=overlay('<h2 style="text-align:center">Tú y '+esc(fname(fid))+'</h2>'
     +row('Como pareja',pt,'Victorias','Derrotas')+row('Como rivales',op,'Tú (victorias)',nm+' (victorias)')
-    +'<button id="dk">Cerrar</button>');
+    +'<button id="dk" class="cr">Cerrar</button>');
   d.querySelector('#dk').onclick=()=>d.remove();
 }
 function overlay(html){const d=document.createElement('div');d.className='ov c';d.innerHTML='<div class="mp" style="max-height:min(calc(82*var(--vh)),calc(calc(100*var(--vh)) - 90px));overflow:hidden"><div class="mpi">'+html+'</div></div>';document.body.appendChild(d);return d}
@@ -1788,7 +1790,7 @@ function medalInfo(m,p,CL){
     const top=big?'<div class="mtop"><div class="mtl">'+head+'<b>'+medalLbl(m,cl)+'</b></div><div class="mtr"><h2>'+esc(m.name)+'</h2><div class="mph">'+esc(m.desc)+'</div>'+(m.req?'<div class="mhow"><small>Cómo se consigue</small>'+esc(m.req(nx!==undefined?nx:m.goals[m.goals.length-1]))+'</div>':'')+'</div></div>':'<div style="display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center">'+head+'<h2>'+esc(m.name)+'</h2><div style="color:var(--mute)">'+esc(m.desc)+'</div><b>'+medalLbl(m,cl)+'</b></div>';
     d.querySelector('.mpi').classList.add('mdet');d.querySelector('.mpi').innerHTML=top
       +(m.soon?'<div style="color:var(--mute)">Disponible en una próxima versión.</div>':(nx!==undefined?'<div><div class="bar"><i style="width:'+Math.round(100*vv/nx)+'%;background:'+TIERC[Math.max(0,cl-1)][0]+'"></i></div><div style="margin-top:4px">Siguiente nivel ('+LV[cl]+'): '+'<span style="white-space:nowrap">'+fmt(vv)+' / '+fmt(nx)+'</span></div></div>':'<div><b>¡Nivel máximo alcanzado!</b></div>'))
-      +(pd?'<button class="rcl lat" data-rc="'+m.id+'"'+rclStyle(Math.max(0,cl-1))+'>Reclamar medalla</button>':'')+'<button id="dk">Cerrar</button>'+(m.nota?'<div class="mnota">* '+esc(m.nota)+'</div>':'');
+      +(pd?'<button class="rcl lat" data-rc="'+m.id+'"'+rclStyle(Math.max(0,cl-1))+'>Reclamar medalla</button>':'')+'<button id="dk" class="cr">Cerrar</button>'+(m.nota?'<div class="mnota">* '+esc(m.nota)+'</div>':'');
     d.querySelector('#dk').onclick=()=>{if(d._fly)d._fly.remove();d.remove();if(claimed)profile()};
     if(anim)flyMedal(d,d.querySelector('.mhd'),medal(m,cl,big?d.querySelector('.mhd').offsetWidth:88),pd);
     const rc=d.querySelector('[data-rc]');
@@ -1802,7 +1804,7 @@ function secInfo(m,p,CL){
     const u=p.sec[m.id],pd=!!u&&!!CL&&!CL[m.id],von=!!u&&!pd;
     const head=anim?'<div class="mhd sp lg"><span class="mold">'+medal(m,0,132)+'</span><span class="mnew">'+medal(m,SPEC,132)+'</span></div>':'<div class="mhd sp lg'+(pd?' hp':'')+'">'+medal(m,von?SPEC:0,132)+'</div>';
     d.querySelector('.mpi').classList.add('mdet');d.querySelector('.mpi').innerHTML='<div class="mtop"><div class="mtl">'+head+'<b>Medalla especial</b></div><div class="mtr"><h2>'+esc(m.name)+'</h2><div class="mph">'+esc(m.desc)+'</div><div class="mhow"><small>Cómo se consigue</small>'+esc(m.req)+'</div></div></div>'
-      +(pd?'<button class="rcl lat" data-rc="'+m.id+'"'+rclStyle(6)+'>Reclamar medalla</button>':'')+'<button id="dk">Cerrar</button>'+(m.nota?'<div class="mnota">* '+esc(m.nota)+'</div>':'');
+      +(pd?'<button class="rcl lat" data-rc="'+m.id+'"'+rclStyle(6)+'>Reclamar medalla</button>':'')+'<button id="dk" class="cr">Cerrar</button>'+(m.nota?'<div class="mnota">* '+esc(m.nota)+'</div>':'');
     d.querySelector('#dk').onclick=()=>{if(d._fly)d._fly.remove();d.remove();if(claimed)profile()};
     if(anim)flyMedal(d,d.querySelector('.mhd'),medal(m,SPEC,d.querySelector('.mhd').offsetWidth),false);
     const rc=d.querySelector('[data-rc]');
@@ -1846,7 +1848,7 @@ const avatarHTML=(f,p,s)=>{const v=avOf(f,p);return avFrame(v.f,aceImg(v.a),s)};
 function pickAvatar(f,p){
   const cur=avOf(f,p);let sel={a:cur.a,f:cur.f};
   const lock='<svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" style="flex:0 0 auto"><rect x="5" y="11" width="14" height="10" rx="2" fill="currentColor"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.4"/></svg>';
-  const d=overlay('<b>Tu avatar</b><div id="apv" style="display:flex;justify-content:center"></div><b style="font-size:14px">As</b><div class="apk" id="apa"></div><b style="font-size:14px">Marco</b><div class="fpk" id="apf"></div><div id="apm" style="min-height:16px;font-size:12.5px;color:var(--mute);text-align:center"></div><div class="row"><button class="ghost" id="cx">Cancelar</button><button id="ok">Guardar</button></div>');
+  const d=overlay('<b>Tu avatar</b><div id="apv" style="display:flex;justify-content:center"></div><b style="font-size:14px">As</b><div class="apk" id="apa"></div><b style="font-size:14px">Marco</b><div class="fpk" id="apf"></div><div id="apm" style="min-height:16px;font-size:12.5px;color:var(--mute);text-align:center"></div><div class="row"><button class="ghost" id="cx">Cancelar</button><button id="ok" class="cr">Guardar</button></div>');
   const q=x=>d.querySelector(x);
   const draw=()=>{
     q('#apv').innerHTML=avFrame(sel.f,aceImg(sel.a),128);
@@ -1907,7 +1909,7 @@ function profile(){
   const mrow=([id,r])=>'<tr><td>'+esc(fname(id))+'</td><td>'+r.g+'</td><td>'+r.w+'</td><td>'+r.l+'</td><td>'+Math.round(100*r.w/r.g)+'%</td></tr>',mtab=a=>'<table><tr><th>Pareja</th><th>PJ</th><th>V</th><th>D</th><th>%</th></tr>'+a.map(mrow).join('')+'</table>';
   app.innerHTML='<div class="top"><button id="b">‹ '+(profBack==='home'?'Inicio':'Amigos')+'</button><h2>'+(f.id===S.me?'Mi perfil':esc(f.name))+'</h2></div>'
   +'<div class="card pcard"><div class="phd"><div class="pav"><button class="avb" id="av" aria-label="Avatar"'+(mine?'':' disabled style="opacity:1"')+'>'+avatarHTML(f,p,96)+'</button>'+(mine?'<button class="ghost" id="avc">Cambiar</button>':'')+'</div>'
-  +'<div class="pid"><label class="pl1"><span class="lbh">Nombre</span>'+(mine?'<input id="pn" class="pnm" maxlength="20" autocomplete="off" value="'+esc(f.name)+'">':'<div class="pnm ro">'+esc(f.name)+'</div>')+'</label>'
+  +'<div class="pid"><label class="pl1"><span class="lbh">Nombre</span>'+(mine?'<input id="pn" class="pnm" maxlength="'+NAME_MAX+'" autocomplete="off" value="'+esc(f.name)+'">':'<div class="pnm ro">'+esc(f.name)+'</div>')+'</label>'
   +'<span class="pmid" id="pmid" role="button" tabindex="0" aria-label="Mus ID">#'+musOf(f)+'</span>'
   +'<div class="pamr" aria-label="Amarracos">'+trIcon(38)+'<b>'+fmt(p.tr)+'</b></div>'
   +'</div></div>'
@@ -1919,15 +1921,15 @@ function profile(){
   +'<div class="card"><div class="hh"><b>Medallas · '+got+'/'+real.length+'</b>'+help('medallas')+'</div><div class="mg">'+FAM.map(m=>'<button class="med'+(pendF(m)?' pend':'')+'" data-a="'+m.id+'">'+medal(m,shown(m),58)+'<span>'+esc(m.name)+'</span><small>'+medalLbl(m,shown(m))+'</small></button>').join('')+'</div></div>'
   +'<div class="card"><div class="hh"><b>Medallas especiales · '+SEC.filter(m=>p.sec[m.id]).length+'/'+SEC.length+'</b>'+help('especiales')+'</div><div class="mg sp">'+SEC.map(m=>{const on=!!p.sec[m.id],pd=on&&CL&&!CL[m.id],von=on&&!pd;return on||VER_PISTAS?'<button class="med'+(pd?' pend':'')+'" data-s="'+m.id+'">'+medal(m,von?SPEC:0,62)+'<span>'+esc(m.name)+'</span><small>'+(von?'Conseguida':'Pista visible')+'</small></button>':'<div class="med"><div class="slotb" style="width:62px;height:62px;border-radius:50%"></div></div>'}).join('')+'</div></div>'
   +'<div class="card"><div class="fr"><b>Mis parejas</b>'+(mates.length?'<button class="ghost" id="ap" style="padding:7px 12px;font-size:14px">Todas las parejas</button>':'')+'</div>'+(mates.length?mtab([bm]):'<span style="color:var(--mute)">Todavía no ha jugado con ninguna pareja.</span>')+'</div>';
-  if(mine&&profBack==='home'){const lo=document.createElement('button');lo.type='button';lo.id='lo';lo.textContent='Cerrar sesión';lo.style.cssText='flex:0 0 auto;border:1.5px solid rgba(200,160,80,.6);color:#eae2cc;background:rgba(0,0,0,.25)';app.appendChild(lo);lo.onclick=()=>dlg('¿Cerrar sesión?',{cancel:1,ok:'Cerrar sesión'},logout)}
+  if(mine&&profBack==='home'){const lo=document.createElement('button');lo.type='button';lo.id='lo';lo.textContent='Cerrar sesión';lo.style.cssText='flex:0 0 auto;border:1.5px solid rgba(200,160,80,.6);color:#eae2cc;background:rgba(0,0,0,.25)';app.appendChild(lo);lo.onclick=()=>dlg('¿Cerrar sesión?',{cancel:1,ok:'Cerrar sesión',cr:1},logout)}
   $('#b').onclick=()=>go(profBack);
   $('#pmid').onclick=e=>musCopy(f,e.currentTarget);
   {const fit=()=>app.querySelectorAll('.nd .nm').forEach(el=>{el.style.removeProperty('font-size');let fs=parseFloat(getComputedStyle(el).fontSize);while(el.scrollWidth>el.clientWidth+0.5&&fs>11){fs-=.5;el.style.setProperty('font-size',fs+'px','important')}});fit();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{if(view==='profile')fit()})}
-  if(mine){const pn=$('#pn');pn.onchange=()=>{const v=pn.value.trim().replace(/\s+/g,' ').slice(0,20);
+  if(mine){const pn=$('#pn');pn.onchange=()=>{const v=pn.value.trim().replace(/\s+/g,' ').slice(0,NAME_MAX);
     if(!v||S.friends.some(x=>!x.deleted&&x.id!==f.id&&x.name.toLowerCase()===v.toLowerCase())){pn.value=f.name;return}
     f.name=v;pn.value=v;save()}}
   if(mine){$('#av').onclick=$('#avc').onclick=()=>pickAvatar(f,p);}
-  const ap=$('#ap');if(ap)ap.onclick=()=>{const d=overlay('<h2 style="text-align:center">Todas las parejas</h2>'+mtab(mates)+'<button id="dk">Cerrar</button>');d.querySelector('#dk').onclick=()=>d.remove()};
+  const ap=$('#ap');if(ap)ap.onclick=()=>{const d=overlay('<h2 style="text-align:center">Todas las parejas</h2>'+mtab(mates)+'<button id="dk" class="cr">Cerrar</button>');d.querySelector('#dk').onclick=()=>d.remove()};
   if(mine)app.querySelectorAll('[data-slot]').forEach(b=>b.onclick=()=>pickSlot(f,p,+b.dataset.slot));
   app.querySelectorAll('.mg [data-a]').forEach(b=>b.onclick=()=>medalInfo(FAM.find(m=>m.id===b.dataset.a),p,CL));
   app.querySelectorAll('.mg [data-s]').forEach(b=>b.onclick=()=>secInfo(SEC.find(m=>m.id===b.dataset.s),p,CL));
@@ -1937,7 +1939,7 @@ function setup(){
   const G=AUTH==='guest',P=G?{}:progress(),me=meId();
   const gens=[1,2,3,4].map(n=>S.friends.find(f=>!f.deleted&&f.gen===n)),amigos=G?[]:live().filter(f=>!f.gen&&f.id!==me),yo=S.friends.find(x=>x.id===me);
   /* Invitado: cuatro genéricos fijos. Con sesión: hueco 0 = el perfil (fijo); huecos 1-3 = su genérico por defecto, sustituible por un amigo */
-  const fixed=(i,fid,name)=>'<label class="pl fj"><input type="hidden" id="p'+i+'" value="'+fid+'"><input type="text" class="gname" id="gn'+i+'" maxlength="16" autocomplete="off" enterkeyhint="done" aria-label="Nombre del jugador '+(i+1)+'" placeholder="Jugador '+(i+1)+'" value="'+esc((S.invNames&&S.invNames[fid])||'')+'"><div id="sb'+i+'" class="sbx"></div></label>';
+  const fixed=(i,fid,name)=>'<label class="pl fj"><input type="hidden" id="p'+i+'" value="'+fid+'"><input type="text" class="gname" id="gn'+i+'" maxlength="'+NAME_MAX+'" autocomplete="off" enterkeyhint="done" aria-label="Nombre del jugador '+(i+1)+'" placeholder="Jugador '+(i+1)+'" value="'+esc((S.invNames&&S.invNames[fid])||'')+'"><div id="sb'+i+'" class="sbx"></div></label>';
   const slot=i=>{
     if(G)return fixed(i,'inv'+(i+1),'Jugador '+(i+1));
     /* Todos los huecos se pueden cambiar: 1.º el genérico («Jugador N», sin la app), luego el perfil y luego los amigos */
@@ -1945,10 +1947,10 @@ function setup(){
     return '<label class="pl"><select id="p'+i+'" aria-label="Jugador">'+list.map(f=>'<option value="'+f.id+'"'+(f===d?' data-gen="1"':'')+(yo&&f===yo?' data-tag="Tú"':'')+(f===def?' selected':'')+'>'+esc(f.name)+'</option>').join('')+'</select><div id="sb'+i+'" class="sbx"></div></label>';
   };
   const c=S.cfg;
-  const tbox=(i,title,k)=>'<div class="card team" style="--c:var(--'+k+');--cf:var(--'+k+'f)"><b style="color:'+(k==='b'?'#a9d6ff':'#f7a99d')+'">'+title+'</b><div class="row">'+slot(i*2)+slot(i*2+1)+'</div><label>Nombre del equipo (opcional)<input id="tn'+i+'" maxlength="20" autocomplete="off" placeholder="'+(i?'Equipo rojo':'Equipo azul')+'"></label></div>';
+  const tbox=(i,title,k)=>'<div class="card team" style="--c:var(--'+k+');--cf:var(--'+k+'f)"><b style="color:'+(k==='b'?'#a9d6ff':'#f7a99d')+'">'+title+'</b><div class="row">'+slot(i*2)+slot(i*2+1)+'</div><label>Nombre del equipo (opcional)<input id="tn'+i+'" maxlength="'+TEAM_MAX+'" autocomplete="off" placeholder="'+(i?'Equipo rojo':'Equipo azul')+'"></label></div>';
   app.innerHTML='<div class="top"><button id="b">‹ Inicio</button><h2>Nueva partida</h2></div>'
   +tbox(0,'Tu equipo','b')+tbox(1,'Equipo rival','a')
-  +'<div class="card"><div class="row cfg"><label>Puntos por juego<input id="meta" type="number" min="5" value="'+c.meta+'" inputmode="numeric"></label>'
+  +'<div class="card"><div class="row cfg"><label>Puntos por juego<input id="meta" type="number" min="5" max="'+META_MAX+'" value="'+c.meta+'" inputmode="numeric"></label>'
   +'<label>Juegos por vaca<input id="jv" type="number" min="1" value="'+c.juegos+'" inputmode="numeric"></label>'
   +'<label>Vacas<input id="vc" type="number" min="1" value="'+c.vacas+'" inputmode="numeric"></label></div><label class="amis" for="inf"><input type="checkbox" id="inf"><span style="display:flex;align-items:center"><b>Partida infinita</b>'+help('infinita')+'</span></label></div>'
   +(G?'':'<div class="card"><label class="amis" for="am"><input type="checkbox" id="am"><span style="display:flex;align-items:center"><b>Partida amistosa</b>'+help('amistosa')+'</span></label></div>')
@@ -1970,8 +1972,8 @@ function setup(){
       if(new Set(nm.map(x=>x.toLowerCase())).size<4){dlg('Elige cuatro nombres distintos.',{});return}
       S.invNames={};nm.forEach((x,i)=>{if(x!=='Jugador '+(i+1))S.invNames['inv'+(i+1)]=x})}
     const n=k=>Math.max(1,parseInt($(k).value)||1);
-    S.cfg={meta:Math.max(5,n('#meta')),juegos:n('#jv'),vacas:n('#vc')};
-    S.tnames=S.tnames||{};const tn=[0,1].map(i=>{const v=$('#tn'+i).value.trim().slice(0,20),k=tkey(i);if(k){if(v)S.tnames[k]=v;else delete S.tnames[k]}return v});
+    S.cfg={meta:Math.min(META_MAX,Math.max(5,n('#meta'))),juegos:n('#jv'),vacas:n('#vc')};
+    S.tnames=S.tnames||{};const tn=[0,1].map(i=>{const v=$('#tn'+i).value.trim().slice(0,TEAM_MAX),k=tkey(i);if(k){if(v)S.tnames[k]=v;else delete S.tnames[k]}return v});
     S.game={id:uid(),p,pts:[0,0],jg:[0,0],vc:[0,0],hist:[],pal:[0,0],rs:[0,0],pz:[0,0],rsf:[false,false],jt:[0,0],tn,am:(!G&&$('#am').checked)?1:0,guest:G?1:0,inf:$('#inf').checked?1:0};save();go('game');vsIntro();
   };
 }
@@ -2009,7 +2011,7 @@ let menu=false;
 const chipHTML=(l,n)=>'<div class="chip" data-chip="'+l+'"><b style="color:#1d4f7a">'+ul(n)+'</b><b class="rot" style="color:#b3392f">'+ul(n)+'</b>'+lanceIcon(l,20)+(sel===l?'<button class="del" data-del="'+l+'" aria-label="Quitar puntos">✕</button>':'')+'</div>';
 let ordOpen=false;
 function ordPanel(rot){
-  return '<div class="mp'+(rot?' rot':'')+'"><div class="fr"><b>¿Quién ha ganado el órdago?</b><button data-od="x">✕</button></div><div class="opts g1">'+[0,1].map(i=>'<button data-od="'+i+'" style="background:'+col(i)+';color:#fff">'+pair(i)+'</button>').join('')+'</div></div>';
+  return '<div class="mp'+(rot?' rot':'')+'"><b>¿Quién ha ganado el órdago?</b><div class="opts g1 odo">'+[0,1].map(i=>'<button data-od="'+i+'">'+pair(i)+'</button>').join('')+'<button class="ghost odb" data-od="x">‹ Atrás</button></div></div>';
 }
 function menuPanel(rot){
   return '<div class="mp'+(rot?' rot':'')+'"><b>Partida</b><div class="opts g1"><button data-menu="r">Reiniciar partida</button><button data-menu="t">Terminar partida</button><button data-menu="q">Salir al inicio</button><button class="ghost" data-menu="x">Seguir jugando</button></div></div>';
@@ -2078,9 +2080,9 @@ function finish(i,inc){
 function endGame(){
   const g=S.game,a=[g.vc[0],g.jg[0],g.pts[0]],b=[g.vc[1],g.jg[1],g.pts[1]];
   let w=-1;for(let k=0;k<3;k++){if(a[k]!==b[k]){w=a[k]>b[k]?0:1;break}}
-  if(w<0){dlg('Van empatados: todavía no hay ganador. Sigue jugando hasta que una pareja se adelante.',{});return}
-  const inc=!g.inf,cnt=(g.am||g.guest)?'':(inc?' No contará como victoria ni derrota, ni para rachas ni amarracos. Los órdagos y las medallas especiales sí se contabilizan.':' Contará como victoria para esa pareja y como derrota para la otra.');
-  dlg('¿Terminar la partida? Gana la pareja que va por delante: '+fname(g.p[w*2])+' y '+fname(g.p[w*2+1])+'.'+cnt,{cancel:1,ok:'Terminar'},()=>finish(w,inc));
+  if(w<0){dlg('Van empatados: todavía no hay ganador. Sigue jugando hasta que una pareja se adelante.',{cr:1});return}
+  const inc=!g.inf;
+  dlg(inc||g.am||g.guest?'¿Terminar partida? No contará como victoria ni derrota.':'¿Terminar partida? Contará como victoria para la pareja que va por delante y como derrota para la otra.',{cancel:1,ok:'Terminar',cr:1},()=>finish(w,inc));
 }
 function add(i,n,rec){
   const g=S.game,c=S.cfg;
@@ -2149,7 +2151,7 @@ function victory(rec,i,A,B){
     +((rec.am||rec.inv||rec.inc)?'':'<div class="vk-d '+(dl>0?'up':dl<0?'dn':'')+'"><b>'+(dl>0?'+'+dl:dl<0?'−'+Math.abs(dl):'0')+'</b>'+trIcon(20)+'</div>')
     +(nm?'<div class="vk-md">'+(nm>1?nm+' medallas':'Medalla')+'</div>':'')+'</div>'};
   const pn=r=>{const ids=rec.t[r],won=r===i;
-    return '<div class="mp vp'+(won?'':' def')+(r?' rot':'')+'"><div class="vc-fit"><small>'+(rec.inc?(won?'Iban ganando':'Iban perdiendo'):(won?'¡Victoria!':'Derrota'))+'</small><div class="vg">'+ids.map(tile).join('')+'</div>'+(rec.inv?'':rec.am?'<div class="vu">Partida amistosa · sin cambios en los amarracos</div>':rec.inc?'<div class="vu">Partida terminada · no cuenta como victoria ni derrota</div>':'')+'</div></div>'};
+    return '<div class="mp vp'+(won?'':' def')+(r?' rot':'')+'"><div class="vc-fit"><small>'+(won?'¡Victoria!':'Derrota')+'</small><div class="vg">'+ids.map(tile).join('')+'</div>'+(rec.inv?'':rec.am?'<div class="vu">Partida amistosa · sin cambios en los amarracos</div>':'')+'</div></div>'};
   d.innerHTML=pn(1)+'<div class="row vrow"><button id="vx" type="button">Volver a inicio</button></div>'+pn(0);
   document.body.appendChild(d);rain(d,34,true,i===1);
   const fit=()=>fitBox(d,'.mp.vp','.vc-fit',false);fit();window.addEventListener('resize',fit);
@@ -2497,6 +2499,21 @@ html body #app.game .sc small.pn{display:flex;justify-content:center;align-items
 html body #app.game .sc small.pn span{display:-webkit-box;width:100%;max-width:100%;padding:0 0 .3em;line-height:1.4;text-align:center;overflow:hidden}
 html body #app.game .half .sc .big{justify-self:center;justify-content:center;width:100%;text-align:center}
 html body #app.game .sc .jv{justify-self:center;display:block;width:100%;text-align:center;line-height:1.5;padding:0 0 .25em .06em;overflow:visible}
+/* Menú de órdago: botones con el color de cada equipo y botón Atrás */
+html body .ov.gpn .mp .opts.odo>button[data-od="0"],html body .ov.gpn .mp .opts.odo>button[data-od="1"]{color:#fff6dc!important;font-weight:700;text-shadow:0 1px 0 rgba(0,0,0,.5);border:2px solid transparent!important}
+html body .ov.gpn .mp .opts.odo>button[data-od="0"]{background:linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,0) 50%) padding-box,linear-gradient(180deg,#3f82c0,#27598e 55%,#1d4670) padding-box,linear-gradient(180deg,#9fcdf5,#4d86bd) border-box!important;box-shadow:inset 0 -3px 6px rgba(0,0,0,.28),0 3px 0 #10294a,0 6px 9px rgba(0,0,0,.4)!important}
+html body .ov.gpn .mp .opts.odo>button[data-od="1"]{background:linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,0) 50%) padding-box,linear-gradient(180deg,#bf4a3c,#8f332a 55%,#6d2019) padding-box,linear-gradient(180deg,#f5a799,#b8574a) border-box!important;box-shadow:inset 0 -3px 6px rgba(0,0,0,.28),0 3px 0 #3b0f0b,0 6px 9px rgba(0,0,0,.4)!important}
+html body .ov.gpn .mp .opts.odo>button.odb{margin-top:8px;color:#f6efdc!important;text-shadow:0 1px 0 rgba(0,0,0,.45);font-weight:700;background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.02)) padding-box!important;border:1.5px solid rgba(201,162,78,.75)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 3px 0 rgba(0,0,0,.4)!important}
+
+/* ===== Botones crema (como el menú de la partida) en ventanas y avisos ===== */
+html body .ov.c .mp button.cr.cr.cr{padding:12px 10px;font:600 17px/1.15 Literata,Georgia,serif;border:0!important;border-radius:12px;color:#2a1a14!important;text-shadow:0 1px 0 rgba(255,255,255,.6);margin:0;transform:none;
+background:linear-gradient(180deg,#fbf3dc 0%,#efe4c6 48%,#d8c9a2 100%)!important;
+box-shadow:inset 0 1.5px 0 rgba(255,255,255,.9),inset 0 -3px 6px rgba(120,86,24,.3),0 3px 0 #9d8f68,0 6px 9px rgba(0,0,0,.4)!important}
+html body .ov.c .mp button.cr.cr.cr:active,html body .ov.c .mp button.cr.cr.cr.pr{filter:none!important;transform:translateY(3px)!important;box-shadow:inset 0 3px 7px rgba(0,0,0,.35),0 1px 0 rgba(0,0,0,.4)!important}
+/* aire entre el final del botón y el marco: que la sombra no se corte ni toque el borde */
+html body .ov.c .mp:has(button.cr){padding-bottom:30px}
+html body .ov.c .mp .mpi:has(button.cr):not(.mdet){padding:3px 6px 12px}
+html body .ov.c .mp .mpi.mdet:has(button.cr){padding-bottom:26px}
 </style>
 </body>
 </html>
