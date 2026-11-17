@@ -50,9 +50,15 @@ html::before,html::after{transition:background-color .35s ease}
 <div id="boot" aria-hidden="true"><div class="bs"><svg viewBox="0 0 48 48"><use href="#su-o"/></svg><svg viewBox="0 0 48 48"><use href="#su-c"/></svg><svg viewBox="0 0 48 48"><use href="#su-e"/></svg><svg viewBox="0 0 48 48"><use href="#su-b"/></svg></div></div>
 <script>
 
-(function(){var t0=Date.now(),MIN=1200,done=0;window.__bootHide=function(){if(done)return;done=1;var b=document.getElementById('boot');if(!b){document.documentElement.classList.remove('bt');return}
+(function(){var t0=Date.now(),MIN=1200,CAP=3000,done=0;
+/* Precarga de imágenes durante la pantalla de carga: se piden todas a la vez (las más usadas primero). La pantalla espera a que terminen, con un tope de CAP ms; las que falten siguen bajando en segundo plano. Si cambias una imagen o su ?v=, cámbialo también aquí. */
+var IMGS=['img/amarraco.webp','img/emblema-liga-0.webp','img/emblema-liga-1.webp','img/emblema-liga-2.webp','img/emblema-liga-3.webp','img/emblema-liga-4.webp','img/emblema-liga-5.webp','img/emblema-liga-6.webp','img/emblema-liga-7.webp','img/emblema-liga-8.webp','img/emblema-liga-9.webp','img/avatar-as-oros.webp?v=3','img/avatar-as-copas.webp?v=3','img/avatar-as-espadas.webp?v=3','img/avatar-as-bastos.webp?v=3','img/marco-0.webp?v=2','img/marco-1.webp?v=2','img/marco-2.webp?v=2','img/marco-3.webp?v=2','img/marco-4.webp?v=2','img/marco-5.webp?v=2','img/marco-6.webp?v=2','img/marco-7.webp?v=2','img/marco-8.webp?v=2','img/marco-9.webp?v=2','img/vs-escudos.webp','img/vs-esfera.webp','img/stat-victorias.webp?v=2','img/stat-racha.webp?v=2','img/stat-pareja.webp','img/nd-l0.webp','img/nd-l1.webp','img/nd-l2.webp','img/nd-l3.webp','img/nd-l4.webp','img/nd-l5.webp','img/nd-l6.webp','img/nd-l7.webp','img/nd-l8.webp','img/nd-l9.webp','img/rm-r0.webp','img/rm-r1.webp','img/rm-r2.webp','img/gp-sl-br.webp','img/gp-sl-sv.webp','img/gp-sl-go.webp','img/mf1.webp?v=2','img/mf2.webp?v=2','img/mf3.webp?v=2','img/mf4.webp?v=2','img/mf5.webp?v=2','img/mf6.webp?v=2','img/mf-s.webp?v=3','img/ms-rc.webp?v=4','img/ms-vw.webp?v=4','img/ms-pr.webp','img/ms-fi.webp','img/ms-od.webp','img/ms-vd.webp','img/ms-xrem.webp','img/ms-prim.webp?v=4','img/ms-noct.webp?v=3','img/ms-rev.webp?v=4','img/ms-res.webp','img/ms-pal.webp','img/ms-rom.webp?v=4','img/ms-paz.webp?v=6'];
+var imgsReady=null;try{window.__pre=[];var ps=IMGS.map(function(u){return new Promise(function(ok){var i=new Image();i.onload=i.onerror=function(){ok()};i.src=u;window.__pre.push(i)})});
+imgsReady=Promise.race([Promise.all(ps),new Promise(function(ok){setTimeout(ok,Math.max(0,CAP-(Date.now()-t0)))})])}catch(e){imgsReady=null}
+window.__bootHide=function(){if(done)return;done=1;var b=document.getElementById('boot');if(!b){document.documentElement.classList.remove('bt');return}
 var go=function(){setTimeout(function(){requestAnimationFrame(function(){requestAnimationFrame(function(){b.classList.add('off');document.documentElement.classList.remove('bt');setTimeout(function(){if(b.parentNode)b.parentNode.removeChild(b)},450)})})},Math.max(0,MIN-(Date.now()-t0)))};
-if(document.fonts&&document.fonts.ready){var t=setTimeout(go,1200);document.fonts.ready.then(function(){clearTimeout(t);go()})}else go()};
+var fr=(document.fonts&&document.fonts.ready)?new Promise(function(ok){var t=setTimeout(ok,1200);document.fonts.ready.then(function(){clearTimeout(t);ok()})}):null;
+if(fr&&imgsReady)Promise.all([fr,imgsReady]).then(go,go);else if(fr)fr.then(go);else if(imgsReady)imgsReady.then(go,go);else go()};
 window.addEventListener('load',function(){setTimeout(window.__bootHide,4000)})})();
 </script>
 
@@ -1051,6 +1057,8 @@ button.csopt .cstag{display:inline-block;margin-left:8px;padding:1px 7px;border-
 #list .fr .frmn{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 #list .fr .frm{min-width:0;max-width:100%}
 #list .fr .frms{font-size:11px;white-space:nowrap}
+/* Amigos: avatares sin brillo de fondo (quita el resplandor dorado del marco de liga máxima) */
+#list .fr .fra .av.g9 .fl,#list .fr .fra .av .fl{filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))!important}
 /* Amigos: ambos recuadros (Liga actual y Mejor pareja) con marco dorado grueso e interior verde oscuro */
 #list .fr .frc{border:3px solid #c9a24e;background:#173a28;padding:3px 6px 4px;box-shadow:none}
 /* Amigos: Liga actual con el emblema ocupando toda la zona izquierda y, a la derecha, título y liga alineados */
