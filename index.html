@@ -2813,5 +2813,28 @@ html body .ov.c .rqb .rqn{background:linear-gradient(180deg,rgba(255,255,255,.3)
 html body .ov.c .rqb button:active{transform:translateY(3px);filter:none;box-shadow:inset 0 3px 6px rgba(0,0,0,.4),0 1px 0 rgba(0,0,0,.4)!important}
 @media (max-width:360px){.rqr{padding:8px;gap:6px}.rqi .frn{font-size:15px}.rqa small{font-size:10px}html body .ov.c .rqb button{width:40px;height:40px}.rqb{gap:6px}}
 </style>
+<style id="ajustes-buscador-solicitudes">
+/* Buscador de Amigos: marco único dorado con la lupa en un cuadrado con cuerpo (el dibujo de la lupa sigue siendo de línea fina) */
+.sbx{--sbh:38px;align-items:stretch;border:2px solid #c9a24e;border-radius:12px;overflow:hidden;background:rgba(0,0,0,.3);box-shadow:inset 0 2px 5px rgba(0,0,0,.45),0 1px 0 rgba(255,255,255,.12)}
+.sbx:focus-within{border-color:#fff}
+html body .sbx input{flex:1 1 auto;min-width:0;width:auto;height:var(--sbh);box-sizing:border-box;border:0!important;border-radius:0;background:none!important;box-shadow:none!important;padding:0 10px;font-size:16px}
+html body .sbx input:focus{border:0!important;outline:none}
+html body .sbx .sbi{position:static;transform:none;flex:0 0 var(--sbh);width:var(--sbh);height:var(--sbh);border-radius:0;display:flex;align-items:center;justify-content:center;color:#2a1a04;cursor:pointer;
+border-left:2px solid #101010;
+background:linear-gradient(180deg,rgba(255,255,255,.4) 0,rgba(255,255,255,0) 52%),linear-gradient(180deg,#f0cd6a 0%,#d4a63c 55%,#a97c1f 100%);
+box-shadow:inset 0 1.5px 0 rgba(255,246,200,.85),inset 0 -3px 5px rgba(90,56,4,.4)}
+html body .sbx .sbi:active{filter:none;background:linear-gradient(180deg,#c99a32,#a97c1f);box-shadow:inset 0 3px 6px rgba(60,36,2,.55)}
+.sbx .sbi svg{width:18px;height:18px}
+@media (max-width:360px){.sbx{--sbh:36px}}
+
+/* Número de solicitudes: círculo con aro doble, relieve y brillo, número centrado */
+html body #app.friends .rqbtn .rqc{position:relative;flex:0 0 auto;min-width:30px;height:30px;padding:0 6px;margin-left:4px;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;border-radius:15px;
+font:800 16px/1 Literata,Georgia,serif;font-feature-settings:"lnum" 1,"tnum" 1;font-variant-numeric:lining-nums tabular-nums;letter-spacing:0;text-align:center;color:#fff3dc;text-shadow:0 1px 1px rgba(0,0,0,.65);
+background:radial-gradient(circle at 34% 26%,#c4581e 0%,#8a3508 48%,#561d00 100%);
+box-shadow:inset 0 1.5px 1px rgba(255,205,150,.65),inset 0 -2.5px 3px rgba(0,0,0,.55),0 0 0 2px #ffd28f,0 0 0 3.5px #101010,0 2px 3px 3.5px rgba(0,0,0,.28)}
+html body #app.friends .rqbtn .rqc{isolation:isolate}
+html body #app.friends .rqbtn .rqc::before{content:'';position:absolute;z-index:-1;left:18%;right:18%;top:9%;height:30%;border-radius:50%;background:linear-gradient(180deg,rgba(255,255,255,.4),rgba(255,255,255,0));pointer-events:none}
+html body #app.friends .rqbtn .rqc>*{position:relative}
+</style>
 </body>
 </html>
