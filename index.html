@@ -1420,6 +1420,7 @@ background:linear-gradient(180deg,rgba(255,226,140,.24),rgba(255,226,140,.07)),r
 .nd .tro svg{width:clamp(20px,6.6vw,26px)!important;height:auto!important}
 #app.senda .top h2{font-size:clamp(17px,5.8vw,24px);white-space:nowrap}
 </style>
+<script src="supabase.js"></script>
 <script>
 const ASES=['img/as-oros.webp?v=3','img/as-copas.webp?v=3','img/as-espadas.webp?v=3','img/as-bastos.webp?v=3'];
 const HELP={senda:'Vence rivales. Gana amarracos. Asciende por 10 ligas.',medallas:'Premios por tus logros. Suben de nivel según avanzas.',especiales:'Medallas ocultas que se logran con hazañas concretas.',amistosa:'No cambia amarracos, historial, rachas ni medallas.',infinita:'Jugad hasta que os canseis.'};
@@ -1435,7 +1436,7 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 document.addEventListener('scroll',close,true);
 document.addEventListener('keydown',e=>{if(e.key==='Escape')close();const b=e.target.closest&&e.target.closest('.hq');if(b&&(e.key==='Enter'||e.key===' ')){e.preventDefault();b.click()}});
 })();
-const KEY='mus-v2';
+const KEY='mus-v3';
 const NAME_MAX=14,TEAM_MAX=18,META_MAX=40; // longitudes máximas: nombre de jugador/perfil, nombre de equipo y puntos por juego
 
 let S={friends:[],hist:[],cfg:{meta:30,juegos:3,vacas:1},game:null};
@@ -1447,14 +1448,13 @@ const $=s=>document.querySelector(s), app=$('#app');
 const fname=id=>{const f=S.friends.find(x=>x.id===id);if(f)return f.name;const m=/^inv([1-4])$/.exec(id);return m?((S.invNames&&S.invNames[id])||'Jugador '+m[1]):'(borrado)'}; // inv1..inv4: jugadores del modo invitado (no son amigos)
 const live=()=>S.friends.filter(f=>!f.deleted);
 {const c=S.cfg||{};if(!S.cfg||(+c.meta===40&&+c.juegos===3&&+c.vacas===3))S.cfg={meta:30,juegos:3,vacas:1};
-{let t=S.friends.find(f=>!f.deleted&&f.id===S.me)||S.friends.find(f=>!f.deleted&&f.name.toLowerCase()==='tori');
-if(!t){t=S.friends.find(f=>!f.deleted&&f.name==='Jugador 1');if(t)t.name='Tori'}
-if(!t){t={id:'fj'+Date.now().toString(36)+'t',name:'Tori',medals:[]};S.friends.unshift(t)}
+{let t=S.friends.find(f=>!f.deleted&&f.id===S.me)||S.friends.find(f=>!f.deleted&&f.name==='Yo');
+if(!t){t={id:'fj'+Date.now().toString(36)+'t',name:'Yo',medals:[]};S.friends.unshift(t)}
 S.me=t.id}
 /* Jugadores genéricos (Jugador 2, 3 y 4): puestos por defecto en las partidas con sesión. No son amigos: no salen en Amigos (f.gen = su número) */
 [1,2,3,4].forEach(n=>{const nm='Jugador '+n;let g=S.friends.find(f=>!f.deleted&&f.gen===n)||S.friends.find(f=>!f.deleted&&!f.gen&&f.name===nm);if(!g){g={id:'fj'+Date.now().toString(36)+n,name:nm};S.friends.push(g)}g.gen=n});
 /* SOLO PRUEBAS: amigos de ejemplo con partidas contra el perfil (pareja y rival) para ver niveles, victorias y derrotas. Se crea una sola vez. Poner false para quitarlo */
-const PRUEBA_AMIGOS=true;
+const PRUEBA_AMIGOS=false;
 if(PRUEBA_AMIGOS&&!S.seedAm){
   const T={Hugo:[12,3,5,4],Crespo:[8,6,7,5],Valls:[4,9,3,10],Godoy:[2,2,1,3],'Álvaro':[6,5,6,6],Alberto:[3,1,2,2],'Ángela':[9,2,4,3],Patri:[1,4,5,1]};
   const nm=Object.keys(T),me=S.me,id={};
@@ -1475,7 +1475,7 @@ try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
    S.users  = otros jugadores que NO son amigos (id, name, musId, tr)
    S.reqIn  = ids de jugadores que te han enviado solicitud
    S.reqOut = ids de jugadores a los que se la has enviado */
-const PRUEBA_SOLICITUDES=true; // SOLO PRUEBAS: crea jugadores de ejemplo y 2 solicitudes recibidas (una sola vez). Poner false para quitarlo
+const PRUEBA_SOLICITUDES=false; // SOLO PRUEBAS: crea jugadores de ejemplo y 2 solicitudes recibidas (una sola vez). Poner false para quitarlo
 S.users=S.users||[];S.reqIn=S.reqIn||[];S.reqOut=S.reqOut||[];
 if(PRUEBA_SOLICITUDES&&!S.seedSol){
   [['Marta','K7M2QX',420],['Nacho','R4T9WB',1310],['Lucía','H8D3NZ',95],['Dani','X2P6VC',2150],['Sergio','M5J7YA',640],['Irene','T9C4EF',30]]
@@ -1528,9 +1528,9 @@ const featured=(f,p)=>[...new Set((f.medals||[]).map(id=>String(id).replace(/\d+
 const blank=()=>({tr:0,floor:0,lg:0,peak:0,streak:0,best:0,bestPair:0,w:0,l:0,g:0,pt:{},op:{},people:new Set(),days:{},ord:0,md:{},sec:{},paz:0,rev:0,soc:0,prev:null,last:null});
 const mx=(o,k)=>Math.max(0,...Object.values(o).map(r=>r[k]));
 const stat=p=>({w:p.w,best:p.best,pair:p.bestPair,peak:p.peak,people:p.people.size,partners:Object.keys(p.pt).length,oppG:mx(p.op,'g'),oppW:mx(p.op,'w'),pairW:mx(p.pt,'w'),paz:p.paz,rev:p.rev,soc:p.soc,day:Math.max(0,...Object.values(p.days)),ord:p.ord});
-const PRUEBA_TROFEOS=true; // SOLO PRUEBAS: da 3.500 amarracos al Jugador 1 (todas las ligas desbloqueadas). Poner false para quitarlo
-const PRUEBA_LIGAS=true; // SOLO PRUEBAS: reparte ligas distintas entre los jugadores (Jugador 1 Maestro, 2 Veterano, 3 Leyenda, 4 Aprendiz...). Poner false para quitarlo
-const PRUEBA_MEDALLAS=true; // SOLO PRUEBAS: da medallas de todos los niveles al Jugador 1. Poner false para quitarlo
+const PRUEBA_TROFEOS=false; // SOLO PRUEBAS: da 3.500 amarracos al Jugador 1 (todas las ligas desbloqueadas). Poner false para quitarlo
+const PRUEBA_LIGAS=false; // SOLO PRUEBAS: reparte ligas distintas entre los jugadores (Jugador 1 Maestro, 2 Veterano, 3 Leyenda, 4 Aprendiz...). Poner false para quitarlo
+const PRUEBA_MEDALLAS=false; // SOLO PRUEBAS: da medallas de todos los niveles al Jugador 1. Poner false para quitarlo
 function progress(hist){
   const H=(hist||S.hist).map((h,i)=>[h,i]).sort((a,b)=>a[0].fecha-b[0].fecha||a[1]-b[1]).map(x=>x[0]),P={},pairs={};
   const get=id=>P[id]||(P[id]=blank());
@@ -1671,23 +1671,36 @@ const PLK='<svg class="plk" viewBox="0 0 24 24" aria-hidden="true" fill="none" s
 /* ===== Cuentas (diseño listo para la base de datos) =====
    Todo el acceso pasa por el objeto API. Hoy SIMULA el servidor en este dispositivo (SIMULAR=true) para poder ver y probar el diseño;
    cuando llegue la base de datos solo hay que sustituir los cuatro métodos de API (registrar, entrar, recuperar, salir) y poner SIMULAR=false */
-const SIMULAR=true; // SOLO PRUEBAS: cuentas simuladas en este dispositivo y botón de «confirmar correo» sin correo real. Poner false al conectar la base de datos
+const SIMULAR=false; // SOLO PRUEBAS: cuentas simuladas en este dispositivo y botón de «confirmar correo» sin correo real. Poner false al conectar la base de datos
 const KEY_SES='mus-sesion'; // solo una marca de «sesión iniciada» en este dispositivo (sin correo ni contraseña)
 const EMAIL_RE=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/,PASS_MIN=6;
+const SB_URL='https://ksxrjrnecjilntkefltm.supabase.co',SB_KEY='sb_publishable_J121b3gCkI5P1UI5my-k-Q_R5dwTOea'; // claves públicas: la seguridad la ponen las reglas (RLS) de la base de datos
+const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+const errAuth=e=>{const m=String((e&&e.message)||''),c=String((e&&e.code)||'');
+  if(/invalid login|invalid_credentials/i.test(m+c))return'Correo o contraseña incorrectos.';
+  if(/already registered|user_already_exists/i.test(m+c))return'Ya existe un perfil con ese correo.';
+  if(/weak_password|at least/i.test(m+c))return'La contraseña debe tener al menos '+PASS_MIN+' caracteres.';
+  if(/rate.?limit/i.test(m+c))return'Se han enviado demasiados correos. Espera un rato e inténtalo de nuevo.';
+  return'No se ha podido completar. Revisa tu conexión e inténtalo de nuevo.'};
 const API={
-  /* Crea la cuenta y envía el correo de confirmación → {ok} | {error}. Simulación: acepta cualquier cosa y no guarda nada */
-  async registrar(email,pw){return{ok:true}},
-  /* Comprueba correo y contraseña → {ok} | {error} | {pendiente:true} (correo sin confirmar). Simulación: entra con cualquier cosa */
-  async entrar(email,pw){return{ok:true}},
-  /* Envía el correo para elegir otra contraseña. Siempre responde igual, exista o no la cuenta */
-  async recuperar(email){return{ok:true}},
-  /* Solo pruebas: da por confirmado el correo (en real, el usuario pulsa el enlace del correo) */
+  /* Crea la cuenta y envía el correo de confirmación → {ok} | {error} */
+  async registrar(email,pw){try{const{data,error}=await sb.auth.signUp({email,password:pw});
+    if(error)return{error:errAuth(error)};
+    if(data&&data.user&&Array.isArray(data.user.identities)&&!data.user.identities.length)return{error:'Ya existe un perfil con ese correo.'};
+    return{ok:true}}catch(e){return{error:errAuth(e)}}},
+  /* Comprueba correo y contraseña → {ok} | {error} | {pendiente:true} (correo sin confirmar) */
+  async entrar(email,pw){try{const{error}=await sb.auth.signInWithPassword({email,password:pw});
+    if(error){if(/not confirmed|email_not_confirmed/i.test(String(error.message)+String(error.code)))return{pendiente:true};return{error:errAuth(error)}}
+    return{ok:true}}catch(e){return{error:errAuth(e)}}},
+  /* Envía el correo para elegir otra contraseña. Responde siempre igual, exista o no la cuenta */
+  async recuperar(email){try{await sb.auth.resetPasswordForEmail(email)}catch(e){}return{ok:true}},
+  async salir(){try{await sb.auth.signOut()}catch(e){}},
   async confirmarSim(email){}
 };
 /* Sesión recordada en este dispositivo: al abrir la app entra sola. Solo se guarda que hay sesión, ningún dato escrito. Con la base de datos se guardará el token de sesión */
-const sesionGuardada=()=>{try{return !!localStorage.getItem(KEY_SES)}catch(e){return false}};
-const recordarSesion=()=>{try{localStorage.setItem(KEY_SES,'1')}catch(e){}};
-const olvidarSesion=()=>{try{localStorage.removeItem(KEY_SES)}catch(e){}};
+const sesionGuardada=()=>false; // la sesión la guarda la librería de Supabase
+const recordarSesion=()=>{};
+const olvidarSesion=()=>{API.salir()};
 
 /* Ventana de acceso: modo 'in' (Iniciar sesión) o 'up' (Crear perfil); mismo menú con correo, contraseña y Aceptar */
 function authDlg(modo,prefill){
@@ -1719,7 +1732,7 @@ function authDlg(modo,prefill){
     close();
     if(up)return confirmarDlg(m);
     if(r.pendiente)return confirmarDlg(m,true);
-    recordarSesion();enterMode('user');
+    await entrarUsuario();
   };
   K.onclick=enviar;
   [E,P].forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();enviar()}}));
@@ -1755,6 +1768,49 @@ function recuperarDlg(prefill){
 /* Punto único de inicio de sesión: abre el menú de acceso. Lo usan la portada, el invitado y los avisos de secciones bloqueadas */
 function login(){authDlg('in')}
 function crearPerfil(){authDlg('up')}
+/* ===== Perfil en la nube (fase A) ===== */
+const cloudErr=()=>dlg('No se ha podido conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.',{},()=>{});
+/* Pide el nombre de perfil la primera vez (no se puede cancelar; se puede cambiar luego en Mi perfil; se permiten repetidos) */
+function nombreDlg(){return new Promise(res=>{
+  const d=document.createElement('div');d.className='ov c auth';
+  d.innerHTML='<div class="mp"><b>Elige tu nombre de perfil</b><p class="atx">Es el nombre que verán tus amigos. Podrás cambiarlo después en Mi perfil.</p>'
+   +'<label class="alb" for="nm">Nombre</label><input id="nm" maxlength="'+NAME_MAX+'" autocomplete="off" placeholder="Tu nombre">'
+   +'<p class="aerr" id="aer" role="alert"></p><div class="row"><button id="dk" class="cr">Aceptar</button></div></div>';
+  document.body.appendChild(d);
+  const I=d.querySelector('#nm'),R=d.querySelector('#aer'),K=d.querySelector('#dk');I.focus();
+  const ok=async()=>{const v=I.value.trim().replace(/\s+/g,' ').slice(0,NAME_MAX);if(!v){R.textContent='Escribe un nombre.';return}
+    K.disabled=true;const{error}=await sb.from('perfiles').update({nombre:v}).eq('id',(await sb.auth.getUser()).data.user.id);
+    K.disabled=false;if(error){R.textContent='No se ha podido guardar. Inténtalo de nuevo.';return}
+    d.remove();res(v)};
+  K.onclick=ok;I.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ok()}})})}
+/* Sustituye el id local de mi perfil por el de la cuenta en todos los datos */
+function adoptarId(viejo,nuevo){if(!viejo||viejo===nuevo)return;S=JSON.parse(JSON.stringify(S).split('"'+viejo+'"').join('"'+nuevo+'"'))}
+/* Carga el perfil de la nube y lo hace «mi perfil» en este dispositivo */
+async function prepararPerfil(user){
+  if(S.uid&&S.uid!==user.id){try{localStorage.removeItem(KEY)}catch(e){}location.reload();return false} // otra cuenta en este dispositivo: empieza limpio
+  const{data:p,error}=await sb.from('perfiles').select('nombre,mus_id').eq('id',user.id).maybeSingle();
+  if(error||!p)return S.uid===user.id?true:(cloudErr(),false); // sin conexión: si ya conocíamos la cuenta, se entra con los datos del dispositivo
+  let nombre=p.nombre;if(!nombre)nombre=await nombreDlg();
+  const me=S.friends.find(f=>f.id===S.me);adoptarId(me&&me.id,user.id);S.me=user.id;
+  const mi=S.friends.find(f=>f.id===user.id);mi.name=nombre;mi.musId=p.mus_id;S.uid=user.id;save();return true}
+let entrando=false;
+async function entrarUsuario(){if(entrando)return;entrando=true;
+  try{const{data}=await sb.auth.getSession(),u=data&&data.session&&data.session.user;
+    if(!u){return}
+    if(await prepararPerfil(u))enterMode('user')}
+  catch(e){cloudErr()}finally{entrando=false}}
+/* Cambiar contraseña (tras pulsar el enlace del correo de recuperación) */
+function nuevaPassDlg(){
+  const d=document.createElement('div');d.className='ov c auth';
+  d.innerHTML='<div class="mp"><b>Elige una contraseña nueva</b><label class="alb" for="np">Contraseña nueva</label><input id="np" type="password" autocomplete="new-password" placeholder="Mínimo '+PASS_MIN+' caracteres">'
+   +'<p class="aerr" id="aer" role="alert"></p><div class="row"><button id="dk" class="cr">Guardar</button></div></div>';
+  document.body.appendChild(d);
+  const I=d.querySelector('#np'),R=d.querySelector('#aer'),K=d.querySelector('#dk');
+  const ok=async()=>{if(I.value.length<PASS_MIN){R.textContent='La contraseña debe tener al menos '+PASS_MIN+' caracteres.';return}
+    K.disabled=true;const{error}=await sb.auth.updateUser({password:I.value});K.disabled=false;
+    if(error){R.textContent=errAuth(error);return}d.remove();dlg('Contraseña cambiada.',{},()=>{});entrarUsuario()};
+  K.onclick=ok;I.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ok()}})}
+sb.auth.onAuthStateChange(ev=>{if(ev==='PASSWORD_RECOVERY')setTimeout(nuevaPassDlg,0)});
 function logout(){olvidarSesion();AUTH=null;go('welcome')}
 function enterMode(m){
   AUTH=m;const guest=m==='guest';
@@ -1778,7 +1834,7 @@ function draw(){if(!AUTH)view='welcome';else if(AUTH==='guest'&&LOCKED.includes(
 
 const RANKS=[1,2,3,4,5,6,7,10,11,12],SN={o:'oros',c:'copas',e:'espadas',b:'bastos'};
 const ensureMe=cb=>{if(!live().some(f=>f.id===S.me)){S.me=(live()[0]||{}).id;save()}cb()};
-const PRUEBA_RECLAMO=true; // SOLO PRUEBAS: al abrir la app deja medallas del Jugador 1 pendientes de reclamar (se repite en cada recarga). Poner false para quitarlo
+const PRUEBA_RECLAMO=false; // SOLO PRUEBAS: al abrir la app deja medallas del Jugador 1 pendientes de reclamar (se repite en cada recarga). Poner false para quitarlo
 /* ===== Medallas: lo reclamado se guarda por jugador (S.claim[id][medalla] = nivel reclamado; especiales: 1) ===== */
 const meId=()=>live().some(f=>f.id===S.me)?S.me:(live()[0]||{}).id;
 function ensureClaims(P){
@@ -1973,7 +2029,7 @@ const glyph=i=>{const g=GLY[i];if(g)return g;
 const FRAMES=["img/marco-0.webp?v=2","img/marco-1.webp?v=2","img/marco-2.webp?v=2","img/marco-3.webp?v=2","img/marco-4.webp?v=2","img/marco-5.webp?v=2","img/marco-6.webp?v=2","img/marco-7.webp?v=2","img/marco-8.webp?v=2","img/marco-9.webp?v=2"];
 const AVIMG=["img/avatar-as-oros.webp?v=3","img/avatar-as-copas.webp?v=3","img/avatar-as-espadas.webp?v=3","img/avatar-as-bastos.webp?v=3"];
 const ACES=['o','c','e','b'],ACEN=['Oros','Copas','Espadas','Bastos'];
-const PRUEBA_MARCOS=true; // SOLO PRUEBAS: desbloquea los 10 marcos para elegirlos. Poner false para quitarlo
+const PRUEBA_MARCOS=false; // SOLO PRUEBAS: desbloquea los 10 marcos para elegirlos. Poner false para quitarlo
 const lgCap=p=>PRUEBA_MARCOS?9:p.lg;
 const aceImg=k=>'<img alt="" draggable="false" src="'+AVIMG[Math.max(0,ACES.indexOf(k))]+'">';
 const avFrame=(fr,inner,s,lock,cc)=>'<span class="av'+(fr===9?' g9':'')+(lock?' lk':'')+'" style="--s:'+s+'px"><span class="ct'+(cc?' '+cc:'')+'">'+inner+'</span><img class="fl" alt="" draggable="false" src="'+FRAMES[fr]+'"></span>';
@@ -2065,7 +2121,7 @@ function profile(){
   {const fit=()=>app.querySelectorAll('.nd .nm').forEach(el=>{el.style.removeProperty('font-size');let fs=parseFloat(getComputedStyle(el).fontSize);while(el.scrollWidth>el.clientWidth+0.5&&fs>11){fs-=.5;el.style.setProperty('font-size',fs+'px','important')}});fit();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{if(view==='profile')fit()})}
   if(mine){const pn=$('#pn');pn.onchange=()=>{const v=pn.value.trim().replace(/\s+/g,' ').slice(0,NAME_MAX);
     if(!v||S.friends.some(x=>!x.deleted&&x.id!==f.id&&x.name.toLowerCase()===v.toLowerCase())){pn.value=f.name;return}
-    f.name=v;pn.value=v;save()}}
+    f.name=v;pn.value=v;save();if(AUTH==='user')sb.from('perfiles').update({nombre:v}).eq('id',S.me).then(()=>{})}}
   if(mine){$('#av').onclick=$('#avc').onclick=()=>pickAvatar(f,p);}
   const ap=$('#ap');if(ap)ap.onclick=()=>{const d=overlay('<h2 style="text-align:center">Todas las parejas</h2>'+mtab(mates)+'<button id="dk" class="cr">Cerrar</button>');d.querySelector('#dk').onclick=()=>d.remove()};
   if(mine)app.querySelectorAll('[data-slot]').forEach(b=>b.onclick=()=>pickSlot(f,p,+b.dataset.slot));
@@ -2320,8 +2376,8 @@ function bootTo(fn){
 view='welcome';
 ensureClaims(progress());pruebaReclamo();
 draw();
-{const h=location.hash.slice(1);if(h)PEND=h} // el enlace compartido se importa al iniciar sesión
-{const t=sesionGuardada();if(t)enterMode('user')} // sesión recordada en este dispositivo: entra directamente, sin pedir los datos
+{const h=location.hash.slice(1);if(h&&!/access_token=|refresh_token=|error=|error_code=|type=(signup|recovery|magiclink|invite|email_change)/.test(h))PEND=h} // el enlace compartido se importa al iniciar sesión
+entrarUsuario() // sesión recordada en este dispositivo: entra directamente, sin pedir los datos
 </script>
 <script>
 /* Efecto de hundirse al pulsar: funciona con dedo y ratón, y se alcanza a ver antes de cambiar de pantalla */
