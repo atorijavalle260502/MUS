@@ -1643,9 +1643,94 @@ function dlg(text,o,cb){
 /* ===== Acceso: sesión o invitado ===== */
 const LOCKED=['senda','friends','profile']; // secciones que exigen sesión
 const PLK='<svg class="plk" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9.5" rx="2.2" fill="currentColor" fill-opacity=".25"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
-/* Punto único de inicio de sesión. Hoy es local (perfil de este dispositivo); cuando lleguen las cuentas (Google/servidor), solo cambia esta función */
-function login(){enterMode('user')}
-function logout(){AUTH=null;go('welcome')}
+/* ===== Cuentas (diseño listo para la base de datos) =====
+   Todo el acceso pasa por el objeto API. Hoy SIMULA el servidor en este dispositivo (SIMULAR=true) para poder ver y probar el diseño;
+   cuando llegue la base de datos solo hay que sustituir los cuatro métodos de API (registrar, entrar, recuperar, salir) y poner SIMULAR=false */
+const SIMULAR=true; // SOLO PRUEBAS: cuentas simuladas en este dispositivo y botón de «confirmar correo» sin correo real. Poner false al conectar la base de datos
+const KEY_SES='mus-sesion'; // solo una marca de «sesión iniciada» en este dispositivo (sin correo ni contraseña)
+const EMAIL_RE=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/,PASS_MIN=6;
+const API={
+  /* Crea la cuenta y envía el correo de confirmación → {ok} | {error}. Simulación: acepta cualquier cosa y no guarda nada */
+  async registrar(email,pw){return{ok:true}},
+  /* Comprueba correo y contraseña → {ok} | {error} | {pendiente:true} (correo sin confirmar). Simulación: entra con cualquier cosa */
+  async entrar(email,pw){return{ok:true}},
+  /* Envía el correo para elegir otra contraseña. Siempre responde igual, exista o no la cuenta */
+  async recuperar(email){return{ok:true}},
+  /* Solo pruebas: da por confirmado el correo (en real, el usuario pulsa el enlace del correo) */
+  async confirmarSim(email){}
+};
+/* Sesión recordada en este dispositivo: al abrir la app entra sola. Solo se guarda que hay sesión, ningún dato escrito. Con la base de datos se guardará el token de sesión */
+const sesionGuardada=()=>{try{return !!localStorage.getItem(KEY_SES)}catch(e){return false}};
+const recordarSesion=()=>{try{localStorage.setItem(KEY_SES,'1')}catch(e){}};
+const olvidarSesion=()=>{try{localStorage.removeItem(KEY_SES)}catch(e){}};
+
+/* Ventana de acceso: modo 'in' (Iniciar sesión) o 'up' (Crear perfil); mismo menú con correo, contraseña y Aceptar */
+function authDlg(modo,prefill){
+  const up=modo==='up',d=document.createElement('div');d.className='ov c auth';
+  d.innerHTML='<div class="mp"><b>'+(up?'Crear perfil':'Iniciar sesión')+'</b>'
+   +'<label class="alb" for="ae">Correo electrónico</label><input id="ae" type="email" inputmode="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="nombre@correo.com">'
+   +'<label class="alb" for="ap">Contraseña</label><input id="ap" type="password" autocomplete="'+(up?'new-password':'current-password')+'" placeholder="'+(up&&!SIMULAR?'Mínimo '+PASS_MIN+' caracteres':'Tu contraseña')+'">'
+   +(up?'':'<button type="button" class="alk" id="af" style="background:none">¿Has olvidado tu contraseña?</button>')
+   +(up?'':'<button type="button" class="alk" id="an" style="background:none">¿No tienes perfil? Crear perfil</button>')
+   +'<p class="aerr" id="aer" role="alert"></p>'
+   +'<div class="row"><button class="ghost cr2" id="dc">Cancelar</button><button id="dk" class="cr">Aceptar</button></div></div>';
+  document.body.appendChild(d);
+  const E=d.querySelector('#ae'),P=d.querySelector('#ap'),R=d.querySelector('#aer'),K=d.querySelector('#dk');
+  if(prefill)E.value=prefill;
+  const err=t=>{R.textContent=t||''},close=()=>d.remove();
+  d.querySelector('#dc').onclick=close;
+  const N=d.querySelector('#an');if(N)N.onclick=()=>{const m=E.value.trim();close();authDlg('up',m)};
+  const F=d.querySelector('#af');if(F)F.onclick=()=>{const m=E.value.trim().toLowerCase();close();recuperarDlg(m)};
+  const enviar=async()=>{
+    const m=E.value.trim().toLowerCase(),p=P.value;err('');
+    if(!SIMULAR){ // en la simulación vale cualquier cosa
+      if(!EMAIL_RE.test(m)){err('Escribe un correo electrónico válido.');E.focus();return}
+      if(!p){err('Escribe tu contraseña.');P.focus();return}
+      if(up&&p.length<PASS_MIN){err('La contraseña debe tener al menos '+PASS_MIN+' caracteres.');P.focus();return}}
+    K.disabled=true;
+    const r=await (up?API.registrar(m,p):API.entrar(m,p));
+    K.disabled=false;
+    if(r.error){err(r.error);return}
+    close();
+    if(up)return confirmarDlg(m);
+    if(r.pendiente)return confirmarDlg(m,true);
+    recordarSesion();enterMode('user');
+  };
+  K.onclick=enviar;
+  [E,P].forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();enviar()}}));
+}
+/* Aviso de «revisa tu correo»: la cuenta no se activa hasta confirmar el correo */
+function confirmarDlg(m,reintento){
+  const d=document.createElement('div');d.className='ov c auth';
+  d.innerHTML='<div class="mp"><b>'+(reintento?'Falta confirmar tu correo':'Confirma tu correo')+'</b>'
+   +'<p class="atx"></p>'
+   +(SIMULAR?'<p class="asim">Solo pruebas: aún no hay servidor de correo.</p><button type="button" id="ac" class="ghost cr2">Simular que he confirmado</button>':'')
+   +'<div class="row"><button id="dk" class="cr">Aceptar</button></div></div>';
+  d.querySelector('.atx').textContent=(reintento?'Tu perfil todavía no está activado. ':'Te hemos enviado un correo a ')+(reintento?'Abre el enlace del correo que enviamos a ':'')+m+(reintento?'':' con un enlace para activar tu perfil.')+' Cuando lo confirmes, podrás iniciar sesión.';
+  document.body.appendChild(d);
+  d.querySelector('#dk').onclick=()=>d.remove();
+  const c=d.querySelector('#ac');if(c)c.onclick=async()=>{await API.confirmarSim(m);d.remove();dlg('Correo confirmado. Ya puedes iniciar sesión.',{ok:'Iniciar sesión'},()=>authDlg('in',m))};
+}
+/* Recuperar contraseña: pide el correo y avisa sin revelar si la cuenta existe */
+function recuperarDlg(prefill){
+  const d=document.createElement('div');d.className='ov c auth';
+  d.innerHTML='<div class="mp"><b>Recuperar contraseña</b><p class="atx">Escribe tu correo electrónico y te enviaremos un enlace para elegir una contraseña nueva.</p>'
+   +'<label class="alb" for="ae">Correo electrónico</label><input id="ae" type="email" inputmode="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="nombre@correo.com">'
+   +'<p class="aerr" id="aer" role="alert"></p>'
+   +'<div class="row"><button class="ghost cr2" id="dc">Cancelar</button><button id="dk" class="cr">Enviar enlace</button></div></div>';
+  document.body.appendChild(d);
+  const E=d.querySelector('#ae'),R=d.querySelector('#aer'),K=d.querySelector('#dk');if(prefill)E.value=prefill;
+  d.querySelector('#dc').onclick=()=>d.remove();
+  const enviar=async()=>{const m=E.value.trim().toLowerCase();R.textContent='';
+    if(!SIMULAR&&!EMAIL_RE.test(m)){R.textContent='Escribe un correo electrónico válido.';E.focus();return}
+    K.disabled=true;await API.recuperar(m);d.remove();
+    dlg('Si existe un perfil con ese correo, te hemos enviado un enlace para cambiar la contraseña.',{},()=>{})};
+  K.onclick=enviar;E.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();enviar()}});
+}
+/* Punto único de inicio de sesión: abre el menú de acceso. Lo usan la portada, el invitado y los avisos de secciones bloqueadas */
+function login(){authDlg('in')}
+function crearPerfil(){authDlg('up')}
+function logout(){olvidarSesion();AUTH=null;go('welcome')}
 function enterMode(m){
   AUTH=m;const guest=m==='guest';
   /* La partida en curso es de un modo u otro: la del otro modo se aparca (S.pk.user / S.pk.guest) y se recupera al volver a él */
@@ -1660,9 +1745,9 @@ function enterMode(m){
 const lockMsg=n=>dlg('Inicia sesión para acceder a '+n+'.',{cancel:1,ok:'Iniciar sesión'},login);
 function welcome(){
   app.innerHTML='<div class="hsuits">'+['o','c','e','b'].map(k=>suit(k,k==='o'?50:64)).join('')+'</div><div class="logo">MUS</div>'+fan()
-  +'<div class="menu"><button class="gold" style="width:100%" id="li">Iniciar sesión</button><button class="ghost" style="width:100%;background:var(--card)" id="gu">Jugar como invitado</button>'
+  +'<div class="menu"><button class="gold" style="width:100%" id="li">Iniciar sesión</button><button class="ghost" style="width:100%;background:var(--card)" id="cp">Crear perfil</button><button class="ghost" style="width:100%;background:var(--card)" id="gu">Jugar como invitado</button>'
   +'<p class="wnote">Como invitado puedes jugar, pero sin perfil, amigos ni estadísticas.</p></div>';
-  $('#li').onclick=login;$('#gu').onclick=()=>enterMode('guest');
+  $('#li').onclick=login;$('#cp').onclick=crearPerfil;$('#gu').onclick=()=>enterMode('guest');
 }
 function draw(){if(!AUTH)view='welcome';else if(AUTH==='guest'&&LOCKED.includes(view))view='home';app.className=view==='welcome'?'home':view;({welcome,home,friends,setup,game,profile,senda})[view]()}
 
@@ -2183,6 +2268,7 @@ view='welcome';
 ensureClaims(progress());pruebaReclamo();
 draw();
 {const h=location.hash.slice(1);if(h)PEND=h} // el enlace compartido se importa al iniciar sesión
+{const t=sesionGuardada();if(t)enterMode('user')} // sesión recordada en este dispositivo: entra directamente, sin pedir los datos
 </script>
 <script>
 /* Efecto de hundirse al pulsar: funciona con dedo y ratón, y se alcanza a ver antes de cambiar de pantalla */
@@ -2399,6 +2485,19 @@ html body #app .pcard .plg .nd.cur[data-l]{position:relative;z-index:1;box-shado
 try{if(screen.orientation&&screen.orientation.lock){screen.orientation.lock('portrait').catch(function(){})}}catch(e){}
 </script>
 <script>window.__bootHide&&window.__bootHide();</script>
+<style id="acceso-cuentas-css">
+/* Ventanas de acceso: Iniciar sesión, Crear perfil, confirmar correo y recuperar contraseña (mismo marco, campos y botones que el resto de ventanas) */
+.ov.auth .mp>b{font:700 20px Literata,Georgia,serif;text-align:center;letter-spacing:.02em;margin-bottom:2px}
+.ov.auth .alb{font:600 14px Literata,Georgia,serif;color:var(--mute);margin:2px 0 -4px 2px}
+.ov.auth input{width:100%}
+.ov.auth .mp>button.alk{align-self:center;border:0!important;background:none!important;box-shadow:none!important;color:#e8bd55!important;text-shadow:none!important;font:600 14px Literata,Georgia,serif;text-decoration:underline;text-underline-offset:3px;padding:4px 8px;margin:0;min-height:0;width:auto;transform:none}
+.ov.auth .aerr{margin:0;min-height:0;text-align:center;font-size:13.5px;line-height:1.35;color:#ff9a8c}
+.ov.auth .aerr:empty{display:none}
+.ov.auth .atx{margin:0;text-align:center;font-size:15px;line-height:1.45;color:var(--ink);overflow-wrap:anywhere}
+.ov.auth .asim{margin:0;text-align:center;font-size:12.5px;line-height:1.35;color:var(--mute)}
+.ov.auth .mp>button.cr2{width:100%}
+.ov.auth button:disabled{opacity:.6}
+</style>
 <style id="acceso-css">
 /* Acceso: pantalla inicial, secciones bloqueadas y jugadores fijos */
 .wnote{margin:2px 0 0;text-align:center;font-size:13px;line-height:1.35;color:rgba(246,239,220,.74)}
@@ -2549,6 +2648,29 @@ html body #app #list .fr>button.frs.frs.frs.frs.frs.frs.frs.frs.frs.frs.frs.frs.
 /* Medallas especiales bloqueadas: diseño muy oscurecido, apenas se distingue */
 .mg.sp .mdl.off,.mhd.sp .mdl.off{filter:grayscale(1) brightness(.3) contrast(.85) blur(.6px);opacity:.75}
 .mg.sp .med.lkd span,.mg.sp .med.lkd small{opacity:.7}
+</style>
+<style id="botones-borde-negro">
+/* Botones crema y dorados con reborde negro fino, base oscura y centro más claro que los bordes (como el verde de «Cancelar») */
+/* Ventanas: crema junto a otro botón (verde; azul en Mi perfil) */
+html body .ov.c .mp button.cr.cr.cr.cr:not(.pr):not(:active),
+html body .ov.c .mp .row>button:not(.ghost):not(.cr2):not([style]):not(.pr):not(:active){border:1.5px solid #101010!important;
+box-shadow:inset 0 1.5px 0 rgba(255,255,255,.9),inset 0 -3px 6px rgba(120,86,24,.3),inset 0 0 9px rgba(120,86,24,.28),0 3px 0 #0f2418,0 6px 9px rgba(0,0,0,.4)!important}
+html[data-v="profile"] body .ov.c .mp button.cr.cr.cr.cr:not(.pr):not(:active),
+html[data-v="profile"] body .ov.c .mp .row>button:not(.ghost):not(.cr2):not([style]):not(.pr):not(:active){box-shadow:inset 0 1.5px 0 rgba(255,255,255,.9),inset 0 -3px 6px rgba(120,86,24,.3),inset 0 0 9px rgba(120,86,24,.28),0 3px 0 #060b1e,0 6px 9px rgba(0,0,0,.4)!important}
+/* Partida: +1 y +5 */
+.half .btns button:not([data-n="-1"]):not(.pr):not(:active){border:1.5px solid #101010!important;
+box-shadow:inset 0 1.5px 0 rgba(255,255,255,.9),inset 0 -3px 6px rgba(120,86,24,.3),inset 0 0 9px rgba(120,86,24,.28),0 3px 0 #0b0b0b,0 6px 9px rgba(0,0,0,.45)!important}
+/* Partida: −1 (conserva su relleno translúcido) */
+html body #app .half .btns button[data-n="-1"]:not(.pr):not(:active){border:1.5px solid #101010!important;
+box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 -2px 4px rgba(0,0,0,.3),inset 0 0 9px rgba(0,0,0,.3),0 3px 0 #0b0b0b,0 6px 9px rgba(0,0,0,.3)!important}
+/* Partida: Órdago (dorado) */
+html body #app .half .ord:not(.pr):not(:active){border:1.5px solid #101010!important;
+box-shadow:inset 0 1.5px 0 rgba(255,246,200,.85),inset 0 -3px 6px rgba(90,56,4,.35),inset 0 0 9px rgba(90,56,4,.3),0 3px 0 #0b0b0b,0 6px 9px rgba(0,0,0,.4)!important}
+/* Menú de la partida: crema y «Seguir jugando» (dorado) */
+html body .ov.gpn .mp .opts.g1>button:not(.ghost):not(.pr):not(:active){border:1.5px solid #101010!important;
+box-shadow:inset 0 1.5px 0 rgba(255,255,255,.9),inset 0 -3px 6px rgba(120,86,24,.3),inset 0 0 9px rgba(120,86,24,.28),0 3px 0 #0f2418,0 6px 9px rgba(0,0,0,.4)!important}
+html body .ov.gpn .mp .opts.g1>button.ghost:not(.pr):not(:active){border:1.5px solid #101010!important;
+box-shadow:inset 0 1.5px 0 rgba(255,246,200,.85),inset 0 -3px 6px rgba(90,56,4,.35),inset 0 0 9px rgba(90,56,4,.3),0 3px 0 #0f2418,0 6px 9px rgba(0,0,0,.4)!important}
 </style>
 </body>
 </html>
