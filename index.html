@@ -1483,10 +1483,14 @@ if(PRUEBA_SOLICITUDES&&!S.seedSol){
   S.reqIn=['u_marta','u_nacho'];S.seedSol=1;save();
 }
 const reqList=()=>(S.reqIn||[]).map(id=>(S.users||[]).find(u=>u.id===id)).filter(Boolean);
-function acceptReq(id){const u=(S.users||[]).find(x=>x.id===id);if(!u)return;
+async function acceptReq(id){
+  if(isUuid(id)){const{error}=await sb.from('amistades').update({estado:'aceptada'}).eq('de',id).eq('a',S.uid);if(error){cloudErr();return}await sincAmistades();return}
+  const u=(S.users||[]).find(x=>x.id===id);if(!u)return;
   if(!S.friends.some(f=>f.id===id))S.friends.push({id:u.id,name:u.name,musId:u.musId,medals:[]});
   S.users=S.users.filter(x=>x.id!==id);S.reqIn=S.reqIn.filter(x=>x!==id);S.reqOut=(S.reqOut||[]).filter(x=>x!==id);save()}
-function rejectReq(id){S.reqIn=(S.reqIn||[]).filter(x=>x!==id);save()}
+async function rejectReq(id){
+  if(isUuid(id)){const{error}=await sb.from('amistades').delete().eq('de',id).eq('a',S.uid);if(error){cloudErr();return}await sincAmistades();return}
+  S.reqIn=(S.reqIn||[]).filter(x=>x!==id);save()}
 const SV={"o": "<circle cx=\"24\" cy=\"24\" r=\"21.5\" fill=\"#e8b83a\" stroke=\"#1d2a44\" stroke-width=\"2.2\"/><circle cx=\"24\" cy=\"24\" r=\"17.4\" fill=\"#f6d869\" stroke=\"#1d2a44\" stroke-width=\"1.3\"/><circle cx=\"24\" cy=\"24\" r=\"11.6\" fill=\"none\" stroke=\"#b5801a\" stroke-width=\"2.4\" stroke-dasharray=\"2.3 2.7\"/><circle cx=\"24\" cy=\"24\" r=\"6.2\" fill=\"#e8b83a\" stroke=\"#1d2a44\" stroke-width=\"1.6\"/>", "c": "<path d=\"M9.6 7.6H38.4C38.4 19.4 32.8 25.4 24 25.4S9.6 19.4 9.6 7.6Z\" fill=\"#c1403a\" stroke=\"#1d2a44\" stroke-width=\"2.2\" stroke-linejoin=\"round\"/>\n<path d=\"M11.2 13.6C18 17.4 30 17.4 36.8 13.6\" fill=\"none\" stroke=\"#f1c24a\" stroke-width=\"2.6\" stroke-linecap=\"round\"/>\n<ellipse cx=\"24\" cy=\"7.6\" rx=\"14.4\" ry=\"3.3\" fill=\"#f1c24a\" stroke=\"#1d2a44\" stroke-width=\"2\"/>\n<path d=\"M21.2 25 H26.8 L26.2 36.6 H21.8Z\" fill=\"#f1c24a\" stroke=\"#1d2a44\" stroke-width=\"2\" stroke-linejoin=\"round\"/>\n<ellipse cx=\"24\" cy=\"30.4\" rx=\"5.8\" ry=\"2.4\" fill=\"#f1c24a\" stroke=\"#1d2a44\" stroke-width=\"1.9\"/>\n<path d=\"M12.4 44C12.4 39.4 17.4 36.4 24 36.4S35.6 39.4 35.6 44Z\" fill=\"#f1c24a\" stroke=\"#1d2a44\" stroke-width=\"2.2\" stroke-linejoin=\"round\"/>", "e": "<path d=\"M24 1.8C25.6 6.6 27.2 11 27.2 16.6V32H20.8V16.6C20.8 11 22.4 6.6 24 1.8Z\" fill=\"#d9e0ea\" stroke=\"#1d2a44\" stroke-width=\"2.2\" stroke-linejoin=\"round\"/>\n<path d=\"M24 9V29\" stroke=\"#8c97a8\" stroke-width=\"1.6\" stroke-linecap=\"round\"/>\n<path d=\"M11 30.6C13.6 35.8 20 35.4 24 33.6 28 35.4 34.4 35.8 37 30.6\" fill=\"none\" stroke=\"#1d2a44\" stroke-width=\"6.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M11 30.6C13.6 35.8 20 35.4 24 33.6 28 35.4 34.4 35.8 37 30.6\" fill=\"none\" stroke=\"#f1c24a\" stroke-width=\"3.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<rect x=\"21.9\" y=\"34.4\" width=\"4.2\" height=\"8\" rx=\"1.2\" fill=\"#9a6428\" stroke=\"#1d2a44\" stroke-width=\"2\"/>\n<circle cx=\"24\" cy=\"44.6\" r=\"2.6\" fill=\"#f1c24a\" stroke=\"#1d2a44\" stroke-width=\"2\"/>", "b": "<g transform=\"translate(24 0) scale(1.12 1) translate(-24 0)\"><clipPath id=\"CPID\"><path d=\"M24 2.2C26.2 10 29.6 20 31.2 29.6 32.4 38 29.2 46 24 46 18.8 46 15.6 38 16.8 29.6 18.4 20 21.8 10 24 2.2Z\"/></clipPath>\n<path d=\"M24 2.2C26.2 10 29.6 20 31.2 29.6 32.4 38 29.2 46 24 46 18.8 46 15.6 38 16.8 29.6 18.4 20 21.8 10 24 2.2Z\" fill=\"#b07a40\"/>\n<g clip-path=\"url(#CPID)\"><path d=\"M12 21L36 14V21L12 28Z\" fill=\"#f1c24a\" stroke=\"#1d2a44\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><path d=\"M12 34.4L36 27.4V34.4L12 41.4Z\" fill=\"#c1403a\" stroke=\"#1d2a44\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/></g>\n<path d=\"M24 2.2C26.2 10 29.6 20 31.2 29.6 32.4 38 29.2 46 24 46 18.8 46 15.6 38 16.8 29.6 18.4 20 21.8 10 24 2.2Z\" fill=\"none\" stroke=\"#1d2a44\" stroke-width=\"2.2\" stroke-linejoin=\"round\"/>\n<path d=\"M22 12C21 19 19.6 25 19.4 31\" fill=\"none\" stroke=\"#d9a468\" stroke-width=\"1.6\" stroke-linecap=\"round\"/>\n<path d=\"M26.8 14.6C29.4 12 33 12 34.8 13.8 32.8 16.2 29.4 16.6 27 15.8Z\" fill=\"#6aa23c\" stroke=\"#1d2a44\" stroke-width=\"1.6\" stroke-linejoin=\"round\"/>\n<path d=\"M20.6 24.6C18 22.4 14.6 22.6 12.8 24.4 14.8 26.8 18.2 27.2 20.6 26.4Z\" fill=\"#6aa23c\" stroke=\"#1d2a44\" stroke-width=\"1.6\" stroke-linejoin=\"round\"/></g>"};
 const SUITSVG={o:'<use href="#su-o"/>',c:'<use href="#su-c"/>',e:'<use href="#su-e"/>',b:'<use href="#su-b"/>'};
 const art=k=>SUITSVG[k];
@@ -1797,7 +1801,7 @@ let entrando=false;
 async function entrarUsuario(){if(entrando)return;entrando=true;
   try{const{data}=await sb.auth.getSession(),u=data&&data.session&&data.session.user;
     if(!u){return}
-    if(await prepararPerfil(u))enterMode('user')}
+    if(await prepararPerfil(u)){enterMode('user');refrescarAmigos()}}
   catch(e){cloudErr()}finally{entrando=false}}
 /* Cambiar contraseña (tras pulsar el enlace del correo de recuperación) */
 function nuevaPassDlg(){
@@ -1811,6 +1815,45 @@ function nuevaPassDlg(){
     if(error){R.textContent=errAuth(error);return}d.remove();dlg('Contraseña cambiada.',{},()=>{});entrarUsuario()};
   K.onclick=ok;I.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ok()}})}
 sb.auth.onAuthStateChange(ev=>{if(ev==='PASSWORD_RECOVERY')setTimeout(nuevaPassDlg,0)});
+/* ===== Amistades en la nube (fase C) ===== */
+const isUuid=x=>/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(x));
+let BUSQ=[]; // resultados de búsqueda por Mus ID (no se guardan)
+const usersAll=()=>{const s=S.users||[];return s.concat(BUSQ.filter(b=>!s.some(u=>u.id===b.id)))};
+/* Busca a una persona por su Mus ID exacto (6 caracteres) */
+async function buscarMusId(q){
+  const id=String(q||'').trim().toUpperCase().replace(/^(MUS\s*ID\s*:?\s*|#)/,'').replace(/\s/g,'');
+  if(AUTH!=='user'||!/^[A-Z0-9]{6}$/.test(id))return;
+  try{const{data,error}=await sb.from('perfiles').select('id,nombre,mus_id').eq('mus_id',id).maybeSingle();
+    if(error||!data||data.id===S.uid||live().some(f=>f.id===data.id))return;
+    if(!BUSQ.some(b=>b.id===data.id))BUSQ.push({id:data.id,name:data.nombre||'Jugador',musId:data.mus_id,tr:0})}catch(e){}}
+/* Envía una solicitud de amistad */
+async function enviarSol(id){
+  try{const{error}=await sb.from('amistades').insert({de:S.uid,a:id});
+    if(error&&error.code!=='23505'){cloudErr();return}}catch(e){cloudErr();return}
+  await sincAmistades()}
+/* Trae de la nube las solicitudes y los amigos; devuelve true si algo ha cambiado */
+async function sincAmistades(){
+  if(AUTH!=='user'||!S.uid)return false;
+  const antes=JSON.stringify([S.reqIn,S.reqOut,live().map(f=>f.id+'|'+f.name+'|'+f.musId)]);
+  try{
+    const{data:rows,error}=await sb.from('amistades').select('de,a,estado');if(error||!rows)return false;
+    const otros=[...new Set(rows.map(r=>r.de===S.uid?r.a:r.de))];let pf=[];
+    if(otros.length){const r=await sb.from('perfiles').select('id,nombre,mus_id').in('id',otros);if(r.error||!r.data)return false;pf=r.data}
+    const por=Object.fromEntries(pf.map(p=>[p.id,p])),acept=new Set();
+    S.users=[];S.reqIn=[];S.reqOut=[];
+    rows.forEach(r=>{const o=r.de===S.uid?r.a:r.de,p=por[o];if(!p)return;const nom=p.nombre||'Jugador';
+      if(r.estado==='aceptada'){acept.add(o);let f=S.friends.find(x=>x.id===o);
+        if(!f){f={id:o,name:nom,musId:p.mus_id,medals:[]};S.friends.push(f)}else{f.deleted=false;f.name=nom;f.musId=p.mus_id}}
+      else{S.users.push({id:o,name:nom,musId:p.mus_id,tr:0});(r.de===S.uid?S.reqOut:S.reqIn).push(o)}});
+    S.friends.forEach(f=>{if(isUuid(f.id)&&f.id!==S.uid&&!acept.has(f.id))f.deleted=true});
+    BUSQ=BUSQ.filter(b=>!rows.some(r=>r.de===b.id||r.a===b.id));
+    save();
+  }catch(e){return false}
+  return antes!==JSON.stringify([S.reqIn,S.reqOut,live().map(f=>f.id+'|'+f.name+'|'+f.musId)])}
+/* Repinta la pantalla si cambia algo mientras se mira Inicio o Amigos */
+async function refrescarAmigos(){if(AUTH==='user'&&await sincAmistades()&&(view==='home'||view==='friends')&&!document.querySelector('.ov'))draw()}
+setInterval(()=>{if(document.visibilityState==='visible')refrescarAmigos()},45000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refrescarAmigos()});
 function logout(){olvidarSesion();AUTH=null;go('welcome')}
 function enterMode(m){
   AUTH=m;const guest=m==='guest';
@@ -1927,8 +1970,8 @@ function reqMenu(){
       +'<button type="button" class="rqn" data-no="'+u.id+'" aria-label="Rechazar solicitud de '+esc(u.name)+'"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div></div>').join('')
      +'</div><button id="dk" class="cr" type="button">Cerrar</button>';
     d.querySelector('#dk').onclick=()=>{d.remove();friends()};
-    d.querySelectorAll('[data-ok]').forEach(b=>b.onclick=()=>{acceptReq(b.dataset.ok);paint()});
-    d.querySelectorAll('[data-no]').forEach(b=>b.onclick=()=>{rejectReq(b.dataset.no);paint()});
+    d.querySelectorAll('[data-ok]').forEach(b=>b.onclick=()=>{b.disabled=true;acceptReq(b.dataset.ok).then(paint)});
+    d.querySelectorAll('[data-no]').forEach(b=>b.onclick=()=>{b.disabled=true;rejectReq(b.dataset.no).then(paint)});
   };
   paint();
 }
@@ -1938,12 +1981,12 @@ function friends(){
   +'<form class="sbx" id="sbf" autocomplete="off"><input id="sbq" type="search" placeholder="Buscar jugadores..." enterkeyhint="search" aria-label="Buscar jugadores"><span class="sbi" id="sbg" role="button" tabindex="0" aria-label="Buscar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></span></form></div>'
   +reqBtnHTML()+'<div id="list"></div>';
   const l=$('#list'),todos=live().filter(f=>f.id!==mid&&!f.gen);
-  const rd=q=>{const amigos=q?todos.filter(f=>matchJ(f,q)):todos;const otros=q?(S.users||[]).filter(u=>!S.friends.some(f=>f.id===u.id)&&matchJ(u,q)).map(userCard).join(''):'';l.innerHTML=(amigos.length||otros)?amigos.map(f=>{const p=P[f.id]||blank();const bm=Object.entries(p.pt).sort((x,y)=>y[1].w-x[1].w||y[1].g-x[1].g)[0],bmOk=bm&&bm[1].w>0;return '<div class="card"><div class="fr"><div class="frl" data-p="'+f.id+'"><div class="frh"><span class="fra">'+avatarHTML(f,p,40)+'</span><span class="frnb"><b class="frn">'+esc(f.name)+'</b><span class="frid" data-mid="'+f.id+'" role="button" tabindex="0">#'+musOf(f)+'</span></span><span class="frt">'+trIcon(22)+fmt(p.tr)+'</span></div><div class="frk"><span class="frc frlg"><small>Liga actual</small><span class="frg">'+lgBadge(p.lg,20)+'<span>'+LEAGUES[p.lg][0]+'</span></span></span><span class="frc"><small>Mejor pareja</small><span class="frg frm">'+(bmOk?'<span class="frmn">'+esc(fname(bm[0]))+'</span><span class="frms">'+bm[1].w+' V · '+bm[1].l+' D · '+Math.round(100*bm[1].w/bm[1].g)+'%</span>':'<span class="frmn">—</span>')+'</span></span></div></div><button class="frs" data-st="'+f.id+'">Estadísticas</button></div></div>'}).join('')+otros:'<div class="card"><span style="color:var(--mute)">'+(q?'Sin resultados para «'+esc(q)+'».':'Aún no hay amigos.')+'</span></div>'};
+  const rd=q=>{const amigos=q?todos.filter(f=>matchJ(f,q)):todos;const otros=q?usersAll().filter(u=>!live().some(f=>f.id===u.id)&&matchJ(u,q)).map(userCard).join(''):'';l.innerHTML=(amigos.length||otros)?amigos.map(f=>{const p=P[f.id]||blank();const bm=Object.entries(p.pt).sort((x,y)=>y[1].w-x[1].w||y[1].g-x[1].g)[0],bmOk=bm&&bm[1].w>0;return '<div class="card"><div class="fr"><div class="frl" data-p="'+f.id+'"><div class="frh"><span class="fra">'+avatarHTML(f,p,40)+'</span><span class="frnb"><b class="frn">'+esc(f.name)+'</b><span class="frid" data-mid="'+f.id+'" role="button" tabindex="0">#'+musOf(f)+'</span></span><span class="frt">'+trIcon(22)+fmt(p.tr)+'</span></div><div class="frk"><span class="frc frlg"><small>Liga actual</small><span class="frg">'+lgBadge(p.lg,20)+'<span>'+LEAGUES[p.lg][0]+'</span></span></span><span class="frc"><small>Mejor pareja</small><span class="frg frm">'+(bmOk?'<span class="frmn">'+esc(fname(bm[0]))+'</span><span class="frms">'+bm[1].w+' V · '+bm[1].l+' D · '+Math.round(100*bm[1].w/bm[1].g)+'%</span>':'<span class="frmn">—</span>')+'</span></span></div></div><button class="frs" data-st="'+f.id+'">Estadísticas</button></div></div>'}).join('')+otros:'<div class="card"><span style="color:var(--mute)">'+(q?'Sin resultados para «'+esc(q)+'».':'Aún no hay amigos.')+'</span></div>'};
   rd('');
-  l.onclick=ev=>{const rq=ev.target.closest('[data-rq]');if(rq){ev.stopPropagation();const id=rq.dataset.rq;S.reqOut=S.reqOut||[];if(!S.reqOut.includes(id))S.reqOut.push(id);save();rd($('#sbq').value);return}
-    const ac=ev.target.closest('[data-acc]');if(ac){ev.stopPropagation();acceptReq(ac.dataset.acc);friends();return}
-    const mi=ev.target.closest('[data-mid]');if(mi){ev.stopPropagation();musCopy(S.friends.find(x=>x.id===mi.dataset.mid)||(S.users||[]).find(x=>x.id===mi.dataset.mid),mi);return}const st=ev.target.closest('[data-st]');if(st){ev.stopPropagation();vsStats(st.dataset.st);return}const pr=ev.target.closest('[data-p]');if(pr){S.profile=pr.dataset.p;profBack='friends';go('profile')}};
-  const go2=()=>rd($('#sbq').value);
+  l.onclick=ev=>{const rq=ev.target.closest('[data-rq]');if(rq){ev.stopPropagation();rq.disabled=true;enviarSol(rq.dataset.rq).then(()=>rd($('#sbq').value));return}
+    const ac=ev.target.closest('[data-acc]');if(ac){ev.stopPropagation();ac.disabled=true;acceptReq(ac.dataset.acc).then(friends);return}
+    const mi=ev.target.closest('[data-mid]');if(mi){ev.stopPropagation();musCopy(S.friends.find(x=>x.id===mi.dataset.mid)||usersAll().find(x=>x.id===mi.dataset.mid),mi);return}const st=ev.target.closest('[data-st]');if(st){ev.stopPropagation();vsStats(st.dataset.st);return}const pr=ev.target.closest('[data-p]');if(pr){S.profile=pr.dataset.p;profBack='friends';go('profile')}};
+  const go2=async()=>{const q=$('#sbq').value;await buscarMusId(q);rd(q)};
   $('#sbf').onsubmit=e=>{e.preventDefault();go2()};
   $('#sbg').onclick=go2;
   $('#sbg').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go2()}};
