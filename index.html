@@ -1445,7 +1445,7 @@ const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 S.hist.forEach((h,i)=>{if(!h.id)h.id='h'+h.fecha+'x'+i});
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const $=s=>document.querySelector(s), app=$('#app');
-const fname=id=>{const f=S.friends.find(x=>x.id===id);if(f)return f.name;const m=/^inv([1-4])$/.exec(id);return m?((S.invNames&&S.invNames[id])||'Jugador '+m[1]):'(borrado)'}; // inv1..inv4: jugadores del modo invitado (no son amigos)
+const fname=id=>{const f=S.friends.find(x=>x.id===id);if(f)return f.name;if(S.ext&&S.ext[id])return S.ext[id];const m=/^inv([1-4])$/.exec(id);return m?((S.invNames&&S.invNames[id])||'Jugador '+m[1]):'(borrado)'}; // inv1..inv4: jugadores del modo invitado (no son amigos)
 const live=()=>S.friends.filter(f=>!f.deleted);
 {const c=S.cfg||{};if(!S.cfg||(+c.meta===40&&+c.juegos===3&&+c.vacas===3))S.cfg={meta:30,juegos:3,vacas:1};
 {let t=S.friends.find(f=>!f.deleted&&f.id===S.me)||S.friends.find(f=>!f.deleted&&f.name==='Yo');
@@ -1859,8 +1859,42 @@ async function sincAmistades(){
     save();
   }catch(e){return false}
   return antes!==JSON.stringify([S.reqIn,S.reqOut,live().map(f=>f.id+'|'+f.name+'|'+f.musId)])}
-/* Repinta la pantalla si cambia algo mientras se mira Inicio o Amigos */
-async function refrescarAmigos(){if(AUTH==='user'&&await sincAmistades()&&(view==='home'||view==='friends')&&!document.querySelector('.ov'))draw()}
+/* ===== Partidas en la nube (fase B) ===== */
+const idsJug=h=>[...new Set([...h.t[0],...h.t[1]])];
+const VERSION='B-2';let DBG={sub:null,baj:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
+/* Sube una partida (una sola vez). Devuelve true si queda guardada en la nube */
+async function subirPartida(h){
+  if(AUTH!=='user'||!S.uid||h._cl)return false;
+  if(h._err&&Date.now()-h._err<300000)return false; // tras un rechazo, reintenta pasados 5 minutos
+  try{const c=JSON.parse(JSON.stringify(h));delete c._cl;delete c._by;delete c._err;
+    const ids=idsJug(h),nn={};ids.filter(x=>!isUuid(x)).forEach(x=>nn[x]=fname(x));c.nn=nn;
+    const row={local_id:String(h.id),creador:S.uid,jugadores:ids.filter(isUuid),datos:c,fecha:new Date(h.fecha).toISOString()};
+    const{error}=await sb.from('partidas').upsert(row,{onConflict:'creador,local_id',ignoreDuplicates:true});
+    if(!error){h._cl=1;delete h._err;DBG.sub=null;return true}
+    DBG.sub=(error.code?error.code+': ':'')+(error.message||'error');if(error.code)h._err=Date.now(); // con código = la base de datos la ha rechazado; sin código = fallo de conexión
+  }catch(e){DBG.sub='Excepción: '+(e&&e.message||e)}
+  return false}
+/* Sube las pendientes y baja las que faltan (las tuyas en otros dispositivos y las de tus amigos); true si llega algo nuevo */
+async function sincPartidas(){
+  if(AUTH!=='user'||!S.uid)return false;
+  try{
+    let subidas=0;for(const h of S.hist.slice())if(await subirPartida(h))subidas++;
+    const{data,error}=await sb.from('partidas').select('local_id,creador,datos').order('fecha',{ascending:true}).limit(1000);
+    if(error||!data){DBG.baj=error?((error.code?error.code+': ':'')+(error.message||'error')):'sin datos';return false}
+    DBG.baj=null;const have=new Set(S.hist.map(h=>String(h.id))),nuevos=data.filter(r=>r&&r.datos&&r.datos.t&&!have.has(String(r.local_id)));
+    S.ext=S.ext||{};const desc=new Set();
+    nuevos.forEach(r=>idsJug(r.datos).forEach(id=>{if(isUuid(id)&&id!==S.uid&&!S.friends.some(f=>f.id===id)&&!S.ext[id])desc.add(id)}));
+    if(desc.size){const q=await sb.from('perfiles').select('id,nombre').in('id',[...desc]);(q.data||[]).forEach(p=>{S.ext[p.id]=p.nombre||'Jugador'})}
+    nuevos.forEach(r=>{let h=JSON.parse(JSON.stringify(r.datos));const pref='e'+String(r.creador||'x').slice(0,8)+'_',nn=h.nn||{};delete h.nn;
+      let txt=JSON.stringify(h);
+      idsJug(h).forEach(id=>{if(!isUuid(id)){const nid=pref+id;txt=txt.split('"'+id+'"').join('"'+nid+'"');S.ext[nid]=nn[id]||'Jugador'}});
+      h=JSON.parse(txt);h.id=String(r.local_id);h._cl=1;h._by=r.creador;S.hist.push(h)});
+    if(nuevos.length||subidas)save();
+    return nuevos.length>0
+  }catch(e){DBG.baj='Excepción: '+(e&&e.message||e);return false}}
+/* Sincroniza amistades y partidas; repinta la pantalla si cambia algo y se está viendo Inicio, Amigos, Perfil o Senda */
+async function refrescarAmigos(){if(AUTH!=='user')return;const a=await sincAmistades(),b=await sincPartidas();
+  if((a||b)&&['home','friends','profile','senda'].includes(view)&&!document.querySelector('.ov'))draw()}
 setInterval(()=>{if(document.visibilityState==='visible')refrescarAmigos()},45000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refrescarAmigos()});
 function logout(){olvidarSesion();AUTH=null;go('welcome')}
@@ -2328,7 +2362,7 @@ function finish(i,inc){
   const rec={id:g.id||uid(),t:[[g.p[0],g.p[1]],[g.p[2],g.p[3]]],w:i,cfg:c,fecha:Date.now(),o:g.ord||[],pl:g.pal||[0,0],rs:g.rs||[0,0],pz:g.pz||[0,0],jt:g.jt,vc:[...g.vc],am:g.am?1:0,tn:g.tn||['',''],inv:g.guest?1:0};
   if(g.inf){rec.inf=1;rec.jg=[...g.jg]}
   if(inc)rec.inc=1;
-  const A=progress();ensureClaims(A);if(!g.am&&!g.guest)S.hist.push(rec);const B=progress();
+  const A=progress();ensureClaims(A);if(!g.am&&!g.guest){S.hist.push(rec);subirPartida(rec).then(ok=>{if(ok)save()})}const B=progress();
   S.game=null;save();go('home');victory(rec,i,A,B);
 }
 /* Terminar partida: gana quien va por delante (vacas, luego juegos, luego puntos) */
@@ -2434,6 +2468,19 @@ function bootTo(fn){
   }));
 }
 
+
+/* Pie de Mi perfil: versión de la app y estado de la sincronización */
+function pieVersion(){
+  const host=document.getElementById('app');if(!host||document.getElementById('vpie'))return;
+  const d=document.createElement('div');d.id='vpie';d.style.cssText='margin:18px 16px 28px;text-align:center;font-size:12.5px;color:#a9b8a8;line-height:1.5';
+  const n=S.hist.length,p=S.hist.filter(h=>!h._cl).length;
+  d.innerHTML='Versión '+VERSION+(AUTH==='user'?' · partidas: '+n+' ('+p+' sin subir)':'')+(AUTH==='user'?'<br><button type="button" id="vsy" style="margin-top:8px;padding:8px 16px;font-size:13px;border-radius:10px;border:1px solid #c9a24e;background:none;color:#e9dcb3">Sincronizar ahora</button>':'');
+  host.appendChild(d);
+  const b=d.querySelector('#vsy');if(b)b.onclick=async()=>{b.disabled=true;b.textContent='Sincronizando…';S.hist.forEach(h=>{delete h._err});
+    await sincAmistades();await sincPartidas();b.disabled=false;
+    const n2=S.hist.length,p2=S.hist.filter(h=>!h._cl).length;
+    dlg('Versión '+VERSION+'. Partidas en este móvil: '+n2+'. Sin subir: '+p2+'.'+(DBG.sub?' Error al subir: '+DBG.sub+'.':'')+(DBG.baj?' Error al bajar: '+DBG.baj+'.':'')+(!DBG.sub&&!DBG.baj?' Todo sincronizado.':''),{},()=>{save();draw()})}}
+{const p0=profile;profile=function(){p0();pieVersion()}}
 view='welcome';
 ensureClaims(progress());pruebaReclamo();
 draw();
