@@ -1718,7 +1718,7 @@ function authDlg(modo,prefill){
    +'<div class="row"><button class="ghost cr2" id="dc">Cancelar</button><button id="dk" class="cr">Aceptar</button></div></div>';
   document.body.appendChild(d);
   const E=d.querySelector('#ae'),P=d.querySelector('#ap'),R=d.querySelector('#aer'),K=d.querySelector('#dk');
-  if(prefill)E.value=prefill;
+  if(prefill)E.value=prefill;ojoPass(P);
   const err=t=>{R.textContent=t||''},close=()=>d.remove();
   d.querySelector('#dc').onclick=close;
   const N=d.querySelector('#an');if(N)N.onclick=()=>{const m=E.value.trim();close();authDlg('up',m)};
@@ -1772,6 +1772,13 @@ function recuperarDlg(prefill){
 /* Punto único de inicio de sesión: abre el menú de acceso. Lo usan la portada, el invitado y los avisos de secciones bloqueadas */
 function login(){authDlg('in')}
 function crearPerfil(){authDlg('up')}
+/* ===== Ojo para ver/ocultar la contraseña ===== */
+const ICO_OJO='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3.2"/></svg>';
+const ICO_OJO_X='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3.2"/><path d="M3.5 3.5l17 17"/></svg>';
+function ojoPass(I){const w=document.createElement('span');w.className='pw';I.parentNode.insertBefore(w,I);w.appendChild(I);
+  const b=document.createElement('button');b.type='button';b.className='pwe';b.setAttribute('aria-label','Mostrar contraseña');b.innerHTML=ICO_OJO;w.appendChild(b);
+  b.onpointerdown=e=>e.preventDefault(); // no quita el foco del campo (el teclado del móvil sigue abierto)
+  b.onclick=()=>{const ver=I.type==='password';I.type=ver?'text':'password';b.innerHTML=ver?ICO_OJO_X:ICO_OJO;b.setAttribute('aria-label',ver?'Ocultar contraseña':'Mostrar contraseña');I.focus()}}
 /* ===== Perfil en la nube (fase A) ===== */
 const cloudErr=()=>dlg('No se ha podido conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.',{},()=>{});
 /* Pide el nombre de perfil la primera vez (no se puede cancelar; se puede cambiar luego en Mi perfil; se permiten repetidos) */
@@ -1809,7 +1816,7 @@ function nuevaPassDlg(){
   d.innerHTML='<div class="mp"><b>Elige una contraseña nueva</b><label class="alb" for="np">Contraseña nueva</label><input id="np" type="password" autocomplete="new-password" placeholder="Mínimo '+PASS_MIN+' caracteres">'
    +'<p class="aerr" id="aer" role="alert"></p><div class="row"><button id="dk" class="cr">Guardar</button></div></div>';
   document.body.appendChild(d);
-  const I=d.querySelector('#np'),R=d.querySelector('#aer'),K=d.querySelector('#dk');
+  const I=d.querySelector('#np'),R=d.querySelector('#aer'),K=d.querySelector('#dk');ojoPass(I);
   const ok=async()=>{if(I.value.length<PASS_MIN){R.textContent='La contraseña debe tener al menos '+PASS_MIN+' caracteres.';return}
     K.disabled=true;const{error}=await sb.auth.updateUser({password:I.value});K.disabled=false;
     if(error){R.textContent=errAuth(error);return}d.remove();dlg('Contraseña cambiada.',{},()=>{});entrarUsuario()};
@@ -1839,10 +1846,12 @@ async function sincAmistades(){
     const{data:rows,error}=await sb.from('amistades').select('de,a,estado');if(error||!rows)return false;
     const otros=[...new Set(rows.map(r=>r.de===S.uid?r.a:r.de))];let pf=[];
     if(otros.length){const r=await sb.from('perfiles').select('id,nombre,mus_id').in('id',otros);if(r.error||!r.data)return false;pf=r.data}
-    const por=Object.fromEntries(pf.map(p=>[p.id,p])),acept=new Set();
+    const por=Object.fromEntries(pf.map(p=>[p.id,p])),acept=new Set(),prevOut=new Set(S.reqOut||[]);
     S.users=[];S.reqIn=[];S.reqOut=[];
     rows.forEach(r=>{const o=r.de===S.uid?r.a:r.de,p=por[o];if(!p)return;const nom=p.nombre||'Jugador';
-      if(r.estado==='aceptada'){acept.add(o);let f=S.friends.find(x=>x.id===o);
+      if(r.estado==='aceptada'){acept.add(o);
+        if(prevOut.has(o)){S.avisoAm=S.avisoAm||[];if(!S.avisoAm.some(x=>x.id===o))S.avisoAm.push({id:o,name:nom})} // te han aceptado la solicitud que enviaste
+        let f=S.friends.find(x=>x.id===o);
         if(!f){f={id:o,name:nom,musId:p.mus_id,medals:[]};S.friends.push(f)}else{f.deleted=false;f.name=nom;f.musId=p.mus_id}}
       else{S.users.push({id:o,name:nom,musId:p.mus_id,tr:0});(r.de===S.uid?S.reqOut:S.reqIn).push(o)}});
     S.friends.forEach(f=>{if(isUuid(f.id)&&f.id!==S.uid&&!acept.has(f.id))f.deleted=true});
@@ -1920,7 +1929,7 @@ function home(){
   const G=AUTH==='guest';
   app.innerHTML='<div class="hsuits">'+['o','c','e','b'].map(k=>suit(k,k==='o'?50:64)).join('')+'</div>'+'<div class="logo">MUS</div>'+fan()+'<div class="menu">'+(S.game?'<button class="gold" style="width:100%" id="cont">Continuar partida</button>':'')+'<button class="'+(S.game?'ghost" style="width:100%;background:var(--card)':'gold" style="width:100%')+'" id="go">Iniciar partida</button>'
   +'<button class="ghost'+(G?' glk':'')+'" id="sd"'+(G?' aria-disabled="true"':'')+' style="width:100%;background:var(--card)"><span class="hico hbox">'+ICO_AMR+'</span><span class="sdt">Senda del Órdago</span>'+help('senda')+(G?PLK:'')+'</button>'
-  +'<div class="nav" style="margin-top:0"><button id="fr"'+(G?' class="glk" aria-disabled="true"':'')+'>'+ICO_FR+'Amigos'+(G?PLK:(reqList().length?'<span class="mbadge" aria-label="Solicitudes de amistad pendientes"></span>':''))+'</button><button id="mp">'+ICO_ME+(G?'Iniciar sesión':'Mi perfil')+(G?'':mpBadge())+'</button></div></div>';
+  +'<div class="nav" style="margin-top:0"><button id="fr"'+(G?' class="glk" aria-disabled="true"':'')+'>'+ICO_FR+'Amigos'+(G?PLK:(reqList().length||(S.avisoAm||[]).length?'<span class="mbadge" aria-label="Novedades en amigos"></span>':''))+'</button><button id="mp">'+ICO_ME+(G?'Iniciar sesión':'Mi perfil')+(G?'':mpBadge())+'</button></div></div>';
   $('#go').onclick=()=>go('setup');
   if($('#cont'))$('#cont').onclick=()=>go('game');
   $('#sd').onclick=()=>G?lockMsg('la Senda del Órdago'):ensureMe(()=>go('senda'));
@@ -1975,7 +1984,15 @@ function reqMenu(){
   };
   paint();
 }
+/* Cartel: «X ha aceptado tu solicitud. ¡Ya sois amigos!» (se muestra antes de la lista de amigos) */
+function avisoAmigos(fin){
+  const A=S.avisoAm||[],d=overlay('');
+  d.querySelector('.mpi').innerHTML='<h2 style="text-align:center">¡Ya sois amigos!</h2><div class="rqls">'
+   +A.map(u=>'<div class="rqr"><div class="rqi"><b class="frn">'+esc(u.name)+'</b><small style="color:#e9dcb3;font-size:14px;line-height:1.3">ha aceptado tu solicitud</small></div></div>').join('')
+   +'</div><button id="dk" class="cr" type="button">Aceptar</button>';
+  d.querySelector('#dk').onclick=()=>{S.avisoAm=[];save();d.remove();fin()}}
 function friends(){
+  if((S.avisoAm||[]).length){app.innerHTML='';avisoAmigos(friends);return}
   const P=progress(),mid=meId();
   app.innerHTML='<div class="top"><button id="b">‹ Inicio</button><h2>Amigos</h2>'
   +'<form class="sbx" id="sbf" autocomplete="off"><input id="sbq" type="search" placeholder="Buscar jugadores..." enterkeyhint="search" aria-label="Buscar jugadores"><span class="sbi" id="sbg" role="button" tabindex="0" aria-label="Buscar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></span></form></div>'
@@ -2156,8 +2173,8 @@ function profile(){
   +'<div class="stt wide"><small>Mejor pareja</small><div class="sr"><img src="'+STAT_IMG_P+'" alt="" draggable="false"><b class="nm">'+(bm&&bm[1].w>0?esc(fname(bm[0])):'—')+'</b></div></div></div>'
   +'</div>'
   +'<div class="card"><b>Medallas destacadas</b><div class="slots">'+[0,1,2,3].map(i=>'<button class="slotb" data-slot="'+i+'" aria-label="Elegir medalla"'+(mine?'':' disabled style="opacity:1"')+'>'+(fe[i]?medal(fe[i],effLvl(f,p,fe[i].id),54):(mine?'<span>+</span>':''))+'</button>').join('')+'</div></div>'
-  +'<div class="card"><div class="hh"><b>Medallas</b>'+help('medallas')+'</div><div class="mg">'+FAM.map(m=>'<button class="med'+(pendF(m)?' pend':'')+'" data-a="'+m.id+'">'+medal(m,shown(m),58)+'<span>'+esc(m.name)+'</span><small>'+medalLbl(m,shown(m))+'</small></button>').join('')+'</div></div>'
-  +'<div class="card"><div class="hh"><b>Medallas especiales</b>'+help('especiales')+'</div><div class="mg sp">'+SEC.map(m=>{const on=!!p.sec[m.id],pd=on&&CL&&!CL[m.id],von=on&&!pd;return '<button class="med'+(pd?' pend':'')+(on?'':' lkd')+'" data-s="'+m.id+'">'+medal(m,von?SPEC:0,62)+'<span>'+esc(m.name)+'</span><small>'+(on?'Conseguida':'Bloqueada')+'</small></button>'}).join('')+'</div></div>'
+  +'<div class="card"><div class="hh"><b>Medallas</b></div><div class="mg">'+FAM.map(m=>'<button class="med'+(pendF(m)?' pend':'')+'" data-a="'+m.id+'">'+medal(m,shown(m),58)+'<span>'+esc(m.name)+'</span><small>'+medalLbl(m,shown(m))+'</small></button>').join('')+'</div></div>'
+  +'<div class="card"><div class="hh"><b>Medallas especiales</b></div><div class="mg sp">'+SEC.map(m=>{const on=!!p.sec[m.id],pd=on&&CL&&!CL[m.id],von=on&&!pd;return '<button class="med'+(pd?' pend':'')+(on?'':' lkd')+'" data-s="'+m.id+'">'+medal(m,von?SPEC:0,62)+'<span>'+esc(m.name)+'</span><small>'+(on?'Conseguida':'Bloqueada')+'</small></button>'}).join('')+'</div></div>'
   +'<div class="card"><div class="fr"><b>Mis parejas</b>'+(mates.length?'<button class="ghost" id="ap" style="padding:7px 12px;font-size:14px">Todas las parejas</button>':'')+'</div>'+(mates.length?mtab([bm]):'<span style="color:var(--mute)">Todavía no ha jugado con ninguna pareja.</span>')+'</div>';
   if(mine&&profBack==='home'){const lo=document.createElement('button');lo.type='button';lo.id='lo';lo.textContent='Cerrar sesión';lo.style.cssText='flex:0 0 auto;border:1.5px solid rgba(200,160,80,.6);color:#eae2cc;background:rgba(0,0,0,.25)';app.appendChild(lo);lo.onclick=()=>dlg('¿Cerrar sesión?',{cancel:1,ok:'Cerrar sesión',cr:1},logout)}
   $('#b').onclick=()=>go(profBack);
@@ -2643,6 +2660,10 @@ try{if(screen.orientation&&screen.orientation.lock){screen.orientation.lock('por
 .ov.auth .mp>b{font:700 20px Literata,Georgia,serif;text-align:center;letter-spacing:.02em;margin-bottom:2px}
 .ov.auth .alb{font:600 14px Literata,Georgia,serif;color:var(--mute);margin:2px 0 -4px 2px}
 .ov.auth input{width:100%}
+html body .ov.auth .pw{position:relative;display:block;width:100%}
+html body .ov.auth .pw input{padding-right:48px}
+html body .ov.auth .pw .pwe{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:40px;height:40px;min-width:0;margin:0;padding:0;display:flex;align-items:center;justify-content:center;background:none;border:0;box-shadow:none;border-radius:10px;color:#c9a24e;cursor:pointer;filter:none}
+html body .ov.auth .pw .pwe:active{color:#f2d98a}
 .ov.auth .mp>button.alk{align-self:center;border:0!important;background:none!important;box-shadow:none!important;color:#e8bd55!important;text-shadow:none!important;font:600 14px Literata,Georgia,serif;text-decoration:underline;text-underline-offset:3px;padding:4px 8px;margin:0;min-height:0;width:auto;transform:none}
 .ov.auth .aerr{margin:0;min-height:0;text-align:center;font-size:13.5px;line-height:1.35;color:#ff9a8c}
 .ov.auth .aerr:empty{display:none}
