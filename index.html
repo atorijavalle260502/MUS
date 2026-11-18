@@ -1557,7 +1557,7 @@ function progress(hist){
         const st=stat(p);
         FAM.forEach(m=>{if(m.soon)return;const v=m.val(st),r=p.md[m.id]||(p.md[m.id]={lvl:0,t:[],w:[]});while(r.lvl<m.goals.length&&v>=m.goals[r.lvl]){r.t.push(h.fecha);r.w.push(m.id==='pr'?mate:null);r.lvl++}});
       })})});
-  {const nF=Math.max(0,live().length-1),mS=FAM.find(x=>x.id==='soc');
+  {const nF=live().filter(f=>!f.gen&&f.id!==S.me).length,mS=FAM.find(x=>x.id==='soc');
     live().forEach(f=>{const q=get(f.id);q.soc=nF;f.since=f.since||Date.now();const r=q.md.soc||(q.md.soc={lvl:0,t:[],w:[]});
       while(r.lvl<mS.goals.length&&nF>=mS.goals[r.lvl]){r.t.push(f.since);r.w.push(null);r.lvl++}})}
   if(PRUEBA_MEDALLAS){const _t=live().find(f=>f.name==='Tori')||live()[0];
@@ -1839,6 +1839,7 @@ const PRUEBA_RECLAMO=false; // SOLO PRUEBAS: al abrir la app deja medallas del J
 const meId=()=>live().some(f=>f.id===S.me)?S.me:(live()[0]||{}).id;
 function ensureClaims(P){
   S.claim=S.claim||{};let ch=0;P=P||progress();
+  if(!S.mig3){S.claim={};S.mig3=1;ch=1}
   if(!S.mig2){Object.values(S.claim).forEach(c=>{delete c.fi;delete c.xrem;delete c.paz});S.mig2=1;ch=1}
   live().forEach(f=>{if(S.claim[f.id])return;const p=P[f.id]||blank(),c={};
     FAM.forEach(m=>{if(m.soon)return;const n=lvl(p,m.id);if(n)c[m.id]=n});
