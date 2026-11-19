@@ -1679,6 +1679,8 @@ const SIMULAR=false; // SOLO PRUEBAS: cuentas simuladas en este dispositivo y bo
 const KEY_SES='mus-sesion'; // solo una marca de «sesión iniciada» en este dispositivo (sin correo ni contraseña)
 const EMAIL_RE=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/,PASS_MIN=6;
 const SB_URL='https://ksxrjrnecjilntkefltm.supabase.co',SB_KEY='sb_publishable_J121b3gCkI5P1UI5my-k-Q_R5dwTOea'; // claves públicas: la seguridad la ponen las reglas (RLS) de la base de datos
+const HASH0=location.hash,SEARCH0=location.search; // se guardan antes de que la librería lea (y borre) los datos del enlace del correo
+const APP_URL=location.protocol==='https:'?location.origin+location.pathname.replace(/[^\/]*$/,''):undefined; // a dónde vuelve el enlace del correo (la propia app, p. ej. https://…github.io/MUS/); debe estar en «Redirect URLs» de Supabase
 const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const errAuth=e=>{const m=String((e&&e.message)||''),c=String((e&&e.code)||'');
   if(/invalid login|invalid_credentials/i.test(m+c))return'Correo o contraseña incorrectos.';
@@ -1688,7 +1690,7 @@ const errAuth=e=>{const m=String((e&&e.message)||''),c=String((e&&e.code)||'');
   return'No se ha podido completar. Revisa tu conexión e inténtalo de nuevo.'};
 const API={
   /* Crea la cuenta y envía el correo de confirmación → {ok} | {error} */
-  async registrar(email,pw){try{const{data,error}=await sb.auth.signUp({email,password:pw});
+  async registrar(email,pw){try{const{data,error}=await sb.auth.signUp({email,password:pw,options:APP_URL?{emailRedirectTo:APP_URL}:{}});
     if(error)return{error:errAuth(error)};
     if(data&&data.user&&Array.isArray(data.user.identities)&&!data.user.identities.length)return{error:'Ya existe un perfil con ese correo.'};
     return{ok:true}}catch(e){return{error:errAuth(e)}}},
@@ -1697,7 +1699,7 @@ const API={
     if(error){if(/not confirmed|email_not_confirmed/i.test(String(error.message)+String(error.code)))return{pendiente:true};return{error:errAuth(error)}}
     return{ok:true}}catch(e){return{error:errAuth(e)}}},
   /* Envía el correo para elegir otra contraseña. Responde siempre igual, exista o no la cuenta */
-  async recuperar(email){try{await sb.auth.resetPasswordForEmail(email)}catch(e){}return{ok:true}},
+  async recuperar(email){try{await sb.auth.resetPasswordForEmail(email,APP_URL?{redirectTo:APP_URL}:{})}catch(e){}return{ok:true}},
   async salir(){try{await sb.auth.signOut()}catch(e){}},
   async confirmarSim(email){}
 };
@@ -1748,7 +1750,7 @@ function confirmarDlg(m,reintento){
    +'<p class="atx"></p>'
    +(SIMULAR?'<p class="asim">Solo pruebas: aún no hay servidor de correo.</p><button type="button" id="ac" class="ghost cr2">Simular que he confirmado</button>':'')
    +'<div class="row"><button id="dk" class="cr">Aceptar</button></div></div>';
-  d.querySelector('.atx').textContent=(reintento?'Tu perfil todavía no está activado. ':'Te hemos enviado un correo a ')+(reintento?'Abre el enlace del correo que enviamos a ':'')+m+(reintento?'':' con un enlace para activar tu perfil.')+' Cuando lo confirmes, podrás iniciar sesión.';
+  d.querySelector('.atx').textContent=(reintento?'Tu perfil todavía no está activado. ':'Te hemos enviado un correo a ')+(reintento?'Abre el enlace del correo que enviamos a ':'')+m+(reintento?'':' con un enlace para activar tu perfil.')+' Cuando lo confirmes, podrás iniciar sesión. Si al abrir el enlace ves una página de error, no te preocupes: tu perfil queda activado igualmente. Vuelve a la app e inicia sesión.';
   document.body.appendChild(d);
   d.querySelector('#dk').onclick=()=>d.remove();
   const c=d.querySelector('#ac');if(c)c.onclick=async()=>{await API.confirmarSim(m);d.remove();dlg('Correo confirmado. Ya puedes iniciar sesión.',{ok:'Iniciar sesión'},()=>authDlg('in',m))};
@@ -1810,6 +1812,12 @@ async function entrarUsuario(){if(entrando)return;entrando=true;
     if(!u){return}
     if(await prepararPerfil(u)){enterMode('user');refrescarAmigos()}}
   catch(e){cloudErr()}finally{entrando=false}}
+/* Enlace del correo gastado o caducado (otp_expired): hay que avisar con calma, porque la cuenta suele haber quedado confirmada de todos modos */
+function avisoEnlace(){
+  const q=new URLSearchParams((HASH0||'').replace(/^#/,'')+'&'+(SEARCH0||'').replace(/^\?/,''));
+  if(!(q.get('error')||q.get('error_code')))return;
+  try{history.replaceState(null,'',location.pathname)}catch(e){}
+  setTimeout(()=>dlg('Este enlace ya se ha usado o ha caducado. No te preocupes: si ya lo abriste antes, tu perfil está activado y puedes iniciar sesión. Si no, crea el perfil o pide la contraseña de nuevo para recibir otro correo.',{ok:'Iniciar sesión'},()=>authDlg('in')),400)}
 /* Cambiar contraseña (tras pulsar el enlace del correo de recuperación) */
 function nuevaPassDlg(){
   const d=document.createElement('div');d.className='ov c auth';
@@ -1861,7 +1869,7 @@ async function sincAmistades(){
   return antes!==JSON.stringify([S.reqIn,S.reqOut,live().map(f=>f.id+'|'+f.name+'|'+f.musId)])}
 /* ===== Partidas en la nube (fase B) ===== */
 const idsJug=h=>[...new Set([...h.t[0],...h.t[1]])];
-const VERSION='D-1';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
+const VERSION='E-1';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
 /* Sube una partida (una sola vez). Devuelve true si queda guardada en la nube */
 async function subirPartida(h){
   if(AUTH!=='user'||!S.uid||h._cl)return false;
@@ -2510,6 +2518,7 @@ view='welcome';
 ensureClaims(progress());pruebaReclamo();
 draw();
 {const h=location.hash.slice(1);if(h&&!/access_token=|refresh_token=|error=|error_code=|type=(signup|recovery|magiclink|invite|email_change)/.test(h))PEND=h} // el enlace compartido se importa al iniciar sesión
+avisoEnlace();
 entrarUsuario() // sesión recordada en este dispositivo: entra directamente, sin pedir los datos
 </script>
 <script>
