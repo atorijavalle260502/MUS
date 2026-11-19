@@ -1,0 +1,43 @@
+# Mantiene despierto el proyecto gratuito de Supabase (se pausa tras una semana sin actividad).
+# Cada 3 días llama a la función pública «ping», que hace una consulta mínima a la base de datos.
+# No necesita secretos: usa la clave publishable, que ya está en el index.html público.
+name: Mantener Supabase despierto
+
+on:
+  schedule:
+    - cron: '17 6 */3 * *'   # a las 06:17 UTC, cada 3 días (la hora exacta puede retrasarse un poco)
+  workflow_dispatch:         # permite lanzarlo a mano desde la pestaña Actions
+
+permissions:
+  contents: write            # solo para el paso de «actividad» de más abajo
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping a Supabase
+        run: |
+          codigo=$(curl -s -o respuesta.txt -w "%{http_code}" -X POST \
+            "https://ksxrjrnecjilntkefltm.supabase.co/rest/v1/rpc/ping" \
+            -H "apikey: sb_publishable_J121b3gCkI5P1UI5my-k-Q_R5dwTOea" \
+            -H "Content-Type: application/json" -d '{}')
+          echo "Respuesta HTTP: $codigo"
+          cat respuesta.txt; echo
+          [ "$codigo" = "200" ]
+
+      # GitHub desactiva las tareas programadas de un repositorio público si pasan 60 días sin actividad.
+      # Si el último commit tiene 45 días o más, se hace uno vacío para que no ocurra.
+      - name: Evitar que GitHub desactive esta tarea
+        uses: actions/checkout@v4
+      - name: Commit vacío si hace falta
+        run: |
+          ultimo=$(git log -1 --format=%ct)
+          ahora=$(date +%s)
+          dias=$(( (ahora - ultimo) / 86400 ))
+          echo "Días desde el último commit: $dias"
+          if [ "$dias" -ge 45 ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit --allow-empty -m "Mantener activa la tarea programada"
+            git push
+          fi
