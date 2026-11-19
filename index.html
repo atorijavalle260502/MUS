@@ -1861,7 +1861,7 @@ async function sincAmistades(){
   return antes!==JSON.stringify([S.reqIn,S.reqOut,live().map(f=>f.id+'|'+f.name+'|'+f.musId)])}
 /* ===== Partidas en la nube (fase B) ===== */
 const idsJug=h=>[...new Set([...h.t[0],...h.t[1]])];
-const VERSION='B-2';let DBG={sub:null,baj:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
+const VERSION='D-1';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
 /* Sube una partida (una sola vez). Devuelve true si queda guardada en la nube */
 async function subirPartida(h){
   if(AUTH!=='user'||!S.uid||h._cl)return false;
@@ -1892,9 +1892,34 @@ async function sincPartidas(){
     if(nuevos.length||subidas)save();
     return nuevos.length>0
   }catch(e){DBG.baj='Excepción: '+(e&&e.message||e);return false}}
+/* ===== Medallas reclamadas en la nube (fase D) ===== */
+const errTxt=e=>(e&&e.code?e.code+': ':'')+((e&&e.message)||'error');
+/* Guarda en la nube lo que he reclamado (S.claim de mi perfil). Sin upsert: la tabla solo deja modificar «datos» y «actualizado» */
+async function subirReclamosYa(){
+  if(AUTH!=='user'||!S.uid)return false;
+  try{const datos=Object.assign({},((S.claim||{})[S.me])||{}),ahora=new Date().toISOString();
+    let r=await sb.from('reclamos').update({datos,actualizado:ahora}).eq('user_id',S.uid).select('user_id');
+    if(!r.error&&(!r.data||!r.data.length))r=await sb.from('reclamos').insert({user_id:S.uid,datos});
+    DBG.rcl=r.error?errTxt(r.error):null;return !r.error}
+  catch(e){DBG.rcl='Excepción: '+(e&&e.message||e);return false}}
+let rclT=null;
+function subirReclamos(){clearTimeout(rclT);rclT=setTimeout(subirReclamosYa,500)}
+/* Une lo reclamado aquí y en la nube (se queda el nivel más alto de cada medalla: reclamar no se deshace). true si cambia algo en este móvil */
+async function sincReclamos(){
+  if(AUTH!=='user'||!S.uid)return false;
+  try{const{data,error}=await sb.from('reclamos').select('datos').eq('user_id',S.uid).maybeSingle();
+    if(error){DBG.rcl=errTxt(error);return false}
+    const nube=(data&&data.datos)||{};S.claim=S.claim||{};const loc=S.claim[S.me]=S.claim[S.me]||{};
+    let local=false,subir=!data;
+    Object.keys(nube).forEach(k=>{const v=+nube[k]||0;if(v>(+loc[k]||0)){loc[k]=v;local=true}});
+    Object.keys(loc).forEach(k=>{if((+loc[k]||0)>(+nube[k]||0))subir=true});
+    if(local)save();
+    if(subir)await subirReclamosYa();else DBG.rcl=null;
+    return local
+  }catch(e){DBG.rcl='Excepción: '+(e&&e.message||e);return false}}
 /* Sincroniza amistades y partidas; repinta la pantalla si cambia algo y se está viendo Inicio, Amigos, Perfil o Senda */
-async function refrescarAmigos(){if(AUTH!=='user')return;const a=await sincAmistades(),b=await sincPartidas();
-  if((a||b)&&['home','friends','profile','senda'].includes(view)&&!document.querySelector('.ov'))draw()}
+async function refrescarAmigos(){if(AUTH!=='user')return;const a=await sincAmistades(),b=await sincPartidas(),c=await sincReclamos();
+  if((a||b||c)&&['home','friends','profile','senda'].includes(view)&&!document.querySelector('.ov'))draw()}
 setInterval(()=>{if(document.visibilityState==='visible')refrescarAmigos()},45000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refrescarAmigos()});
 function logout(){olvidarSesion();AUTH=null;go('welcome')}
@@ -2083,7 +2108,7 @@ function medalInfo(m,p,CL){
     d.querySelector('#dk').onclick=()=>{if(d._fly)d._fly.remove();d.remove();if(claimed)profile()};
     if(anim)flyMedal(d,d.querySelector('.mhd'),medal(m,cl,big?d.querySelector('.mhd').offsetWidth:88),pd);
     const rc=d.querySelector('[data-rc]');
-    if(rc)rc.onclick=()=>{CL[m.id]=cl+1;claimed=true;save();draw(true)};
+    if(rc)rc.onclick=()=>{CL[m.id]=cl+1;claimed=true;save();subirReclamos();draw(true)};
   };
   draw(false);
 }
@@ -2097,7 +2122,7 @@ function secInfo(m,p,CL){
     d.querySelector('#dk').onclick=()=>{if(d._fly)d._fly.remove();d.remove();if(claimed)profile()};
     if(anim)flyMedal(d,d.querySelector('.mhd'),medal(m,SPEC,d.querySelector('.mhd').offsetWidth),false);
     const rc=d.querySelector('[data-rc]');
-    if(rc)rc.onclick=()=>{CL[m.id]=1;claimed=true;save();draw(true)};
+    if(rc)rc.onclick=()=>{CL[m.id]=1;claimed=true;save();subirReclamos();draw(true)};
   };
   draw(false);
 }
@@ -2477,9 +2502,9 @@ function pieVersion(){
   d.innerHTML='Versión '+VERSION+(AUTH==='user'?' · partidas: '+n+' ('+p+' sin subir)':'')+(AUTH==='user'?'<br><button type="button" id="vsy" style="margin-top:8px;padding:8px 16px;font-size:13px;border-radius:10px;border:1px solid #c9a24e;background:none;color:#e9dcb3">Sincronizar ahora</button>':'');
   host.appendChild(d);
   const b=d.querySelector('#vsy');if(b)b.onclick=async()=>{b.disabled=true;b.textContent='Sincronizando…';S.hist.forEach(h=>{delete h._err});
-    await sincAmistades();await sincPartidas();b.disabled=false;
+    await sincAmistades();await sincPartidas();await sincReclamos();b.disabled=false;
     const n2=S.hist.length,p2=S.hist.filter(h=>!h._cl).length;
-    dlg('Versión '+VERSION+'. Partidas en este móvil: '+n2+'. Sin subir: '+p2+'.'+(DBG.sub?' Error al subir: '+DBG.sub+'.':'')+(DBG.baj?' Error al bajar: '+DBG.baj+'.':'')+(!DBG.sub&&!DBG.baj?' Todo sincronizado.':''),{},()=>{save();draw()})}}
+    dlg('Versión '+VERSION+'. Partidas en este móvil: '+n2+'. Sin subir: '+p2+'.'+(DBG.sub?' Error al subir: '+DBG.sub+'.':'')+(DBG.baj?' Error al bajar: '+DBG.baj+'.':'')+(DBG.rcl?' Error en medallas: '+DBG.rcl+'.':'')+(!DBG.sub&&!DBG.baj&&!DBG.rcl?' Todo sincronizado.':''),{},()=>{save();draw()})}}
 {const p0=profile;profile=function(){p0();pieVersion()}}
 view='welcome';
 ensureClaims(progress());pruebaReclamo();
