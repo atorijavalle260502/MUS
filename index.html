@@ -1750,7 +1750,7 @@ function confirmarDlg(m,reintento){
    +'<p class="atx"></p>'
    +(SIMULAR?'<p class="asim">Solo pruebas: aún no hay servidor de correo.</p><button type="button" id="ac" class="ghost cr2">Simular que he confirmado</button>':'')
    +'<div class="row"><button id="dk" class="cr">Aceptar</button></div></div>';
-  d.querySelector('.atx').textContent=(reintento?'Tu perfil todavía no está activado. ':'Te hemos enviado un correo a ')+(reintento?'Abre el enlace del correo que enviamos a ':'')+m+(reintento?'':' con un enlace para activar tu perfil.')+' Cuando lo confirmes, podrás iniciar sesión. Si al abrir el enlace ves una página de error, no te preocupes: tu perfil queda activado igualmente. Vuelve a la app e inicia sesión.';
+  d.querySelector('.atx').textContent=(reintento?'Tu perfil todavía no está activado. ':'Te hemos enviado un correo a ')+(reintento?'Abre el enlace del correo que enviamos a ':'')+m+(reintento?'':' con un enlace para activar tu perfil.')+' Si no lo ves, mira en la carpeta de spam. El enlace se abre en el navegador, y ahí queda activado tu perfil. Después vuelve a la app (la del icono) e inicia sesión con tu correo y contraseña. Si ves una página de error, no te preocupes: tu perfil queda activado igualmente.';
   document.body.appendChild(d);
   d.querySelector('#dk').onclick=()=>d.remove();
   const c=d.querySelector('#ac');if(c)c.onclick=async()=>{await API.confirmarSim(m);d.remove();dlg('Correo confirmado. Ya puedes iniciar sesión.',{ok:'Iniciar sesión'},()=>authDlg('in',m))};
@@ -1815,6 +1815,8 @@ async function entrarUsuario(){if(entrando)return;entrando=true;
 /* Enlace del correo gastado o caducado (otp_expired): hay que avisar con calma, porque la cuenta suele haber quedado confirmada de todos modos */
 function avisoEnlace(){
   const q=new URLSearchParams((HASH0||'').replace(/^#/,'')+'&'+(SEARCH0||'').replace(/^\?/,''));
+  if(q.get('type')==='signup'&&!(q.get('error')||q.get('error_code'))){ // correo confirmado: el enlace se abre en el navegador, no en la app del icono
+    setTimeout(()=>dlg('¡Correo confirmado! Tu perfil ya está activo. Ahora cierra esta pestaña, abre la app desde el icono de tu pantalla de inicio e inicia sesión con tu correo y contraseña.',{ok:'Entendido'}),600);return}
   if(!(q.get('error')||q.get('error_code')))return;
   try{history.replaceState(null,'',location.pathname)}catch(e){}
   setTimeout(()=>dlg('Este enlace ya se ha usado o ha caducado. No te preocupes: si ya lo abriste antes, tu perfil está activado y puedes iniciar sesión. Si no, crea el perfil o pide la contraseña de nuevo para recibir otro correo.',{ok:'Iniciar sesión'},()=>authDlg('in')),400)}
@@ -1869,7 +1871,7 @@ async function sincAmistades(){
   return antes!==JSON.stringify([S.reqIn,S.reqOut,live().map(f=>f.id+'|'+f.name+'|'+f.musId)])}
 /* ===== Partidas en la nube (fase B) ===== */
 const idsJug=h=>[...new Set([...h.t[0],...h.t[1]])];
-const VERSION='E-1';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
+const VERSION='E-2';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
 /* Sube una partida (una sola vez). Devuelve true si queda guardada en la nube */
 async function subirPartida(h){
   if(AUTH!=='user'||!S.uid||h._cl)return false;
