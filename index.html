@@ -1750,7 +1750,11 @@ function confirmarDlg(m,reintento){
    +'<p class="atx"></p>'
    +(SIMULAR?'<p class="asim">Solo pruebas: aún no hay servidor de correo.</p><button type="button" id="ac" class="ghost cr2">Simular que he confirmado</button>':'')
    +'<div class="row"><button id="dk" class="cr">Aceptar</button></div></div>';
-  d.querySelector('.atx').textContent=(reintento?'Tu perfil todavía no está activado. ':'Te hemos enviado un correo a ')+(reintento?'Abre el enlace del correo que enviamos a ':'')+m+(reintento?'':' con un enlace para activar tu perfil.')+' Si no lo ves, mira en la carpeta de spam. El enlace se abre en el navegador, y ahí queda activado tu perfil. Después vuelve a la app (la del icono) e inicia sesión con tu correo y contraseña. Si ves una página de error, no te preocupes: tu perfil queda activado igualmente.';
+  const ps=reintento
+    ?['Tu perfil todavía no está activado. Abre el enlace del correo que enviamos a '+m+'.','El enlace se abre en el navegador. Después vuelve a la app e inicia sesión. Si ves una página de error, tranquilo: el perfil queda activado igualmente.','¿No lo encuentras? Mira en la carpeta de spam.']
+    :['Te hemos enviado un correo a '+m+' para activar tu perfil.','Abre el enlace (se abre en el navegador) y después vuelve a la app e inicia sesión. Si ves una página de error, tranquilo: el perfil queda activado igualmente.','¿No te llega? Mira en la carpeta de spam.'];
+  const box=d.querySelector('.atx'),pad=box.parentNode;
+  ps.forEach(t=>{const e=document.createElement('p');e.className='atx just';e.textContent=t;pad.insertBefore(e,box)});box.remove();
   document.body.appendChild(d);
   d.querySelector('#dk').onclick=()=>d.remove();
   const c=d.querySelector('#ac');if(c)c.onclick=async()=>{await API.confirmarSim(m);d.remove();dlg('Correo confirmado. Ya puedes iniciar sesión.',{ok:'Iniciar sesión'},()=>authDlg('in',m))};
@@ -1829,7 +1833,8 @@ function nuevaPassDlg(){
   const I=d.querySelector('#np'),R=d.querySelector('#aer'),K=d.querySelector('#dk');ojoPass(I);
   const ok=async()=>{if(I.value.length<PASS_MIN){R.textContent='La contraseña debe tener al menos '+PASS_MIN+' caracteres.';return}
     K.disabled=true;const{error}=await sb.auth.updateUser({password:I.value});K.disabled=false;
-    if(error){R.textContent=errAuth(error);return}d.remove();dlg('Contraseña cambiada.',{},()=>{});entrarUsuario()};
+    if(error&&!/same_password|different from the old/i.test(String(error.code||'')+String(error.message||''))){R.textContent=errAuth(error);return} // si pone la misma contraseña que ya tenía, no es un error: se da por hecho
+    d.remove();dlg('Contraseña cambiada.',{},()=>{});entrarUsuario()};
   K.onclick=ok;I.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ok()}})}
 sb.auth.onAuthStateChange(ev=>{if(ev==='PASSWORD_RECOVERY')setTimeout(nuevaPassDlg,0)});
 /* ===== Amistades en la nube (fase C) ===== */
@@ -1871,7 +1876,7 @@ async function sincAmistades(){
   return antes!==JSON.stringify([S.reqIn,S.reqOut,live().map(f=>f.id+'|'+f.name+'|'+f.musId)])}
 /* ===== Partidas en la nube (fase B) ===== */
 const idsJug=h=>[...new Set([...h.t[0],...h.t[1]])];
-const VERSION='E-2';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
+const VERSION='E-3';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
 /* Sube una partida (una sola vez). Devuelve true si queda guardada en la nube */
 async function subirPartida(h){
   if(AUTH!=='user'||!S.uid||h._cl)return false;
@@ -2750,6 +2755,7 @@ html body .ov.auth .pw .pwe:active{color:#f2d98a}
 .ov.auth .mp>button.alk{align-self:center;border:0!important;background:none!important;box-shadow:none!important;color:#e8bd55!important;text-shadow:none!important;font:600 14px Literata,Georgia,serif;text-decoration:underline;text-underline-offset:3px;padding:4px 8px;margin:0;min-height:0;width:auto;transform:none}
 .ov.auth .aerr{margin:0;min-height:0;text-align:center;font-size:13.5px;line-height:1.35;color:#ff9a8c}
 .ov.auth .aerr:empty{display:none}
+.ov.auth .atx.just{text-align:justify;hyphens:auto;-webkit-hyphens:auto}
 .ov.auth .atx{margin:0;text-align:center;font-size:15px;line-height:1.45;color:var(--ink);overflow-wrap:anywhere}
 .ov.auth .asim{margin:0;text-align:center;font-size:12.5px;line-height:1.35;color:var(--mute)}
 .ov.auth .mp>button.cr2{width:100%}
