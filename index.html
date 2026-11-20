@@ -1853,6 +1853,11 @@ async function enviarSol(id){
   try{const{error}=await sb.from('amistades').insert({de:S.uid,a:id});
     if(error&&error.code!=='23505'){cloudErr();return}}catch(e){cloudErr();return}
   await sincAmistades()}
+/* Elimina la amistad con un jugador (la regla de la base de datos deja borrarla a cualquiera de los dos). Las partidas jugadas juntos se conservan */
+async function borrarAmigo(id){
+  try{const{error}=await sb.from('amistades').delete().or('and(de.eq.'+S.uid+',a.eq.'+id+'),and(de.eq.'+id+',a.eq.'+S.uid+')');
+    if(error){cloudErr();return false}}catch(e){cloudErr();return false}
+  await sincAmistades();return true}
 /* Trae de la nube las solicitudes y los amigos; devuelve true si algo ha cambiado */
 async function sincAmistades(){
   if(AUTH!=='user'||!S.uid)return false;
@@ -1876,7 +1881,7 @@ async function sincAmistades(){
   return antes!==JSON.stringify([S.reqIn,S.reqOut,live().map(f=>f.id+'|'+f.name+'|'+f.musId)])}
 /* ===== Partidas en la nube (fase B) ===== */
 const idsJug=h=>[...new Set([...h.t[0],...h.t[1]])];
-const VERSION='E-3';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
+const VERSION='E-4';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
 /* Sube una partida (una sola vez). Devuelve true si queda guardada en la nube */
 async function subirPartida(h){
   if(AUTH!=='user'||!S.uid||h._cl)return false;
@@ -2251,6 +2256,8 @@ function profile(){
   +'<div class="card"><div class="hh"><b>Medallas especiales</b></div><div class="mg sp">'+SEC.map(m=>{const on=!!p.sec[m.id],pd=on&&CL&&!CL[m.id],von=on&&!pd;return '<button class="med'+(pd?' pend':'')+(on?'':' lkd')+'" data-s="'+m.id+'">'+medal(m,von?SPEC:0,62)+'<span>'+esc(m.name)+'</span><small>'+(on?'Conseguida':'Bloqueada')+'</small></button>'}).join('')+'</div></div>'
   +'<div class="card"><div class="fr"><b>Mis parejas</b>'+(mates.length?'<button class="ghost" id="ap" style="padding:7px 12px;font-size:14px">Todas las parejas</button>':'')+'</div>'+(mates.length?mtab([bm]):'<span style="color:var(--mute)">Todavía no ha jugado con ninguna pareja.</span>')+'</div>';
   if(mine&&profBack==='home'){const lo=document.createElement('button');lo.type='button';lo.id='lo';lo.textContent='Cerrar sesión';lo.style.cssText='flex:0 0 auto;border:1.5px solid rgba(200,160,80,.6);color:#eae2cc;background:rgba(0,0,0,.25)';app.appendChild(lo);lo.onclick=()=>dlg('¿Cerrar sesión?',{cancel:1,ok:'Cerrar sesión',cr:1},logout)}
+  if(!mine&&AUTH==='user'&&isUuid(f.id)){const rb=document.createElement('button');rb.type='button';rb.id='rf';rb.textContent='Eliminar amigo';rb.style.cssText='flex:0 0 auto;border:1.5px solid rgba(200,160,80,.6);color:#eae2cc;background:rgba(0,0,0,.25)';app.appendChild(rb);
+    rb.onclick=()=>dlg('¿Eliminar a '+f.name+' de tus amigos? Las partidas que habéis jugado juntos se conservan.',{cancel:1,ok:'Eliminar',cr:1},async()=>{if(await borrarAmigo(f.id))go(profBack==='home'?'friends':profBack)})}
   $('#b').onclick=()=>go(profBack);
   $('#pmid').onclick=e=>musCopy(f,e.currentTarget);
   {const fit=()=>app.querySelectorAll('.nd .nm').forEach(el=>{el.style.removeProperty('font-size');let fs=parseFloat(getComputedStyle(el).fontSize);while(el.scrollWidth>el.clientWidth+0.5&&fs>11){fs-=.5;el.style.setProperty('font-size',fs+'px','important')}});fit();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{if(view==='profile')fit()})}
