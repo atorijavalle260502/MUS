@@ -1528,7 +1528,10 @@ const SEC=[
 {id:'pal',name:'¿Hay rival?',desc:'Así me aburro',req:'Gana un juego dejando al rival en 0 puntos'},
 {id:'rom',name:'Rompe rachas',desc:'Para que os relajéis',req:'Gana a una pareja que llevaba 5 o más victorias seguidas'}];
 const lvl=(p,k)=>(p.md[k]||{lvl:0}).lvl;
-const featured=(f,p)=>[...new Set((f.medals||[]).map(id=>String(id).replace(/\d+$/,'')))].map(id=>FAM.find(m=>m.id===id)).filter(m=>m&&effLvl(f,p,m.id)>0).slice(0,4);
+/* Especial conseguida (en mi perfil, además reclamada) */
+const secOk=(f,p,id)=>{if(!p.sec[id])return false;if(f&&f.id===meId())return !!(((S.claim||{})[f.id]||{})[id]);return true};
+const featured=(f,p)=>[...new Set((f.medals||[]).map(id=>String(id).replace(/\d+$/,'')))].map(id=>FAM.find(m=>m.id===id)||SEC.find(m=>m.id===id)).filter(m=>m&&(SEC.includes(m)?secOk(f,p,m.id):effLvl(f,p,m.id)>0)).slice(0,4);
+const fmedal=(f,p,m,s)=>SEC.includes(m)?medal(m,SPEC,s):medal(m,effLvl(f,p,m.id),s);
 const blank=()=>({tr:0,floor:0,lg:0,peak:0,streak:0,best:0,bestPair:0,w:0,l:0,g:0,pt:{},op:{},people:new Set(),days:{},ord:0,md:{},sec:{},paz:0,rev:0,soc:0,prev:null,last:null});
 const mx=(o,k)=>Math.max(0,...Object.values(o).map(r=>r[k]));
 const stat=p=>({w:p.w,best:p.best,pair:p.bestPair,peak:p.peak,people:p.people.size,partners:Object.keys(p.pt).length,oppG:mx(p.op,'g'),oppW:mx(p.op,'w'),pairW:mx(p.pt,'w'),paz:p.paz,rev:p.rev,soc:p.soc,day:Math.max(0,...Object.values(p.days)),ord:p.ord});
@@ -1716,13 +1719,15 @@ function authDlg(modo,prefill){
   d.innerHTML='<div class="mp"><b>'+(up?'Crear perfil':'Iniciar sesión')+'</b>'
    +'<label class="alb" for="ae">Correo electrónico</label><input id="ae" type="email" inputmode="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="nombre@correo.com">'
    +'<label class="alb" for="ap">Contraseña</label><input id="ap" type="password" autocomplete="'+(up?'new-password':'current-password')+'" placeholder="'+(up&&!SIMULAR?'Mínimo '+PASS_MIN+' caracteres':'Tu contraseña')+'">'
+   +(up?'<label class="alb" for="ap2">Repetir contraseña</label><input id="ap2" type="password" autocomplete="new-password" placeholder="Escríbela otra vez">':'')
    +(up?'':'<button type="button" class="alk" id="af" style="background:none">¿Has olvidado tu contraseña?</button>')
    +(up?'':'<button type="button" class="alk" id="an" style="background:none">¿No tienes perfil? Crear perfil</button>')
    +'<p class="aerr" id="aer" role="alert"></p>'
    +'<div class="row"><button class="ghost cr2" id="dc">Cancelar</button><button id="dk" class="cr">Aceptar</button></div></div>';
   document.body.appendChild(d);
   const E=d.querySelector('#ae'),P=d.querySelector('#ap'),R=d.querySelector('#aer'),K=d.querySelector('#dk');
-  if(prefill)E.value=prefill;ojoPass(P);
+  const P2=d.querySelector('#ap2');
+  if(prefill)E.value=prefill;ojoPass(P);if(P2)ojoPass(P2);
   const err=t=>{R.textContent=t||''},close=()=>d.remove();
   d.querySelector('#dc').onclick=close;
   const N=d.querySelector('#an');if(N)N.onclick=()=>{const m=E.value.trim();close();authDlg('up',m)};
@@ -1732,7 +1737,9 @@ function authDlg(modo,prefill){
     if(!SIMULAR){ // en la simulación vale cualquier cosa
       if(!EMAIL_RE.test(m)){err('Escribe un correo electrónico válido.');E.focus();return}
       if(!p){err('Escribe tu contraseña.');P.focus();return}
-      if(up&&p.length<PASS_MIN){err('La contraseña debe tener al menos '+PASS_MIN+' caracteres.');P.focus();return}}
+      if(up&&p.length<PASS_MIN){err('La contraseña debe tener al menos '+PASS_MIN+' caracteres.');P.focus();return}
+      if(up&&!P2.value){err('Repite la contraseña.');P2.focus();return}
+      if(up&&P2.value!==p){err('Las contraseñas no coinciden.');P2.focus();return}}
     K.disabled=true;
     const r=await (up?API.registrar(m,p):API.entrar(m,p));
     K.disabled=false;
@@ -1743,7 +1750,7 @@ function authDlg(modo,prefill){
     await entrarUsuario();
   };
   K.onclick=enviar;
-  [E,P].forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();enviar()}}));
+  [E,P,P2].filter(Boolean).forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();enviar()}}));
 }
 /* Aviso de «revisa tu correo»: la cuenta no se activa hasta confirmar el correo */
 function confirmarDlg(m,reintento){
@@ -1887,8 +1894,11 @@ async function sincAmistades(){
 /* ===== Partidas en la nube (fase B) ===== */
 const idsJug=h=>[...new Set([...h.t[0],...h.t[1]])];
 /* Jugador de una cuenta eliminada: sus partidas siguen contando, pero no aparece en las tablas de parejas */
+/* Hueco de la mesa («Jugador 1-4»: hoy Carlos, mañana Pepe…): no es una pareja real y no sale en las tablas de parejas */
+const hueco=id=>{const f=S.friends.find(x=>x.id===id);if(f&&f.gen)return true;if(!f&&/^(.*_)?inv[1-4]$/.test(String(id)))return true;return !f&&!isUuid(id)&&/^Jugador [1-4]$/.test(fname(id))};
+const oculto=id=>gone(id)||hueco(id);
 const gone=id=>/(^|_)del_[0-9a-f]{8}$/.test(String(id))||!!(S.gone&&S.gone[id]);
-const VERSION='E-8';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
+const VERSION='E-9';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
 /* Sube una partida (una sola vez). Devuelve true si queda guardada en la nube */
 async function subirPartida(h){
   if(AUTH!=='user'||!S.uid||h._cl)return false;
@@ -2106,7 +2116,7 @@ function friends(){
   +'<form class="sbx" id="sbf" autocomplete="off"><input id="sbq" type="search" placeholder="Buscar jugadores..." enterkeyhint="search" aria-label="Buscar jugadores"><span class="sbi" id="sbg" role="button" tabindex="0" aria-label="Buscar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></span></form></div>'
   +reqBtnHTML()+'<div id="list"></div>';
   const l=$('#list'),todos=live().filter(f=>f.id!==mid&&!f.gen);
-  const rd=q=>{const amigos=q?todos.filter(f=>matchJ(f,q)):todos;const otros=q?usersAll().filter(u=>!live().some(f=>f.id===u.id)&&matchJ(u,q)).map(userCard).join(''):'';l.innerHTML=(amigos.length||otros)?amigos.map(f=>{const p=P[f.id]||blank();const bm=Object.entries(p.pt).filter(e=>!gone(e[0])).sort((x,y)=>y[1].w-x[1].w||y[1].g-x[1].g)[0],bmOk=bm&&bm[1].w>0;return '<div class="card"><div class="fr"><div class="frl" data-p="'+f.id+'"><div class="frh"><span class="fra">'+avatarHTML(f,p,40)+'</span><span class="frnb"><b class="frn">'+esc(f.name)+'</b><span class="frid" data-mid="'+f.id+'" role="button" tabindex="0">#'+musOf(f)+'</span></span><span class="frt">'+trIcon(22)+fmt(p.tr)+'</span></div><div class="frk"><span class="frc frlg"><small>Liga actual</small><span class="frg">'+lgBadge(p.lg,20)+'<span>'+LEAGUES[p.lg][0]+'</span></span></span><span class="frc"><small>Mejor pareja</small><span class="frg frm">'+(bmOk?'<span class="frmn">'+esc(fname(bm[0]))+'</span><span class="frms">'+bm[1].w+' V · '+bm[1].l+' D · '+Math.round(100*bm[1].w/bm[1].g)+'%</span>':'<span class="frmn">—</span>')+'</span></span></div></div><button class="frs" data-st="'+f.id+'">Estadísticas</button></div></div>'}).join('')+otros:'<div class="card"><span style="color:var(--mute)">'+(q?'Sin resultados para «'+esc(q)+'».':'Aún no hay amigos.')+'</span></div>'};
+  const rd=q=>{const amigos=q?todos.filter(f=>matchJ(f,q)):todos;const otros=q?usersAll().filter(u=>!live().some(f=>f.id===u.id)&&matchJ(u,q)).map(userCard).join(''):'';l.innerHTML=(amigos.length||otros)?amigos.map(f=>{const p=P[f.id]||blank();const bm=Object.entries(p.pt).filter(e=>!oculto(e[0])).sort((x,y)=>y[1].w-x[1].w||y[1].g-x[1].g)[0],bmOk=bm&&bm[1].w>0;return '<div class="card"><div class="fr"><div class="frl" data-p="'+f.id+'"><div class="frh"><span class="fra">'+avatarHTML(f,p,40)+'</span><span class="frnb"><b class="frn">'+esc(f.name)+'</b><span class="frid" data-mid="'+f.id+'" role="button" tabindex="0">#'+musOf(f)+'</span></span><span class="frt">'+trIcon(22)+fmt(p.tr)+'</span></div><div class="frk"><span class="frc frlg"><small>Liga actual</small><span class="frg">'+lgBadge(p.lg,20)+'<span>'+LEAGUES[p.lg][0]+'</span></span></span><span class="frc"><small>Mejor pareja</small><span class="frg frm">'+(bmOk?'<span class="frmn">'+esc(fname(bm[0]))+'</span><span class="frms">'+bm[1].w+' V · '+bm[1].l+' D · '+Math.round(100*bm[1].w/bm[1].g)+'%</span>':'<span class="frmn">—</span>')+'</span></span></div></div><button class="frs" data-st="'+f.id+'">Estadísticas</button></div></div>'}).join('')+otros:'<div class="card"><span style="color:var(--mute)">'+(q?'Sin resultados para «'+esc(q)+'».':'Aún no hay amigos.')+'</span></div>'};
   rd('');
   l.onclick=ev=>{const rq=ev.target.closest('[data-rq]');if(rq){ev.stopPropagation();rq.disabled=true;enviarSol(rq.dataset.rq).then(()=>rd($('#sbq').value));return}
     const ac=ev.target.closest('[data-acc]');if(ac){ev.stopPropagation();ac.disabled=true;acceptReq(ac.dataset.acc).then(friends);return}
@@ -2124,7 +2134,7 @@ function vsStats(fid){
   const nm=esc(fname(fid));
   const row=(t,r,la,lb)=>{const pc=r.g?Math.round(100*r.w/r.g):0;
     return '<div class="vsr"><div class="vsh"><b>'+t+'</b>'+(r.g?'<span>('+pc+'% de victorias)</span>':'')+'</div>'
-    +(r.g?'<div class="vsbar"><i class="vsw" style="flex:'+r.w+'">'+(r.w?r.w:'')+'</i><i class="vsd" style="flex:'+r.l+'">'+(r.l?r.l:'')+'</i></div><div class="vsl"><span><u class="vsw"></u>'+la+'</span><span><u class="vsd"></u>'+lb+'</span></div>'
+    +(r.g?'<div class="vsbar">'+(r.w?'<i class="vsw" style="flex:'+r.w+'">'+r.w+'</i>':'')+(r.l?'<i class="vsd" style="flex:'+r.l+'">'+r.l+'</i>':'')+'</div><div class="vsl"><span><u class="vsw"></u>'+la+'</span><span><u class="vsd"></u>'+lb+'</span></div>'
     :'<div class="vsbar vse"></div>')+'</div>'};
   const pt=me.pt[fid]||z,op=me.op[fid]||z;
   const d=overlay('<h2 style="text-align:center">Tú y '+esc(fname(fid))+'</h2>'
@@ -2177,8 +2187,8 @@ function secInfo(m,p,CL){
 }
 function pickSlot(f,p,i){
   const cur=featured(f,p).map(m=>m.id);
-  const opts=FAM.filter(m=>effLvl(f,p,m.id)>0&&(!cur.includes(m.id)||cur[i]===m.id));
-  const d=overlay('<b>Elige una medalla destacada</b>'+(opts.length?'<div class="mg">'+opts.map(m=>'<button class="med" data-a="'+m.id+'">'+medal(m,effLvl(f,p,m.id),54)+'<span>'+esc(m.name)+'</span><small>'+medalLbl(m,effLvl(f,p,m.id))+'</small></button>').join('')+'</div>':'<span style="color:var(--mute)">Aún no tienes medallas. Gana partidas para conseguirlas.</span>')+'<div class="row">'+(cur[i]?'<button class="ghost cr2" id="rm">Quitar</button>':'')+'<button class="ghost cr2" id="cx">Cancelar</button></div>');
+  const libre=m=>!cur.includes(m.id)||cur[i]===m.id,opts=FAM.filter(m=>effLvl(f,p,m.id)>0&&libre(m)),optsS=SEC.filter(m=>secOk(f,p,m.id)&&libre(m));
+  const d=overlay('<b>Elige una medalla destacada</b>'+(opts.length||optsS.length?'<div class="mg">'+opts.map(m=>'<button class="med" data-a="'+m.id+'">'+medal(m,effLvl(f,p,m.id),54)+'<span>'+esc(m.name)+'</span><small>'+medalLbl(m,effLvl(f,p,m.id))+'</small></button>').join('')+optsS.map(m=>'<button class="med" data-a="'+m.id+'">'+medal(m,SPEC,54)+'<span>'+esc(m.name)+'</span><small>Especial</small></button>').join('')+'</div>':'<span style="color:var(--mute)">Aún no tienes medallas. Gana partidas para conseguirlas.</span>')+'<div class="row">'+(cur[i]?'<button class="ghost cr2" id="rm">Quitar</button>':'')+'<button class="ghost cr2" id="cx">Cancelar</button></div>');
   const done=n=>{f.medals=n.slice(0,4);save();d.remove();profile()};
   d.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const n=cur.slice();if(i<n.length)n[i]=b.dataset.a;else n.push(b.dataset.a);done(n)});
   if(d.querySelector('#rm'))d.querySelector('#rm').onclick=()=>{const n=cur.slice();n.splice(i,1);done(n)};
@@ -2268,7 +2278,7 @@ function profile(){
   const real=FAM.filter(m=>!m.soon),got=real.filter(m=>effLvl(f,p,m.id)>0).length;
   const mine=f.id===meId();if(mine)ensureClaims();const CL=mine?((S.claim||{})[f.id]||{}):null; // en mi perfil se muestra el nivel reclamado; el pendiente late
   const shown=m=>CL?Math.min(lvl(p,m.id),CL[m.id]||0):lvl(p,m.id),pendF=m=>CL&&!m.soon&&lvl(p,m.id)>(CL[m.id]||0);
-  const mates=Object.entries(p.pt).filter(e=>!gone(e[0])).sort((x,y)=>y[1].w-x[1].w||y[1].g-x[1].g),bm=mates[0];
+  const mates=Object.entries(p.pt).filter(e=>!oculto(e[0])).sort((x,y)=>y[1].w-x[1].w||y[1].g-x[1].g),bm=mates[0];
   const mrow=([id,r])=>'<tr><td>'+esc(fname(id))+'</td><td>'+r.g+'</td><td>'+r.w+'</td><td>'+r.l+'</td><td>'+Math.round(100*r.w/r.g)+'%</td></tr>',mtab=a=>'<table><tr><th>Pareja</th><th>PJ</th><th>V</th><th>D</th><th>%</th></tr>'+a.map(mrow).join('')+'</table>';
   app.innerHTML='<div class="top"><button id="b">‹ '+(profBack==='home'?'Inicio':'Amigos')+'</button><h2>'+(f.id===S.me?'Mi perfil':esc(f.name))+'</h2></div>'
   +'<div class="card pcard"><div class="phd"><div class="pav"><button class="avb" id="av" aria-label="Avatar"'+(mine?'':' disabled style="opacity:1"')+'>'+avatarHTML(f,p,96)+'</button>'+(mine?'<button class="ghost" id="avc">Cambiar</button>':'')+'</div>'
@@ -2280,7 +2290,7 @@ function profile(){
   +'<div class="stg"><div class="stt"><small>'+(p.w===1?'Victoria':'Victorias')+'</small><div class="sr"><img src="'+STAT_IMG_V+'" alt="" draggable="false"><b>'+fmt(p.w)+'</b></div></div><div class="stt"><small>Mejor racha</small><div class="sr"><img src="'+STAT_IMG_R+'" alt="" draggable="false"><b>'+fmt(p.best)+'</b></div></div>'
   +'<div class="stt wide"><small>Mejor pareja</small><div class="sr"><img src="'+STAT_IMG_P+'" alt="" draggable="false"><b class="nm">'+(bm&&bm[1].w>0?esc(fname(bm[0])):'—')+'</b></div></div></div>'
   +'</div>'
-  +'<div class="card"><b>Medallas destacadas</b><div class="slots">'+[0,1,2,3].map(i=>'<button class="slotb" data-slot="'+i+'" aria-label="Elegir medalla"'+(mine?'':' disabled style="opacity:1"')+'>'+(fe[i]?medal(fe[i],effLvl(f,p,fe[i].id),54):(mine?'<span>+</span>':''))+'</button>').join('')+'</div></div>'
+  +'<div class="card"><b>Medallas destacadas</b><div class="slots">'+[0,1,2,3].map(i=>'<button class="slotb" data-slot="'+i+'" aria-label="Elegir medalla"'+(mine?'':' disabled style="opacity:1"')+'>'+(fe[i]?fmedal(f,p,fe[i],54):(mine?'<span>+</span>':''))+'</button>').join('')+'</div></div>'
   +'<div class="card"><div class="hh"><b>Medallas</b></div><div class="mg">'+FAM.map(m=>'<button class="med'+(pendF(m)?' pend':'')+'" data-a="'+m.id+'">'+medal(m,shown(m),58)+'<span>'+esc(m.name)+'</span><small>'+medalLbl(m,shown(m))+'</small></button>').join('')+'</div></div>'
   +'<div class="card"><div class="hh"><b>Medallas especiales</b></div><div class="mg sp">'+SEC.map(m=>{const on=!!p.sec[m.id],pd=on&&CL&&!CL[m.id],von=on&&!pd;return '<button class="med'+(pd?' pend':'')+(on?'':' lkd')+'" data-s="'+m.id+'">'+medal(m,von?SPEC:0,62)+'<span>'+esc(m.name)+'</span><small>'+(on?'Conseguida':'Bloqueada')+'</small></button>'}).join('')+'</div></div>'
   +'<div class="card"><div class="fr"><b>Mis parejas</b>'+(mates.length?'<button class="ghost" id="ap" style="padding:7px 12px;font-size:14px">Todas las parejas</button>':'')+'</div>'+(mates.length?mtab([bm]):'<span style="color:var(--mute)">Todavía no ha jugado con ninguna pareja.</span>')+'</div>';
@@ -3085,6 +3095,13 @@ box-shadow:inset 0 1.5px 1px rgba(255,205,150,.65),inset 0 -2.5px 3px rgba(0,0,0
 html body #app.friends .rqbtn .rqc{isolation:isolate}
 html body #app.friends .rqbtn .rqc::before{content:'';position:absolute;z-index:-1;left:18%;right:18%;top:9%;height:30%;border-radius:50%;background:linear-gradient(180deg,rgba(255,255,255,.4),rgba(255,255,255,0));pointer-events:none}
 html body #app.friends .rqbtn .rqc>*{position:relative}
+</style>
+<style id="e9-brillo">
+/* Reclamar medalla: el brillo del final era un «drop-shadow» del cuadro de la imagen y dejaba ver sus bordes cuadrados. Ahora es un halo circular que se desvanece solo */
+@keyframes medres{0%{filter:brightness(1)}25%{filter:brightness(1.5)}100%{filter:brightness(1)}}
+@keyframes medhalo{0%{opacity:0;transform:scale(.8)}25%{opacity:1;transform:scale(1.15)}100%{opacity:.4;transform:scale(1)}}
+.mnew::before,.mfly::before{content:"";position:absolute;inset:-12%;border-radius:50%;pointer-events:none;background:radial-gradient(circle closest-side,rgba(255,226,120,.95) 0%,rgba(255,196,60,.55) 55%,rgba(255,196,60,0) 100%);animation:medhalo 1.9s ease-out .4s both}
+.mfly::before{animation-delay:.47s}
 </style>
 </body>
 </html>
