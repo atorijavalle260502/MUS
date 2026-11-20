@@ -1847,7 +1847,7 @@ const usersAll=()=>{const s=S.users||[];return s.concat(BUSQ.filter(b=>!s.some(u
 async function buscarMusId(q){
   const id=String(q||'').trim().toUpperCase().replace(/^(MUS\s*ID\s*:?\s*|#)/,'').replace(/\s/g,'');
   if(AUTH!=='user'||!/^[A-Z0-9]{6}$/.test(id))return;
-  try{const{data,error}=await sb.from('perfiles').select('id,nombre,mus_id').eq('mus_id',id).maybeSingle();
+  try{const{data:filas,error}=await sb.rpc('buscar_por_mus_id',{p_mus_id:id});const data=filas&&filas[0];
     if(error||!data||data.id===S.uid||live().some(f=>f.id===data.id))return;
     if(!BUSQ.some(b=>b.id===data.id))BUSQ.push({id:data.id,name:data.nombre||'Jugador',musId:data.mus_id,tr:0})}catch(e){}}
 /* Envía una solicitud de amistad */
@@ -1878,8 +1878,8 @@ async function sincAmistades(){
       else{S.users.push({id:o,name:nom,musId:p.mus_id,tr:0});(r.de===S.uid?S.reqOut:S.reqIn).push(o)}});
     S.friends.forEach(f=>{if(isUuid(f.id)&&f.id!==S.uid&&!acept.has(f.id))f.deleted=true});
     /* ¿Alguno de esos ya no tiene perfil? Entonces su cuenta se eliminó (no solo la amistad) */
-    const cand=[...new Set([...S.friends.filter(f=>f.deleted).map(f=>f.id),...Object.keys(S.ext||{}).filter(isUuid)])].filter(id=>id!==S.uid&&!(S.gone&&S.gone[id])).slice(0,100);
-    if(cand.length){const q=await sb.from('perfiles').select('id').in('id',cand);if(!q.error&&q.data){const vivos=new Set(q.data.map(x=>x.id));S.gone=S.gone||{};cand.forEach(id=>{if(!vivos.has(id))S.gone[id]=1})}}
+    const cand=[...new Set([...S.friends.filter(f=>f.deleted).map(f=>f.id),...Object.keys(S.ext||{}).filter(isUuid)])].filter(id=>id!==S.uid).slice(0,100);
+    if(cand.length){const q=await sb.rpc('perfiles_existentes',{p_ids:cand});if(!q.error&&Array.isArray(q.data)){const vivos=new Set(q.data.map(x=>typeof x==='string'?x:Object.values(x)[0]));S.gone=S.gone||{};cand.forEach(id=>{if(vivos.has(id))delete S.gone[id];else S.gone[id]=1})}}
     BUSQ=BUSQ.filter(b=>!rows.some(r=>r.de===b.id||r.a===b.id));
     save();
   }catch(e){return false}
@@ -1888,7 +1888,7 @@ async function sincAmistades(){
 const idsJug=h=>[...new Set([...h.t[0],...h.t[1]])];
 /* Jugador de una cuenta eliminada: sus partidas siguen contando, pero no aparece en las tablas de parejas */
 const gone=id=>/(^|_)del_[0-9a-f]{8}$/.test(String(id))||!!(S.gone&&S.gone[id]);
-const VERSION='E-6';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
+const VERSION='E-7';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
 /* Sube una partida (una sola vez). Devuelve true si queda guardada en la nube */
 async function subirPartida(h){
   if(AUTH!=='user'||!S.uid||h._cl)return false;
