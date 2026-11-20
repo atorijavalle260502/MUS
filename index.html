@@ -1888,7 +1888,7 @@ async function sincAmistades(){
 const idsJug=h=>[...new Set([...h.t[0],...h.t[1]])];
 /* Jugador de una cuenta eliminada: sus partidas siguen contando, pero no aparece en las tablas de parejas */
 const gone=id=>/(^|_)del_[0-9a-f]{8}$/.test(String(id))||!!(S.gone&&S.gone[id]);
-const VERSION='E-7';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
+const VERSION='E-8';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
 /* Sube una partida (una sola vez). Devuelve true si queda guardada en la nube */
 async function subirPartida(h){
   if(AUTH!=='user'||!S.uid||h._cl)return false;
@@ -2552,8 +2552,9 @@ function pieVersion(){
   const host=document.getElementById('app');if(!host||document.getElementById('vpie'))return;
   const d=document.createElement('div');d.id='vpie';d.style.cssText='margin:18px 16px 28px;text-align:center;font-size:12.5px;color:#a9b8a8;line-height:1.5';
   const n=S.hist.length,p=S.hist.filter(h=>!h._cl).length;
-  d.innerHTML='Versión '+VERSION+(AUTH==='user'?' · partidas: '+n+' ('+p+' sin subir)':'')+(AUTH==='user'?'<br><button type="button" id="vsy" style="margin-top:8px;padding:8px 16px;font-size:13px;border-radius:10px;border:1px solid #c9a24e;background:none;color:#e9dcb3">Sincronizar ahora</button>':'');
+  d.innerHTML='Versión '+VERSION+(AUTH==='user'?' · partidas: '+n+' ('+p+' sin subir)':'')+(AUTH==='user'?'<br><button type="button" id="vsy" style="display:none;margin-top:8px;padding:8px 16px;font-size:13px;border-radius:10px;border:1px solid #c9a24e;background:none;color:#e9dcb3">Sincronizar ahora</button>':'');
   host.appendChild(d);
+  let tq=0,t0=0;d.addEventListener('click',e=>{if(e.target.closest('#vsy'))return;const t=Date.now();if(t-t0>3000)tq=0;t0=t;if(++tq>=5){const bb=d.querySelector('#vsy');if(bb)bb.style.display='';tq=0}});
   const b=d.querySelector('#vsy');if(b)b.onclick=async()=>{b.disabled=true;b.textContent='Sincronizando…';S.hist.forEach(h=>{delete h._err});
     await sincAmistades();await sincPartidas();await sincReclamos();b.disabled=false;
     const n2=S.hist.length,p2=S.hist.filter(h=>!h._cl).length;
