@@ -1701,6 +1701,8 @@ const API={
   /* Envía el correo para elegir otra contraseña. Responde siempre igual, exista o no la cuenta */
   async recuperar(email){try{await sb.auth.resetPasswordForEmail(email,APP_URL?{redirectTo:APP_URL}:{})}catch(e){}return{ok:true}},
   async salir(){try{await sb.auth.signOut()}catch(e){}},
+  /* Borra mi cuenta con la función SQL eliminar_mi_cuenta() (solo borra a quien la llama) → {ok} | {error} */
+  async eliminarCuenta(){try{const{error}=await sb.rpc('eliminar_mi_cuenta');if(error)return{error:errTxt(error)};return{ok:true}}catch(e){return{error:'Excepción: '+(e&&e.message||e)}}},
   async confirmarSim(email){}
 };
 /* Sesión recordada en este dispositivo: al abrir la app entra sola. Solo se guarda que hay sesión, ningún dato escrito. Con la base de datos se guardará el token de sesión */
@@ -1881,7 +1883,7 @@ async function sincAmistades(){
   return antes!==JSON.stringify([S.reqIn,S.reqOut,live().map(f=>f.id+'|'+f.name+'|'+f.musId)])}
 /* ===== Partidas en la nube (fase B) ===== */
 const idsJug=h=>[...new Set([...h.t[0],...h.t[1]])];
-const VERSION='E-4';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
+const VERSION='E-5';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
 /* Sube una partida (una sola vez). Devuelve true si queda guardada en la nube */
 async function subirPartida(h){
   if(AUTH!=='user'||!S.uid||h._cl)return false;
@@ -1938,11 +1940,31 @@ async function sincReclamos(){
     return local
   }catch(e){DBG.rcl='Excepción: '+(e&&e.message||e);return false}}
 /* Sincroniza amistades y partidas; repinta la pantalla si cambia algo y se está viendo Inicio, Amigos, Perfil o Senda */
-async function refrescarAmigos(){if(AUTH!=='user')return;const a=await sincAmistades(),b=await sincPartidas(),c=await sincReclamos();
+let BORRANDO=false; // true mientras se elimina la cuenta: nada se sincroniza ni se guarda
+async function refrescarAmigos(){if(AUTH!=='user'||BORRANDO)return;const a=await sincAmistades(),b=await sincPartidas(),c=await sincReclamos();
   if((a||b||c)&&['home','friends','profile','senda'].includes(view)&&!document.querySelector('.ov'))draw()}
 setInterval(()=>{if(document.visibilityState==='visible')refrescarAmigos()},45000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refrescarAmigos()});
 function logout(){olvidarSesion();AUTH=null;go('welcome')}
+/* Eliminar cuenta: pide escribir ELIMINAR; borra en la nube (SQL) y después deja este móvil limpio */
+function eliminarCuentaDlg(){
+  const d=document.createElement('div');d.className='ov c auth';
+  d.innerHTML='<div class="mp"><b>¿Eliminar tu cuenta?</b>'
+   +'<p class="atx">Se borrarán para siempre tu perfil, tus amistades y tus medallas reclamadas, y todo lo guardado en este móvil. Las partidas compartidas con amigos se conservan con tu nombre cambiado a «Jugador eliminado»; las que solo eran tuyas se borran. No se puede deshacer.</p>'
+   +'<label class="alb" for="ec">Escribe ELIMINAR para confirmar</label><input id="ec" autocomplete="off" autocapitalize="characters" spellcheck="false">'
+   +'<p class="aerr" id="aer" role="alert"></p><div class="row"><button class="ghost cr2" id="dc">Cancelar</button><button id="dk" class="cr">Eliminar</button></div></div>';
+  document.body.appendChild(d);
+  const I=d.querySelector('#ec'),R=d.querySelector('#aer'),K=d.querySelector('#dk'),C=d.querySelector('#dc');
+  C.onclick=()=>d.remove();
+  const ok=async()=>{
+    if(I.value.trim().toUpperCase()!=='ELIMINAR'){R.textContent='Escribe la palabra ELIMINAR para confirmar.';return}
+    R.textContent='';K.disabled=true;C.disabled=true;K.textContent='Eliminando…';BORRANDO=true;
+    const r=await API.eliminarCuenta();
+    if(r.error){BORRANDO=false;K.disabled=false;C.disabled=false;K.textContent='Eliminar';R.textContent='No se ha podido eliminar la cuenta. Revisa tu conexión e inténtalo de nuevo.';return}
+    try{await sb.auth.signOut({scope:'local'})}catch(e){}
+    try{localStorage.removeItem(KEY)}catch(e){}
+    location.reload()};
+  K.onclick=ok;I.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ok()}})}
 function enterMode(m){
   AUTH=m;const guest=m==='guest';
   /* La partida en curso es de un modo u otro: la del otro modo se aparca (S.pk.user / S.pk.guest) y se recupera al volver a él */
@@ -1958,7 +1980,7 @@ const lockMsg=n=>dlg('Inicia sesión para acceder a '+n+'.',{cancel:1,ok:'Inicia
 function welcome(){
   app.innerHTML='<div class="hsuits">'+['o','c','e','b'].map(k=>suit(k,k==='o'?50:64)).join('')+'</div><div class="logo">MUS</div>'+fan()
   +'<div class="menu"><button class="gold" style="width:100%" id="li">Iniciar sesión</button><button class="ghost" style="width:100%;background:var(--card)" id="cp">Crear perfil</button><button class="ghost" style="width:100%;background:var(--card)" id="gu">Jugar como invitado</button>'
-  +'<p class="wnote">Como invitado puedes jugar, pero sin perfil, amigos ni estadísticas.</p></div>';
+  +'<p class="wnote">Como invitado puedes jugar, pero sin perfil, amigos ni estadísticas.</p><p class="wnote"><a class="plink" href="privacidad.html" target="_blank" rel="noopener">Política de privacidad</a></p></div>';
   $('#li').onclick=login;$('#cp').onclick=crearPerfil;$('#gu').onclick=()=>enterMode('guest');
 }
 function draw(){if(!AUTH)view='welcome';else if(AUTH==='guest'&&LOCKED.includes(view))view='home';app.className=view==='welcome'?'home':view;({welcome,home,friends,setup,game,profile,senda})[view]()}
@@ -2255,7 +2277,9 @@ function profile(){
   +'<div class="card"><div class="hh"><b>Medallas</b></div><div class="mg">'+FAM.map(m=>'<button class="med'+(pendF(m)?' pend':'')+'" data-a="'+m.id+'">'+medal(m,shown(m),58)+'<span>'+esc(m.name)+'</span><small>'+medalLbl(m,shown(m))+'</small></button>').join('')+'</div></div>'
   +'<div class="card"><div class="hh"><b>Medallas especiales</b></div><div class="mg sp">'+SEC.map(m=>{const on=!!p.sec[m.id],pd=on&&CL&&!CL[m.id],von=on&&!pd;return '<button class="med'+(pd?' pend':'')+(on?'':' lkd')+'" data-s="'+m.id+'">'+medal(m,von?SPEC:0,62)+'<span>'+esc(m.name)+'</span><small>'+(on?'Conseguida':'Bloqueada')+'</small></button>'}).join('')+'</div></div>'
   +'<div class="card"><div class="fr"><b>Mis parejas</b>'+(mates.length?'<button class="ghost" id="ap" style="padding:7px 12px;font-size:14px">Todas las parejas</button>':'')+'</div>'+(mates.length?mtab([bm]):'<span style="color:var(--mute)">Todavía no ha jugado con ninguna pareja.</span>')+'</div>';
-  if(mine&&profBack==='home'){const lo=document.createElement('button');lo.type='button';lo.id='lo';lo.textContent='Cerrar sesión';lo.style.cssText='flex:0 0 auto;border:1.5px solid rgba(200,160,80,.6);color:#eae2cc;background:rgba(0,0,0,.25)';app.appendChild(lo);lo.onclick=()=>dlg('¿Cerrar sesión?',{cancel:1,ok:'Cerrar sesión',cr:1},logout)}
+  if(mine&&profBack==='home'){const lo=document.createElement('button');lo.type='button';lo.id='lo';lo.textContent='Cerrar sesión';lo.style.cssText='flex:0 0 auto;border:1.5px solid rgba(200,160,80,.6);color:#eae2cc;background:rgba(0,0,0,.25)';app.appendChild(lo);lo.onclick=()=>dlg('¿Cerrar sesión?',{cancel:1,ok:'Cerrar sesión',cr:1},logout);
+    const de=document.createElement('button');de.type='button';de.id='de';de.textContent='Eliminar cuenta';de.style.cssText=lo.style.cssText;app.appendChild(de);de.onclick=eliminarCuentaDlg;
+    const pv=document.createElement('p');pv.className='wnote';pv.innerHTML='<a class="plink" href="privacidad.html" target="_blank" rel="noopener">Política de privacidad</a>';app.appendChild(pv)}
   if(!mine&&AUTH==='user'&&isUuid(f.id)){const rb=document.createElement('button');rb.type='button';rb.id='rf';rb.textContent='Eliminar amigo';rb.style.cssText='flex:0 0 auto;border:1.5px solid rgba(200,160,80,.6);color:#eae2cc;background:rgba(0,0,0,.25)';app.appendChild(rb);
     rb.onclick=()=>dlg('¿Eliminar a '+f.name+' de tus amigos? Las partidas que habéis jugado juntos se conservan.',{cancel:1,ok:'Eliminar',cr:1},async()=>{if(await borrarAmigo(f.id))go(profBack==='home'?'friends':profBack)})}
   $('#b').onclick=()=>go(profBack);
@@ -2770,6 +2794,7 @@ html body .ov.auth .pw .pwe:active{color:#f2d98a}
 </style>
 <style id="acceso-css">
 /* Acceso: pantalla inicial, secciones bloqueadas y jugadores fijos */
+.plink{color:inherit;text-decoration:underline;text-underline-offset:3px}
 .wnote{margin:2px 0 0;text-align:center;font-size:13px;line-height:1.35;color:rgba(246,239,220,.74)}
 button.glk{position:relative;filter:saturate(.5) brightness(.8)}
 button.glk .plk{position:static;flex:0 0 auto;width:17px;height:17px;color:#f6efdc;pointer-events:none}
