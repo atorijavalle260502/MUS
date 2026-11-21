@@ -1420,6 +1420,21 @@ background:linear-gradient(180deg,rgba(255,226,140,.24),rgba(255,226,140,.07)),r
 .nd .tro svg{width:clamp(20px,6.6vw,26px)!important;height:auto!important}
 #app.senda .top h2{font-size:clamp(17px,5.8vw,24px);white-space:nowrap}
 </style>
+<style id="fase-i">
+/* Fase I: tabla de parejas más ligera, nombre pinchable, aviso de nombre */
+.mtw{overflow-x:auto}
+table.mt{border-collapse:collapse;width:100%;font-size:15px;font-variant-numeric:tabular-nums}
+table.mt th{padding:4px 6px 7px;text-align:center;font:800 12px Literata,Georgia,serif;letter-spacing:.09em;text-transform:uppercase;color:#e0b04a;border-bottom:1.5px solid rgba(224,176,74,.6)}
+table.mt td{padding:9px 6px;text-align:center;color:var(--ink);border-bottom:1px solid rgba(200,160,80,.16)}
+table.mt tbody tr:last-child td{border-bottom:0}
+table.mt th.l,table.mt td.l{text-align:left;padding-left:2px}
+table.mt td.mpc{color:#f2d98a;font-weight:700}
+table.mt .mrk{display:inline-block;min-width:1.35em;margin-right:2px;color:var(--mute);font-size:13px}
+table.mt .mnl{cursor:pointer;color:#f2d98a;font:700 15px/1.25 Literata,Georgia,serif;text-decoration:underline dotted rgba(242,217,138,.55);text-underline-offset:4px;-webkit-tap-highlight-color:transparent}
+table.mt .mnl:active{filter:brightness(1.25)}
+.pnerr{margin:2px 0 0;font-size:13.5px;line-height:1.35;color:#ff9a8c}
+.pnerr:empty{display:none}
+</style>
 <script src="supabase.js"></script>
 <script>
 const ASES=['img/as-oros.webp?v=3','img/as-copas.webp?v=3','img/as-espadas.webp?v=3','img/as-bastos.webp?v=3'];
@@ -1445,7 +1460,8 @@ const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 S.hist.forEach((h,i)=>{if(!h.id)h.id='h'+h.fecha+'x'+i});
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const $=s=>document.querySelector(s), app=$('#app');
-const fname=id=>{const f=S.friends.find(x=>x.id===id);if(f)return f.name;if(S.ext&&S.ext[id])return S.ext[id];const m=/^inv([1-4])$/.exec(id);return m?((S.invNames&&S.invNames[id])||'Jugador '+m[1]):'(borrado)'}; // inv1..inv4: jugadores del modo invitado (no son amigos)
+const PUB={}; // perfiles de otras personas traídos de la nube (no se guardan)
+const fname=id=>{const f=S.friends.find(x=>x.id===id);if(f)return f.name;if(S.ext&&S.ext[id])return S.ext[id];if(PUB[id]&&PUB[id].name)return PUB[id].name;const m=/^inv([1-4])$/.exec(id);return m?((S.invNames&&S.invNames[id])||'Jugador '+m[1]):'(borrado)'}; // inv1..inv4: jugadores del modo invitado (no son amigos)
 const live=()=>S.friends.filter(f=>!f.deleted);
 {const c=S.cfg||{};if(!S.cfg||(+c.meta===40&&+c.juegos===3&&+c.vacas===3))S.cfg={meta:30,juegos:3,vacas:1};
 {let t=S.friends.find(f=>!f.deleted&&f.id===S.me)||S.friends.find(f=>!f.deleted&&f.name==='Yo');
@@ -1514,7 +1530,7 @@ const LV=['Bronce','Plata','Oro','Rubí','Diamante','Leyenda'],SPEC=7;
 const FAM=[
 {id:'rc',name:'Rachas',desc:'Qué alguien me pare',goals:[2,3,5,6,8,10],val:s=>s.best,req:g=>'Gana '+g+' partidas seguidas'},
 {id:'vw',name:'Victorias',desc:'Cada victoria cuenta.',goals:[3,10,25,50,100,150],val:s=>s.w,req:g=>'Gana '+g+' partidas'},
-{id:'pr',name:'Parejas',desc:'Juntos somos imparables',goals:[3,8,20,35,60,90],val:s=>s.pairW,req:g=>'Gana '+g+' partidas con la misma pareja'},
+{id:'pr',name:'Parejas',desc:'Juntos somos imparables',goals:[3,8,20,35,60,90],val:s=>s.pairW,req:g=>'Gana '+g+' partidas con la misma pareja*',notaF:p=>parejaNota(p)},
 {id:'od',name:'Órdagos',desc:'Todo o nada',goals:[1,3,8,15,30,50],val:s=>s.ord,req:g=>'Gana '+g+(g>1?' órdagos':' órdago')},
 {id:'vd',name:'Verdugo',desc:'No es nada personal',goals:[3,8,20,40,75,110],val:s=>s.oppW,req:g=>'Vence '+g+' veces al mismo rival'},
 {id:'paz',name:'Palizón',desc:'Nunca hubo opción',goals:[1,3,6,12,20,35],val:s=>s.paz,req:g=>'Gana '+g+(g>1?' vacas':' vaca')+' dejando al rival en 0 juegos*',nota:'Mínimo 3 juegos en la vaca'},
@@ -1534,7 +1550,7 @@ const featured=(f,p)=>[...new Set((f.medals||[]).map(id=>String(id).replace(/\d+
 const fmedal=(f,p,m,s)=>SEC.includes(m)?medal(m,SPEC,s):medal(m,effLvl(f,p,m.id),s);
 const blank=()=>({tr:0,floor:0,lg:0,peak:0,streak:0,best:0,bestPair:0,w:0,l:0,g:0,pt:{},op:{},people:new Set(),days:{},ord:0,md:{},sec:{},paz:0,rev:0,soc:0,prev:null,last:null});
 const mx=(o,k)=>Math.max(0,...Object.values(o).map(r=>r[k]));
-const stat=p=>({w:p.w,best:p.best,pair:p.bestPair,peak:p.peak,people:p.people.size,partners:Object.keys(p.pt).length,oppG:mx(p.op,'g'),oppW:mx(p.op,'w'),pairW:mx(p.pt,'w'),paz:p.paz,rev:p.rev,soc:p.soc,day:Math.max(0,...Object.values(p.days)),ord:p.ord});
+const stat=p=>p._st||({w:p.w,best:p.best,pair:p.bestPair,peak:p.peak,people:p.people.size,partners:Object.keys(p.pt).length,oppG:mx(p.op,'g'),oppW:mx(p.op,'w'),pairW:mx(p.pt,'w'),paz:p.paz,rev:p.rev,soc:p.soc,day:Math.max(0,...Object.values(p.days)),ord:p.ord});
 const PRUEBA_TROFEOS=false; // SOLO PRUEBAS: da 3.500 amarracos al Jugador 1 (todas las ligas desbloqueadas). Poner false para quitarlo
 const PRUEBA_LIGAS=false; // SOLO PRUEBAS: reparte ligas distintas entre los jugadores (Jugador 1 Maestro, 2 Veterano, 3 Leyenda, 4 Aprendiz...). Poner false para quitarlo
 const PRUEBA_MEDALLAS=false; // SOLO PRUEBAS: da medallas de todos los niveles al Jugador 1. Poner false para quitarlo
@@ -1796,17 +1812,17 @@ function ojoPass(I){const w=document.createElement('span');w.className='pw';I.pa
   b.onclick=()=>{const ver=I.type==='password';I.type=ver?'text':'password';b.innerHTML=ver?ICO_OJO_X:ICO_OJO;b.setAttribute('aria-label',ver?'Ocultar contraseña':'Mostrar contraseña');I.focus()}}
 /* ===== Perfil en la nube (fase A) ===== */
 const cloudErr=()=>dlg('No se ha podido conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.',{},()=>{});
-/* Pide el nombre de perfil la primera vez (no se puede cancelar; se puede cambiar luego en Mi perfil; se permiten repetidos) */
+/* Pide el nombre de perfil la primera vez (no se puede cancelar; se puede cambiar luego en Mi perfil; es único, sin distinguir mayúsculas) */
 function nombreDlg(){return new Promise(res=>{
   const d=document.createElement('div');d.className='ov c auth';
-  d.innerHTML='<div class="mp"><b>Elige tu nombre de perfil</b><p class="atx">Es el nombre que verán tus amigos. Podrás cambiarlo después en Mi perfil.</p>'
+  d.innerHTML='<div class="mp"><b>Elige tu nombre de perfil</b><p class="atx">Es el nombre que verán los demás jugadores y no puede repetirse. Podrás cambiarlo después en Mi perfil.</p>'
    +'<label class="alb" for="nm">Nombre</label><input id="nm" maxlength="'+NAME_MAX+'" autocomplete="off" placeholder="Tu nombre">'
    +'<p class="aerr" id="aer" role="alert"></p><div class="row"><button id="dk" class="cr">Aceptar</button></div></div>';
   document.body.appendChild(d);
   const I=d.querySelector('#nm'),R=d.querySelector('#aer'),K=d.querySelector('#dk');I.focus();
-  const ok=async()=>{const v=I.value.trim().replace(/\s+/g,' ').slice(0,NAME_MAX);if(!v){R.textContent='Escribe un nombre.';return}
+  const ok=async()=>{const v=I.value.trim().replace(/\s+/g,' ').slice(0,NAME_MAX);if(!v){R.textContent='Escribe un nombre.';return}if(RESERVADO.test(v)){R.textContent=NOMBRE_NO;return}
     K.disabled=true;const{error}=await sb.from('perfiles').update({nombre:v}).eq('id',(await sb.auth.getUser()).data.user.id);
-    K.disabled=false;if(error){R.textContent='No se ha podido guardar. Inténtalo de nuevo.';return}
+    K.disabled=false;if(error){R.textContent=nombreMalo(error)?NOMBRE_NO:'No se ha podido guardar. Inténtalo de nuevo.';return}
     d.remove();res(v)};
   K.onclick=ok;I.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ok()}})})}
 /* Sustituye el id local de mi perfil por el de la cuenta en todos los datos */
@@ -1850,13 +1866,6 @@ sb.auth.onAuthStateChange(ev=>{if(ev==='PASSWORD_RECOVERY')setTimeout(nuevaPassD
 const isUuid=x=>/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(x));
 let BUSQ=[]; // resultados de búsqueda por Mus ID (no se guardan)
 const usersAll=()=>{const s=S.users||[];return s.concat(BUSQ.filter(b=>!s.some(u=>u.id===b.id)))};
-/* Busca a una persona por su Mus ID exacto (6 caracteres) */
-async function buscarMusId(q){
-  const id=String(q||'').trim().toUpperCase().replace(/^(MUS\s*ID\s*:?\s*|#)/,'').replace(/\s/g,'');
-  if(AUTH!=='user'||!/^[A-Z0-9]{6}$/.test(id))return;
-  try{const{data:filas,error}=await sb.rpc('buscar_por_mus_id',{p_mus_id:id});const data=filas&&filas[0];
-    if(error||!data||data.id===S.uid||live().some(f=>f.id===data.id))return;
-    if(!BUSQ.some(b=>b.id===data.id))BUSQ.push({id:data.id,name:data.nombre||'Jugador',musId:data.mus_id,tr:0})}catch(e){}}
 /* Envía una solicitud de amistad */
 async function enviarSol(id){
   try{const{error}=await sb.from('amistades').insert({de:S.uid,a:id});
@@ -1874,15 +1883,15 @@ async function sincAmistades(){
   try{
     const{data:rows,error}=await sb.from('amistades').select('de,a,estado');if(error||!rows)return false;
     const otros=[...new Set(rows.map(r=>r.de===S.uid?r.a:r.de))];let pf=[];
-    if(otros.length){const r=await sb.from('perfiles').select('id,nombre,mus_id').in('id',otros);if(r.error||!r.data)return false;pf=r.data}
+    if(otros.length){pf=await traerPerfiles(otros);if(!pf)return false;const faltan=[];pf.forEach(r=>{const x=PUB[r.id];if(x&&x.res)idsPareja(x.res).forEach(i=>{if(!PUB[i]&&!S.friends.some(f=>f.id===i))faltan.push(i)})});if(faltan.length)await cargarPub(faltan)}
     const por=Object.fromEntries(pf.map(p=>[p.id,p])),acept=new Set(),prevOut=new Set(S.reqOut||[]);
     S.users=[];S.reqIn=[];S.reqOut=[];
     rows.forEach(r=>{const o=r.de===S.uid?r.a:r.de,p=por[o];if(!p)return;const nom=p.nombre||'Jugador';
       if(r.estado==='aceptada'){acept.add(o);
         if(prevOut.has(o)){S.avisoAm=S.avisoAm||[];if(!S.avisoAm.some(x=>x.id===o))S.avisoAm.push({id:o,name:nom})} // te han aceptado la solicitud que enviaste
         let f=S.friends.find(x=>x.id===o);
-        if(!f){f={id:o,name:nom,musId:p.mus_id,medals:[]};S.friends.push(f)}else{f.deleted=false;f.name=nom;f.musId=p.mus_id}}
-      else{S.users.push({id:o,name:nom,musId:p.mus_id,tr:0});(r.de===S.uid?S.reqOut:S.reqIn).push(o)}});
+        if(!f){f={id:o,name:nom,musId:p.mus_id,medals:[]};S.friends.push(f)}else{f.deleted=false;f.name=nom;f.musId=p.mus_id}if(PUB[o]&&PUB[o].av)f.av=PUB[o].av}
+      else{S.users.push({id:o,name:nom,musId:p.mus_id,tr:(PUB[o]&&PUB[o].res&&PUB[o].res.tr)||0});(r.de===S.uid?S.reqOut:S.reqIn).push(o)}});
     S.friends.forEach(f=>{if(isUuid(f.id)&&f.id!==S.uid&&!acept.has(f.id))f.deleted=true});
     /* ¿Alguno de esos ya no tiene perfil? Entonces su cuenta se eliminó (no solo la amistad) */
     const cand=[...new Set([...S.friends.filter(f=>f.deleted).map(f=>f.id),...Object.keys(S.ext||{}).filter(isUuid)])].filter(id=>id!==S.uid).slice(0,100);
@@ -1898,7 +1907,87 @@ const idsJug=h=>[...new Set([...h.t[0],...h.t[1]])];
 const hueco=id=>{const f=S.friends.find(x=>x.id===id);if(f&&f.gen)return true;if(!f&&/^(.*_)?inv[1-4]$/.test(String(id)))return true;return !f&&!isUuid(id)&&/^Jugador [1-4]$/.test(fname(id))};
 const oculto=id=>gone(id)||hueco(id);
 const gone=id=>/(^|_)del_[0-9a-f]{8}$/.test(String(id))||!!(S.gone&&S.gone[id]);
-const VERSION='E-9';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
+const VERSION='E-10';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
+/* ===== Perfiles públicos (fase I) ===== */
+const RESERVADO=/^(yo|invitado|jugador( ?[1-4])?|jugador eliminado)$/i; // mismos nombres que bloquea la base de datos
+const NOMBRE_NO='Nombre no disponible';
+const nombreMalo=e=>!!e&&(e.code==='23505'||e.code==='23514'||/perfiles_nombre/.test(String(e.message||'')));
+/* Puntuación de una pareja: límite inferior de Wilson con z = 1,28 (≈ 90 % a una cara). Pondera el % de victorias por el nº de partidas */
+const WZ=1.2816;
+const wilson=(w,g)=>{if(!g)return 0;const p=w/g,z=WZ*WZ;return Math.max(0,(p+z/(2*g)-WZ*Math.sqrt((p*(1-p)+z/(4*g))/g))/(1+z/g))};
+const cmpMate=(a,b)=>wilson(b.w,b.g)-wilson(a.w,a.g)||b.g-a.g||b.w-a.w;
+/* Parejas de mejor a peor, solo amigos, sin «Jugador 1-4» ni cuentas eliminadas. De otra persona se usan sus parejas publicadas */
+function matesOf(id,p,res){
+  if(res&&res.v)return(res.bp||[]).map(([i,g,w])=>({id:i,g:g,w:w,l:g-w})).filter(r=>r.g>0&&!oculto(r.id)).sort(cmpMate);
+  const amigos=new Set(live().filter(f=>!f.gen&&f.id!==id).map(f=>f.id));
+  return Object.entries(p.pt).filter(([i,r])=>amigos.has(i)&&!oculto(i)&&r.g>0).map(([i,r])=>({id:i,g:r.g,w:r.w,l:r.l})).sort(cmpMate)}
+const mejorDe=a=>a.length&&a[0].w>0?a[0]:null;
+/* Nota de la medalla de Parejas: con quién se está consiguiendo */
+function parejaNota(p){
+  let id=null,w=0,nm='';
+  if(p._pm){id=p._pm[0];w=+p._pm[1]||0;nm=p._pm[2]||''}
+  else{const e=Object.entries(p.pt).sort((a,b)=>b[1].w-a[1].w||b[1].g-a[1].g)[0];if(e){id=e[0];w=e[1].w}}
+  if(!w)return'Cuenta la pareja con la que más victorias se acumulan';
+  const n=id?fname(id):'',nombre=(n&&n!=='(borrado)')?n:(nm||'una pareja que ya no está');
+  return'Ahora mismo, con '+nombre+' ('+w+(w===1?' victoria':' victorias')+')'}
+/* Datos publicados de otras personas */
+const PUB_COLS='id,nombre,mus_id,avatar,destacadas,resumen';
+function guardarPub(r){PUB[r.id]={id:r.id,name:r.nombre||'Jugador',musId:r.mus_id,av:r.avatar||null,medals:Array.isArray(r.destacadas)?r.destacadas:[],res:(r.resumen&&typeof r.resumen==='object'&&r.resumen.v)?r.resumen:null}}
+async function traerPerfiles(ids){
+  try{let r=await sb.from('perfiles').select(PUB_COLS).in('id',ids);
+    if(r.error)r=await sb.from('perfiles').select('id,nombre,mus_id').in('id',ids); // por si la fase I aún no está pegada
+    if(r.error||!r.data)return null;r.data.forEach(guardarPub);return r.data}catch(e){return null}}
+async function cargarPub(ids){ids=[...new Set(ids)].filter(i=>isUuid(i)&&i!==S.uid);for(let k=0;k<ids.length;k+=80)await traerPerfiles(ids.slice(k,k+80))}
+const idsPareja=r=>r?(r.bp||[]).map(x=>x[0]).concat(r.pm&&r.pm[0]?[r.pm[0]]:[]):[]; // ids de las parejas publicadas (para poder poner sus nombres)
+/* Perfil publicado → el mismo formato que calcula progress() para que el perfil se dibuje igual */
+function pPub(res){const p=blank();p.tr=+res.tr||0;p.lg=+res.lg||0;p.peak=+res.pk||p.tr;p.w=+res.w||0;p.l=+res.l||0;p.best=+res.b||0;p._st=res.st||{};p._pm=res.pm||null;
+  Object.entries(res.md||{}).forEach(([k,n])=>{p.md[k]={lvl:+n||0,t:[],w:[]}});(res.sec||[]).forEach(k=>{p.sec[k]={t:0}});return p}
+/* Qué se enseña de una persona: yo y los amigos sin datos publicados salen del historial de este móvil; el resto, de lo que ha publicado */
+function vistaPerfil(id){
+  const fr=S.friends.find(x=>x.id===id),pub=PUB[id],res=pub&&pub.res?pub.res:null,mine=id===meId(),amigo=!!fr&&!fr.deleted;
+  if(mine||(amigo&&!res)){if(!fr)return null;return{f:fr,p:progress()[id]||blank(),mine:mine,amigo:true,res:null}}
+  if(!pub)return null;
+  const f=Object.assign({},amigo?fr:{},{id:id,name:pub.name||(fr&&fr.name)||'Jugador',musId:pub.musId,av:pub.av||(fr&&fr.av)||null,medals:pub.medals||[]});
+  return{f:f,p:res?pPub(res):blank(),mine:false,amigo:amigo,res:res}}
+const profPila=[]; // perfiles por los que se ha ido pasando (para «Atrás»)
+function profAtras(){const a=profPila.pop();if(a){S.profile=a.id;profBack=a.back;go('profile')}else go(profBack)}
+async function abrirPerfil(id,desde){
+  if(desde)profPila.push({id:S.profile,back:profBack});else profPila.length=0;
+  await cargarPub([id]);{const pb=PUB[id];if(pb&&pb.res)await cargarPub(idsPareja(pb.res).filter(i=>!PUB[i]))}
+  const fr=S.friends.find(x=>x.id===id&&!x.deleted);
+  if(id!==meId()&&!fr&&!PUB[id]){if(desde)profPila.pop();dlg('Este perfil ya no existe.',{},()=>{});return}
+  S.profile=id;if(desde)profBack='perfil';go('profile')}
+const solBtn=id=>{const got=(S.reqIn||[]).includes(id),sent=(S.reqOut||[]).includes(id);
+  return got?'<button class="sgb" type="button" id="fsol" data-k="acc">Aceptar solicitud</button>':sent?'<button class="sgb sent" type="button" disabled>Solicitud enviada</button>':'<button class="sgb" type="button" id="fsol" data-k="env">Enviar solicitud de amistad</button>'};
+/* Búsqueda: por Mus ID exacto y/o por nombre (contiene el texto, sin distinguir mayúsculas, máx. 20) */
+async function buscarMusId(q){
+  if(AUTH!=='user')return;q=String(q||'').trim();if(!q)return;
+  const soloId=/^(#|mus\s*id)/i.test(q),id=q.toUpperCase().replace(/^(MUS\s*ID\s*:?\s*|#)/,'').replace(/\s/g,'');
+  const add=r=>{if(!r||r.id===S.uid||live().some(f=>f.id===r.id))return;const b=PUB[r.id];BUSQ=BUSQ.filter(x=>x.id!==r.id);BUSQ.push({id:r.id,name:r.nombre||'Jugador',musId:r.mus_id,tr:(b&&b.res&&b.res.tr)||0})};
+  try{
+    if(/^[A-Z0-9]{6}$/.test(id)){const{data:filas,error}=await sb.rpc('buscar_por_mus_id',{p_mus_id:id});const d=filas&&filas[0];if(!error&&d){await cargarPub([d.id]);add(d)}}
+    if(!soloId){const pat='%'+q.replace(/[\\%_]/g,'\\$&')+'%';
+      const{data,error}=await sb.from('perfiles').select(PUB_COLS).ilike('nombre',pat).limit(20);
+      if(!error&&data)data.forEach(r=>{guardarPub(r);add(r)})}
+  }catch(e){}}
+/* Publica mi resumen (amarracos, liga, victorias, medallas reclamadas, mejores parejas), avatar y destacadas para que los demás vean mi perfil */
+function resumenMio(){
+  const P=progress(),id=meId(),p=P[id]||blank();ensureClaims(P);const CL=(S.claim||{})[id]||{},md={},sec=[];
+  FAM.forEach(m=>{if(m.soon)return;const n=Math.min(lvl(p,m.id),CL[m.id]||0);if(n)md[m.id]=n});
+  SEC.forEach(m=>{if(p.sec[m.id]&&CL[m.id])sec.push(m.id)});
+  const e=Object.entries(p.pt).sort((a,b)=>b[1].w-a[1].w||b[1].g-a[1].g)[0];
+  const pm=e&&e[1].w>0?[e[0],e[1].w,String(fname(e[0])).slice(0,NAME_MAX)]:null;
+  const bp=matesOf(id,p,null).filter(r=>isUuid(r.id)).slice(0,8).map(r=>[r.id,r.g,r.w]);
+  return{v:1,tr:p.tr,lg:p.lg,pk:p.peak,w:p.w,l:p.l,b:p.best,st:stat(p),md:md,sec:sec,pm:pm,bp:bp}}
+let resSig='',resT=null;
+async function subirResumenYa(){
+  if(AUTH!=='user'||!S.uid||BORRANDO)return;
+  try{const me=S.friends.find(f=>f.id===S.me);if(!me)return;
+    const res=resumenMio(),av=me.av&&ACES.includes(me.av.a)?{a:me.av.a,f:Number.isInteger(me.av.f)?me.av.f:-1}:null,dest=(me.medals||[]).slice(0,4);
+    const sig=JSON.stringify([res,av,dest]);if(sig===resSig)return;
+    const{error}=await sb.from('perfiles').update({resumen:res,avatar:av,destacadas:dest}).eq('id',S.uid);
+    if(!error)resSig=sig;else DBG.res=errTxt(error)}catch(e){}}
+function subirResumen(){clearTimeout(resT);resT=setTimeout(subirResumenYa,1500)}
 /* Sube una partida (una sola vez). Devuelve true si queda guardada en la nube */
 async function subirPartida(h){
   if(AUTH!=='user'||!S.uid||h._cl)return false;
@@ -1916,7 +2005,7 @@ async function sincPartidas(){
   if(AUTH!=='user'||!S.uid)return false;
   try{
     let subidas=0;for(const h of S.hist.slice())if(await subirPartida(h))subidas++;
-    const{data,error}=await sb.from('partidas').select('local_id,creador,datos').order('fecha',{ascending:true}).limit(1000);
+    const{data,error}=await sb.from('partidas').select('local_id,creador,datos').order('fecha',{ascending:false}).limit(1000);
     if(error||!data){DBG.baj=error?((error.code?error.code+': ':'')+(error.message||'error')):'sin datos';return false}
     DBG.baj=null;const have=new Set(S.hist.map(h=>String(h.id))),nuevos=data.filter(r=>r&&r.datos&&r.datos.t&&!have.has(String(r.local_id)));
     S.ext=S.ext||{};const desc=new Set();
@@ -1940,7 +2029,7 @@ async function subirReclamosYa(){
     DBG.rcl=r.error?errTxt(r.error):null;return !r.error}
   catch(e){DBG.rcl='Excepción: '+(e&&e.message||e);return false}}
 let rclT=null;
-function subirReclamos(){clearTimeout(rclT);rclT=setTimeout(subirReclamosYa,500)}
+function subirReclamos(){clearTimeout(rclT);rclT=setTimeout(subirReclamosYa,500);subirResumen()}
 /* Une lo reclamado aquí y en la nube (se queda el nivel más alto de cada medalla: reclamar no se deshace). true si cambia algo en este móvil */
 async function sincReclamos(){
   if(AUTH!=='user'||!S.uid)return false;
@@ -1956,7 +2045,7 @@ async function sincReclamos(){
   }catch(e){DBG.rcl='Excepción: '+(e&&e.message||e);return false}}
 /* Sincroniza amistades y partidas; repinta la pantalla si cambia algo y se está viendo Inicio, Amigos, Perfil o Senda */
 let BORRANDO=false; // true mientras se elimina la cuenta: nada se sincroniza ni se guarda
-async function refrescarAmigos(){if(AUTH!=='user'||BORRANDO)return;const a=await sincAmistades(),b=await sincPartidas(),c=await sincReclamos();
+async function refrescarAmigos(){if(AUTH!=='user'||BORRANDO)return;const a=await sincAmistades(),b=await sincPartidas(),c=await sincReclamos();subirResumen();
   if((a||b||c)&&['home','friends','profile','senda'].includes(view)&&!document.querySelector('.ov'))draw()}
 setInterval(()=>{if(document.visibilityState==='visible')refrescarAmigos()},45000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refrescarAmigos()});
@@ -2051,7 +2140,7 @@ function home(){
   $('#go').onclick=()=>go('setup');
   if($('#cont'))$('#cont').onclick=()=>go('game');
   $('#sd').onclick=()=>G?lockMsg('la Senda del Órdago'):ensureMe(()=>go('senda'));
-  $('#mp').onclick=()=>G?login():ensureMe(()=>{S.profile=S.me;profBack='home';go('profile')});
+  $('#mp').onclick=()=>G?login():ensureMe(()=>{S.profile=S.me;profBack='home';profPila.length=0;go('profile')});
   $('#fr').onclick=()=>G?lockMsg('Amigos'):go('friends');
 }
 
@@ -2085,7 +2174,7 @@ function userCard(u){
   const btn=got?'<button class="sgb" type="button" data-acc="'+u.id+'">Aceptar solicitud</button>'
     :sent?'<button class="sgb sent" type="button" disabled>Solicitud enviada</button>'
     :'<button class="sgb" type="button" data-rq="'+u.id+'">Enviar solicitud de amistad</button>';
-  return '<div class="card"><div class="sg"><div class="sgt"><span class="frnb"><b class="frn">'+esc(u.name)+'</b><span class="frid" data-mid="'+u.id+'" role="button" tabindex="0">#'+esc(musOf(u))+'</span></span><span class="frt">'+trIcon(22)+fmt(u.tr||0)+'</span></div>'+btn+'</div></div>'}
+  return '<div class="card"><div class="sg"><div class="sgt" data-p="'+u.id+'"><span class="frnb"><b class="frn">'+esc(u.name)+'</b><span class="frid" data-mid="'+u.id+'" role="button" tabindex="0">#'+esc(musOf(u))+'</span></span><span class="frt">'+trIcon(22)+fmt(u.tr||0)+'</span></div>'+btn+'</div></div>'}
 /* Menú con las solicitudes recibidas */
 function reqMenu(){
   const d=overlay('');
@@ -2116,11 +2205,11 @@ function friends(){
   +'<form class="sbx" id="sbf" autocomplete="off"><input id="sbq" type="search" placeholder="Buscar jugadores..." enterkeyhint="search" aria-label="Buscar jugadores"><span class="sbi" id="sbg" role="button" tabindex="0" aria-label="Buscar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></span></form></div>'
   +reqBtnHTML()+'<div id="list"></div>';
   const l=$('#list'),todos=live().filter(f=>f.id!==mid&&!f.gen);
-  const rd=q=>{const amigos=q?todos.filter(f=>matchJ(f,q)):todos;const otros=q?usersAll().filter(u=>!live().some(f=>f.id===u.id)&&matchJ(u,q)).map(userCard).join(''):'';l.innerHTML=(amigos.length||otros)?amigos.map(f=>{const p=P[f.id]||blank();const bm=Object.entries(p.pt).filter(e=>!oculto(e[0])).sort((x,y)=>y[1].w-x[1].w||y[1].g-x[1].g)[0],bmOk=bm&&bm[1].w>0;return '<div class="card"><div class="fr"><div class="frl" data-p="'+f.id+'"><div class="frh"><span class="fra">'+avatarHTML(f,p,40)+'</span><span class="frnb"><b class="frn">'+esc(f.name)+'</b><span class="frid" data-mid="'+f.id+'" role="button" tabindex="0">#'+musOf(f)+'</span></span><span class="frt">'+trIcon(22)+fmt(p.tr)+'</span></div><div class="frk"><span class="frc frlg"><small>Liga actual</small><span class="frg">'+lgBadge(p.lg,20)+'<span>'+LEAGUES[p.lg][0]+'</span></span></span><span class="frc"><small>Mejor pareja</small><span class="frg frm">'+(bmOk?'<span class="frmn">'+esc(fname(bm[0]))+'</span><span class="frms">'+bm[1].w+' V · '+bm[1].l+' D · '+Math.round(100*bm[1].w/bm[1].g)+'%</span>':'<span class="frmn">—</span>')+'</span></span></div></div><button class="frs" data-st="'+f.id+'">Estadísticas</button></div></div>'}).join('')+otros:'<div class="card"><span style="color:var(--mute)">'+(q?'Sin resultados para «'+esc(q)+'».':'Aún no hay amigos.')+'</span></div>'};
+  const rd=q=>{const amigos=q?todos.filter(f=>matchJ(f,q)):todos;const otros=q?usersAll().filter(u=>!live().some(f=>f.id===u.id)&&matchJ(u,q)).map(userCard).join(''):'';l.innerHTML=(amigos.length||otros)?amigos.map(f=>{const V=vistaPerfil(f.id)||{f:f,p:P[f.id]||blank(),res:null},p=V.p,bm=mejorDe(matesOf(f.id,p,V.res)),bmOk=!!bm;return '<div class="card"><div class="fr"><div class="frl" data-p="'+f.id+'"><div class="frh"><span class="fra">'+avatarHTML(V.f,p,40)+'</span><span class="frnb"><b class="frn">'+esc(f.name)+'</b><span class="frid" data-mid="'+f.id+'" role="button" tabindex="0">#'+musOf(f)+'</span></span><span class="frt">'+trIcon(22)+fmt(p.tr)+'</span></div><div class="frk"><span class="frc frlg"><small>Liga actual</small><span class="frg">'+lgBadge(p.lg,20)+'<span>'+LEAGUES[p.lg][0]+'</span></span></span><span class="frc"><small>Mejor pareja</small><span class="frg frm">'+(bmOk?'<span class="frmn">'+esc(fname(bm.id))+'</span><span class="frms">'+bm.w+' V · '+bm.l+' D · '+Math.round(100*bm.w/bm.g)+'%</span>':'<span class="frmn">—</span>')+'</span></span></div></div><button class="frs" data-st="'+f.id+'">Estadísticas</button></div></div>'}).join('')+otros:'<div class="card"><span style="color:var(--mute)">'+(q?'Sin resultados para «'+esc(q)+'».':'Aún no hay amigos.')+'</span></div>'};
   rd('');
   l.onclick=ev=>{const rq=ev.target.closest('[data-rq]');if(rq){ev.stopPropagation();rq.disabled=true;enviarSol(rq.dataset.rq).then(()=>rd($('#sbq').value));return}
     const ac=ev.target.closest('[data-acc]');if(ac){ev.stopPropagation();ac.disabled=true;acceptReq(ac.dataset.acc).then(friends);return}
-    const mi=ev.target.closest('[data-mid]');if(mi){ev.stopPropagation();musCopy(S.friends.find(x=>x.id===mi.dataset.mid)||usersAll().find(x=>x.id===mi.dataset.mid),mi);return}const st=ev.target.closest('[data-st]');if(st){ev.stopPropagation();vsStats(st.dataset.st);return}const pr=ev.target.closest('[data-p]');if(pr){S.profile=pr.dataset.p;profBack='friends';go('profile')}};
+    const mi=ev.target.closest('[data-mid]');if(mi){ev.stopPropagation();musCopy(S.friends.find(x=>x.id===mi.dataset.mid)||usersAll().find(x=>x.id===mi.dataset.mid),mi);return}const st=ev.target.closest('[data-st]');if(st){ev.stopPropagation();vsStats(st.dataset.st);return}const pr=ev.target.closest('[data-p]');if(pr){profBack='friends';abrirPerfil(pr.dataset.p)}};
   const go2=async()=>{const q=$('#sbq').value;await buscarMusId(q);rd(q)};
   $('#sbf').onsubmit=e=>{e.preventDefault();go2()};
   $('#sbg').onclick=go2;
@@ -2158,12 +2247,12 @@ function medalInfo(m,p,CL){
   let claimed=false;const d=overlay('');
   const draw=anim=>{
     const r=p.md[m.id]||{lvl:0,t:[],w:[]},cl=CL?Math.min(r.lvl,CL[m.id]||0):r.lvl,v=m.soon?0:m.val(stat(p)),nx=m.goals[cl],pd=!m.soon&&cl<r.lvl,vv=pd?nx:Math.min(v,nx);
-    const big=true,S=big?132:88,hc=big?' lg':'';
+    const big=true,S=big?132:88,hc=big?' lg':'',nt=m.notaF?m.notaF(p):m.nota;
     const head=anim?'<div class="mhd'+hc+'"><span class="mold">'+medal(m,cl-1,S)+'</span><span class="mnew">'+medal(m,cl,S)+'</span></div>':'<div class="mhd'+hc+(pd?' hp':'')+'">'+medal(m,cl,S)+'</div>';
     const top=big?'<div class="mtop"><div class="mtl">'+head+'<b>'+medalLbl(m,cl)+'</b></div><div class="mtr"><h2>'+esc(m.name)+'</h2><div class="mph">'+esc(m.desc)+'</div>'+(m.req?'<div class="mhow"><small>Cómo se consigue</small>'+esc(m.req(nx!==undefined?nx:m.goals[m.goals.length-1]))+'</div>':'')+'</div></div>':'<div style="display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center">'+head+'<h2>'+esc(m.name)+'</h2><div style="color:var(--mute)">'+esc(m.desc)+'</div><b>'+medalLbl(m,cl)+'</b></div>';
     d.querySelector('.mpi').classList.add('mdet');d.querySelector('.mpi').innerHTML=top
       +(m.soon?'<div style="color:var(--mute)">Disponible en una próxima versión.</div>':(nx!==undefined?'<div><div class="bar"><i style="width:'+Math.round(100*vv/nx)+'%;background:'+TIERC[Math.max(0,cl-1)][0]+'"></i></div><div style="margin-top:4px">Siguiente nivel ('+LV[cl]+'): '+'<span style="white-space:nowrap">'+fmt(vv)+' / '+fmt(nx)+'</span></div></div>':'<div><b>¡Nivel máximo alcanzado!</b></div>'))
-      +(pd?'<button class="rcl lat" data-rc="'+m.id+'"'+rclStyle(Math.max(0,cl-1))+'>Reclamar medalla</button>':'')+'<button id="dk" class="cr">Cerrar</button>'+(m.nota?'<div class="mnota">* '+esc(m.nota)+'</div>':'');
+      +(pd?'<button class="rcl lat" data-rc="'+m.id+'"'+rclStyle(Math.max(0,cl-1))+'>Reclamar medalla</button>':'')+'<button id="dk" class="cr">Cerrar</button>'+(nt?'<div class="mnota">* '+esc(nt)+'</div>':'');
     d.querySelector('#dk').onclick=()=>{if(d._fly)d._fly.remove();d.remove();if(claimed)profile()};
     if(anim)flyMedal(d,d.querySelector('.mhd'),medal(m,cl,big?d.querySelector('.mhd').offsetWidth:88),pd);
     const rc=d.querySelector('[data-rc]');
@@ -2189,7 +2278,7 @@ function pickSlot(f,p,i){
   const cur=featured(f,p).map(m=>m.id);
   const libre=m=>!cur.includes(m.id)||cur[i]===m.id,opts=FAM.filter(m=>effLvl(f,p,m.id)>0&&libre(m)),optsS=SEC.filter(m=>secOk(f,p,m.id)&&libre(m));
   const d=overlay('<b>Elige una medalla destacada</b>'+(opts.length||optsS.length?'<div class="mg">'+opts.map(m=>'<button class="med" data-a="'+m.id+'">'+medal(m,effLvl(f,p,m.id),54)+'<span>'+esc(m.name)+'</span><small>'+medalLbl(m,effLvl(f,p,m.id))+'</small></button>').join('')+optsS.map(m=>'<button class="med" data-a="'+m.id+'">'+medal(m,SPEC,54)+'<span>'+esc(m.name)+'</span><small>Especial</small></button>').join('')+'</div>':'<span style="color:var(--mute)">Aún no tienes medallas. Gana partidas para conseguirlas.</span>')+'<div class="row">'+(cur[i]?'<button class="ghost cr2" id="rm">Quitar</button>':'')+'<button class="ghost cr2" id="cx">Cancelar</button></div>');
-  const done=n=>{f.medals=n.slice(0,4);save();d.remove();profile()};
+  const done=n=>{f.medals=n.slice(0,4);save();subirResumen();d.remove();profile()};
   d.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const n=cur.slice();if(i<n.length)n[i]=b.dataset.a;else n.push(b.dataset.a);done(n)});
   if(d.querySelector('#rm'))d.querySelector('#rm').onclick=()=>{const n=cur.slice();n.splice(i,1);done(n)};
   d.querySelector('#cx').onclick=()=>d.remove();
@@ -2232,7 +2321,7 @@ function pickAvatar(f,p){
   };
   draw();
   q('#cx').onclick=()=>d.remove();
-  q('#ok').onclick=()=>{f.av={a:sel.a,f:sel.f===p.lg?-1:sel.f};save();d.remove();profile()};
+  q('#ok').onclick=()=>{f.av={a:sel.a,f:sel.f===p.lg?-1:sel.f};save();subirResumen();d.remove();profile()};
 }
 function senda(){
   const f=S.friends.find(x=>x.id===S.me),p=f?(progress()[f.id]||blank()):blank();
@@ -2272,41 +2361,49 @@ const STAT_IMG_P='img/stat-pareja.webp';
 function lgTapete(i,tr){const l=LEAGUES[i];
   return '<div class="nd cur" data-l="'+i+'"><div class="nt"><div class="emb">'+lgEmblem(i,68)+'</div><div class="ni"><div class="nm'+(l[0].length>9?' nmx':'')+'">'+l[0]+'</div></div></div></div>'}
 function profile(){
-  const f=S.friends.find(x=>x.id===S.profile);if(!f){go('friends');return}
-  const p=progress()[f.id]||blank(),lg=p.lg,cur=LEAGUES[lg],nx=LEAGUES[lg+1];
+  const V=vistaPerfil(S.profile);if(!V){go('friends');return}
+  const f=V.f,p=V.p,lg=p.lg,cur=LEAGUES[lg],nx=LEAGUES[lg+1];
   const fe=featured(f,p);
   const real=FAM.filter(m=>!m.soon),got=real.filter(m=>effLvl(f,p,m.id)>0).length;
   const mine=f.id===meId();if(mine)ensureClaims();const CL=mine?((S.claim||{})[f.id]||{}):null; // en mi perfil se muestra el nivel reclamado; el pendiente late
   const shown=m=>CL?Math.min(lvl(p,m.id),CL[m.id]||0):lvl(p,m.id),pendF=m=>CL&&!m.soon&&lvl(p,m.id)>(CL[m.id]||0);
-  const mates=Object.entries(p.pt).filter(e=>!oculto(e[0])).sort((x,y)=>y[1].w-x[1].w||y[1].g-x[1].g),bm=mates[0];
-  const mrow=([id,r])=>'<tr><td>'+esc(fname(id))+'</td><td>'+r.g+'</td><td>'+r.w+'</td><td>'+r.l+'</td><td>'+Math.round(100*r.w/r.g)+'%</td></tr>',mtab=a=>'<table><tr><th>Pareja</th><th>PJ</th><th>V</th><th>D</th><th>%</th></tr>'+a.map(mrow).join('')+'</table>';
-  app.innerHTML='<div class="top"><button id="b">‹ '+(profBack==='home'?'Inicio':'Amigos')+'</button><h2>'+(f.id===S.me?'Mi perfil':esc(f.name))+'</h2></div>'
+  const mates=matesOf(f.id,p,V.res).slice(0,8),bm=mejorDe(mates);
+  const mtab=(a,rk)=>'<div class="mtw"><table class="mt"><thead><tr><th class="l">Pareja</th><th>PJ</th><th>V</th><th>D</th><th>%</th></tr></thead><tbody>'+a.map((r,n)=>'<tr><td class="l">'+(rk?'<span class="mrk">'+(n+1)+'</span>':'')+'<a class="mnl" role="button" tabindex="0" data-pid="'+esc(r.id)+'">'+esc(fname(r.id))+'</a></td><td>'+r.g+'</td><td>'+r.w+'</td><td>'+r.l+'</td><td class="mpc">'+Math.round(100*r.w/r.g)+'%</td></tr>').join('')+'</tbody></table></div>';
+  app.innerHTML='<div class="top"><button id="b">‹ '+(profPila.length?'Atrás':profBack==='home'?'Inicio':'Amigos')+'</button><h2>'+(f.id===S.me?'Mi perfil':esc(f.name))+'</h2></div>'
   +'<div class="card pcard"><div class="phd"><div class="pav"><button class="avb" id="av" aria-label="Avatar"'+(mine?'':' disabled style="opacity:1"')+'>'+avatarHTML(f,p,96)+'</button>'+(mine?'<button class="ghost" id="avc">Cambiar</button>':'')+'</div>'
-  +'<div class="pid"><label class="pl1"><span class="lbh">Nombre</span>'+(mine?'<input id="pn" class="pnm" maxlength="'+NAME_MAX+'" autocomplete="off" value="'+esc(f.name)+'">':'<div class="pnm ro">'+esc(f.name)+'</div>')+'</label>'
+  +'<div class="pid"><label class="pl1"><span class="lbh">Nombre</span>'+(mine?'<input id="pn" class="pnm" maxlength="'+NAME_MAX+'" autocomplete="off" value="'+esc(f.name)+'">':'<div class="pnm ro">'+esc(f.name)+'</div>')+'</label>'+(mine?'<p class="pnerr" id="pnerr" role="alert"></p>':'')+(V.amigo||mine?'':solBtn(f.id))
   +'<span class="pmid" id="pmid" role="button" tabindex="0" aria-label="Mus ID">#'+musOf(f)+'</span>'
   +'<div class="pamr" aria-label="Amarracos">'+trIcon(38)+'<b>'+fmt(p.tr)+'</b></div>'
   +'</div></div>'
   +'<div class="plg">'+lgTapete(lg,p.tr)+'</div>'
   +'<div class="stg"><div class="stt"><small>'+(p.w===1?'Victoria':'Victorias')+'</small><div class="sr"><img src="'+STAT_IMG_V+'" alt="" draggable="false"><b>'+fmt(p.w)+'</b></div></div><div class="stt"><small>Mejor racha</small><div class="sr"><img src="'+STAT_IMG_R+'" alt="" draggable="false"><b>'+fmt(p.best)+'</b></div></div>'
-  +'<div class="stt wide"><small>Mejor pareja</small><div class="sr"><img src="'+STAT_IMG_P+'" alt="" draggable="false"><b class="nm">'+(bm&&bm[1].w>0?esc(fname(bm[0])):'—')+'</b></div></div></div>'
+  +'<div class="stt wide"><small>Mejor pareja</small><div class="sr"><img src="'+STAT_IMG_P+'" alt="" draggable="false"><b class="nm">'+(bm?esc(fname(bm.id)):'—')+'</b></div></div></div>'
   +'</div>'
   +'<div class="card"><b>Medallas destacadas</b><div class="slots">'+[0,1,2,3].map(i=>'<button class="slotb" data-slot="'+i+'" aria-label="Elegir medalla"'+(mine?'':' disabled style="opacity:1"')+'>'+(fe[i]?fmedal(f,p,fe[i],54):(mine?'<span>+</span>':''))+'</button>').join('')+'</div></div>'
   +'<div class="card"><div class="hh"><b>Medallas</b></div><div class="mg">'+FAM.map(m=>'<button class="med'+(pendF(m)?' pend':'')+'" data-a="'+m.id+'">'+medal(m,shown(m),58)+'<span>'+esc(m.name)+'</span><small>'+medalLbl(m,shown(m))+'</small></button>').join('')+'</div></div>'
   +'<div class="card"><div class="hh"><b>Medallas especiales</b></div><div class="mg sp">'+SEC.map(m=>{const on=!!p.sec[m.id],pd=on&&CL&&!CL[m.id],von=on&&!pd;return '<button class="med'+(pd?' pend':'')+(on?'':' lkd')+'" data-s="'+m.id+'">'+medal(m,von?SPEC:0,62)+'<span>'+esc(m.name)+'</span><small>'+(on?'Conseguida':'Bloqueada')+'</small></button>'}).join('')+'</div></div>'
-  +'<div class="card"><div class="fr"><b>Mis parejas</b>'+(mates.length?'<button class="ghost" id="ap" style="padding:7px 12px;font-size:14px">Todas las parejas</button>':'')+'</div>'+(mates.length?mtab([bm]):'<span style="color:var(--mute)">Todavía no ha jugado con ninguna pareja.</span>')+'</div>';
+  +'<div class="card"><div class="fr"><b>Mejor pareja</b>'+(mates.length?'<button class="ghost" id="ap" style="padding:7px 12px;font-size:14px">Principales parejas</button>':'')+'</div>'+(bm?mtab([bm]):'<span style="color:var(--mute)">'+(mates.length?'Aún no hay victorias con ninguna pareja.':'Todavía no ha jugado con ninguna pareja.')+'</span>')+'</div>'+(!V.mine&&!V.res&&!V.amigo?'<p class="wnote">Este jugador aún no ha publicado sus estadísticas.</p>':'');
   if(mine&&profBack==='home'){const lo=document.createElement('button');lo.type='button';lo.id='lo';lo.textContent='Cerrar sesión';lo.style.cssText='flex:0 0 auto;border:1.5px solid rgba(200,160,80,.6);color:#eae2cc;background:rgba(0,0,0,.25)';app.appendChild(lo);lo.onclick=()=>dlg('¿Cerrar sesión?',{cancel:1,ok:'Cerrar sesión',cr:1},logout);
     const de=document.createElement('button');de.type='button';de.id='de';de.textContent='Eliminar cuenta';de.style.cssText='flex:0 0 auto;border:1.5px solid rgba(190,84,74,.7);color:#eeb0a8;background:rgba(110,28,24,.32)';app.appendChild(de);de.onclick=eliminarCuentaDlg;
     const pv=document.createElement('p');pv.className='wnote';pv.innerHTML='<a class="plink" href="privacidad.html" target="_blank" rel="noopener">Política de privacidad</a>';app.appendChild(pv)}
-  if(!mine&&AUTH==='user'&&isUuid(f.id)){const rb=document.createElement('button');rb.type='button';rb.id='rf';rb.textContent='Eliminar amigo';rb.style.cssText='flex:0 0 auto;border:1.5px solid rgba(190,84,74,.7);color:#eeb0a8;background:rgba(110,28,24,.32)';app.appendChild(rb);
-    rb.onclick=()=>dlg('¿Eliminar a '+f.name+' de tus amigos? Las partidas que habéis jugado juntos se conservan.',{cancel:1,ok:'Eliminar',cr:1},async()=>{if(await borrarAmigo(f.id))go(profBack==='home'?'friends':profBack)})}
-  $('#b').onclick=()=>go(profBack);
+  if(!mine&&V.amigo&&AUTH==='user'&&isUuid(f.id)){const rb=document.createElement('button');rb.type='button';rb.id='rf';rb.textContent='Eliminar amigo';rb.style.cssText='flex:0 0 auto;border:1.5px solid rgba(190,84,74,.7);color:#eeb0a8;background:rgba(110,28,24,.32)';app.appendChild(rb);
+    rb.onclick=()=>dlg('¿Eliminar a '+f.name+' de tus amigos? Las partidas que habéis jugado juntos se conservan.',{cancel:1,ok:'Eliminar',cr:1},async()=>{if(await borrarAmigo(f.id)){if(profPila.length)profAtras();else go(profBack==='home'?'friends':profBack)}})}
+  $('#b').onclick=profAtras;
   $('#pmid').onclick=e=>musCopy(f,e.currentTarget);
   {const fit=()=>app.querySelectorAll('.nd .nm').forEach(el=>{el.style.removeProperty('font-size');let fs=parseFloat(getComputedStyle(el).fontSize);while(el.scrollWidth>el.clientWidth+0.5&&fs>11){fs-=.5;el.style.setProperty('font-size',fs+'px','important')}});fit();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{if(view==='profile')fit()})}
-  if(mine){const pn=$('#pn');pn.onchange=()=>{const v=pn.value.trim().replace(/\s+/g,' ').slice(0,NAME_MAX);
-    if(!v||S.friends.some(x=>!x.deleted&&x.id!==f.id&&x.name.toLowerCase()===v.toLowerCase())){pn.value=f.name;return}
-    f.name=v;pn.value=v;save();if(AUTH==='user')sb.from('perfiles').update({nombre:v}).eq('id',S.me).then(()=>{})}}
+  if(mine){const pn=$('#pn'),er=$('#pnerr');let tm=0;const msg=t=>{er.textContent=t;clearTimeout(tm);if(t)tm=setTimeout(()=>{er.textContent=''},4500)};
+    pn.oninput=()=>msg('');
+    pn.onchange=async()=>{const v=pn.value.trim().replace(/\s+/g,' ').slice(0,NAME_MAX);
+      if(!v||v===f.name){pn.value=f.name;return}
+      if(RESERVADO.test(v)){pn.value=f.name;msg(NOMBRE_NO);return}
+      if(AUTH==='user'){pn.disabled=true;let error=null;try{({error}=await sb.from('perfiles').update({nombre:v}).eq('id',S.uid))}catch(e){error={message:'red'}}pn.disabled=false;
+        if(error){pn.value=f.name;msg(nombreMalo(error)?NOMBRE_NO:'No se ha podido guardar. Revisa tu conexión.');return}}
+      f.name=v;pn.value=v;save();subirResumen()}}
   if(mine){$('#av').onclick=$('#avc').onclick=()=>pickAvatar(f,p);}
-  const ap=$('#ap');if(ap)ap.onclick=()=>{const d=overlay('<h2 style="text-align:center">Todas las parejas</h2>'+mtab(mates)+'<button id="dk" class="cr">Cerrar</button>');d.querySelector('#dk').onclick=()=>d.remove()};
+  const goP=(b,d)=>{b.onclick=()=>{if(d)d.remove();abrirPerfil(b.dataset.pid,true)};b.onkeydown=e=>{if(e.key==='Enter')b.onclick()}};
+  app.querySelectorAll('.mt [data-pid]').forEach(b=>goP(b));
+  const ap=$('#ap');if(ap)ap.onclick=()=>{const d=overlay('<h2 style="text-align:center">Principales parejas</h2>'+mtab(mates,true)+'<button id="dk" class="cr">Cerrar</button>');d.querySelector('#dk').onclick=()=>d.remove();d.querySelectorAll('[data-pid]').forEach(b=>goP(b,d))};
+  const fs=$('#fsol');if(fs)fs.onclick=async()=>{fs.disabled=true;if(fs.dataset.k==='acc')await acceptReq(f.id);else await enviarSol(f.id);profile()};
   if(mine)app.querySelectorAll('[data-slot]').forEach(b=>b.onclick=()=>pickSlot(f,p,+b.dataset.slot));
   app.querySelectorAll('.mg [data-a]').forEach(b=>b.onclick=()=>medalInfo(FAM.find(m=>m.id===b.dataset.a),p,CL));
   app.querySelectorAll('.mg [data-s]').forEach(b=>b.onclick=()=>secInfo(SEC.find(m=>m.id===b.dataset.s),p,CL));
@@ -2450,7 +2547,7 @@ function finish(i,inc){
   const rec={id:g.id||uid(),t:[[g.p[0],g.p[1]],[g.p[2],g.p[3]]],w:i,cfg:c,fecha:Date.now(),o:g.ord||[],pl:g.pal||[0,0],rs:g.rs||[0,0],pz:g.pz||[0,0],jt:g.jt,vc:[...g.vc],am:g.am?1:0,tn:g.tn||['',''],inv:g.guest?1:0};
   if(g.inf){rec.inf=1;rec.jg=[...g.jg]}
   if(inc)rec.inc=1;
-  const A=progress();ensureClaims(A);if(!g.am&&!g.guest){S.hist.push(rec);subirPartida(rec).then(ok=>{if(ok)save()})}const B=progress();
+  const A=progress();ensureClaims(A);if(!g.am&&!g.guest){S.hist.push(rec);subirPartida(rec).then(ok=>{if(ok)save()})}const B=progress();subirResumen();
   S.game=null;save();go('home');victory(rec,i,A,B);
 }
 /* Terminar partida: gana quien va por delante (vacas, luego juegos, luego puntos) */
