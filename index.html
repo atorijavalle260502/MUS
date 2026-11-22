@@ -1438,7 +1438,7 @@ table.mt .mnl:active{filter:brightness(1.25)}
 <script src="supabase.js"></script>
 <script>
 const ASES=['img/as-oros.webp?v=3','img/as-copas.webp?v=3','img/as-espadas.webp?v=3','img/as-bastos.webp?v=3'];
-const HELP={senda:'Vence rivales. Gana amarracos. Asciende por 10 ligas.',medallas:'Premios por tus logros. Suben de nivel según avanzas.',especiales:'Medallas ocultas que se logran con hazañas concretas.',amistosa:'No cambia amarracos, historial, rachas ni medallas.',infinita:'Jugad hasta que os canseis.',modoLocal:'Dispositivo al centro. Ambos equipos cuentan en este dispositivo.',modoConectado:'Cada jugador cuenta en su dispositivo en directo.'};
+const HELP={senda:'Vence rivales. Gana amarracos. Asciende por 10 ligas.',medallas:'Premios por tus logros. Suben de nivel según avanzas.',especiales:'Medallas ocultas que se logran con hazañas concretas.',amistosa:'No cambia amarracos, historial, rachas ni medallas.',infinita:'Jugad hasta que os canseis.',modoLocal:'Ambos equipos cuentan en ese dispositivo.',modoConectado:'Cada jugador cuenta en su móvil.'};
 const help=k=>'<span class="hq" role="button" tabindex="0" data-help="'+k+'" aria-label="Ayuda">?</span>';
 (function(){let pop=null;const close=()=>{if(pop){pop.remove();pop=null}};
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.hq');
@@ -1908,7 +1908,7 @@ const idsJug=h=>[...new Set([...h.t[0],...h.t[1]])];
 const hueco=id=>{const f=S.friends.find(x=>x.id===id);if(f&&f.gen)return true;if(!f&&/^(.*_)?inv[1-4]$/.test(String(id)))return true;return !f&&!isUuid(id)&&/^Jugador [1-4]$/.test(fname(id))};
 const oculto=id=>gone(id)||hueco(id);
 const gone=id=>/(^|_)del_[0-9a-f]{8}$/.test(String(id))||!!(S.gone&&S.gone[id]);
-const VERSION='E-11';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
+const VERSION='E-12';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
 /* ===== Perfiles públicos (fase I) ===== */
 const RESERVADO=/^(yo|invitado|jugador( ?[1-4])?|jugador eliminado)$/i; // mismos nombres que bloquea la base de datos
 const NOMBRE_NO='Nombre no disponible';
@@ -2135,12 +2135,12 @@ function sdProg(){
 }
 function home(){
   const G=AUTH==='guest';
-  app.innerHTML='<div class="hsuits">'+['o','c','e','b'].map(k=>suit(k,k==='o'?50:64)).join('')+'</div>'+'<div class="logo">MUS</div>'+fan()+'<div class="menu">'+(S.game?'<button class="gold" style="width:100%" id="cont">Continuar partida</button>':'<button class="gold" style="width:100%" id="go">Iniciar partida</button>')+'<button class="ghost'+(INV.length?' late':'')+'" id="cn" style="width:100%;background:var(--card)">Conectarse a partida'+(INV.length?'<span class="mbadge" aria-label="Tienes una invitación"></span>':'')+'</button>'+(S.game?'<button class="ab" id="ab" type="button">Abandonar partida</button>':'')
+  app.innerHTML='<div class="hsuits">'+['o','c','e','b'].map(k=>suit(k,k==='o'?50:64)).join('')+'</div>'+'<div class="logo">MUS</div>'+fan()+'<div class="menu">'+(S.game?'<button class="gold" style="width:100%" id="cont">Continuar partida</button>':'<button class="gold" style="width:100%" id="go">Iniciar partida</button>')+'<button class="ghost'+(INV.length?' late':'')+'" id="cn" style="width:100%;background:var(--card)">Conectarse a partida'+(INV.length?'<span class="mbadge" aria-label="Tienes una invitación"></span>':'')+'</button>'
   +'<button class="ghost'+(G?' glk':'')+'" id="sd"'+(G?' aria-disabled="true"':'')+' style="width:100%;background:var(--card)"><span class="hico hbox">'+ICO_AMR+'</span><span class="sdt">Senda del Órdago</span>'+help('senda')+(G?PLK:'')+'</button>'
   +'<div class="nav" style="margin-top:0"><button id="fr"'+(G?' class="glk" aria-disabled="true"':'')+'>'+ICO_FR+'Amigos'+(G?PLK:(reqList().length||(S.avisoAm||[]).length?'<span class="mbadge" aria-label="Novedades en amigos"></span>':''))+'</button><button id="mp">'+ICO_ME+(G?'Iniciar sesión':'Mi perfil')+(G?'':mpBadge())+'</button></div></div>';
   if($('#go'))$('#go').onclick=modoDlg;
   if($('#cont'))$('#cont').onclick=()=>go('game');
-  $('#cn').onclick=conectarDlg;if($('#ab'))$('#ab').onclick=abandonarDlg;
+  $('#cn').onclick=conectarDlg;
   $('#sd').onclick=()=>G?lockMsg('la Senda del Órdago'):ensureMe(()=>go('senda'));
   $('#mp').onclick=()=>G?login():ensureMe(()=>{S.profile=S.me;profBack='home';profPila.length=0;go('profile')});
   $('#fr').onclick=()=>G?lockMsg('Amigos'):go('friends');
@@ -2874,7 +2874,7 @@ async function drain(){
     const r=await rpcSala('sala_accion',a);
     if(!SL)return;
     if(r.motivo==='red'){SL.conn='off';pintar();reconectarLuego();await sleep(1500);if(SL&&SL.conn==='off')await resync();continue}
-    if(r.ok){c.seq=r.seq;SL.lastV=r.v;SL.lastG=r.g;esperarEco(r.seq);procesar();if(c.tipo==='juego'&&c.fin)terminarYa(true)}
+    if(r.ok){c.seq=r.seq;SL.lastV=r.v;SL.lastG=r.g;esperarEco(r.seq);procesar();if(c.tipo==='juego'&&c.fin)terminarYa(true,c.res)}
     else rechazo(r)}}
   finally{if(SL)SL.busy=false}}
 function esperarEco(seq){setTimeout(()=>{if(SL&&SL.srv.seq<seq)resync()},2500)}
@@ -2902,7 +2902,7 @@ async function ordago(w){
   const ids=[0,1,2,3].map(idPuesto),nj=r.j;
   nj.ord=[...(j0.ord||[]),{w:ids.slice(w*2,w*2+2),l:ids.slice((1-w)*2,(1-w)*2+2)}];
   const res=await rpcSala('sala_accion',{p_sala:SL.id,p_tipo:'ordago',p_base:Math.max(SL.srv.g,SL.lastG||0),p_juego:nj});if(!SL)return;
-  if(res.ok){SL.lastV=res.v;SL.lastG=res.g;esperarEco(res.seq);if(r.fin)terminarYa(true)}else rechazo(res)}
+  if(res.ok){SL.lastV=res.v;SL.lastG=res.g;esperarEco(res.seq);if(r.fin)terminarYa(true,nj)}else rechazo(res)}
 async function deshacer(seq){
   if(!puedeJugar())return;
   const r=await rpcSala('sala_accion',{p_sala:SL.id,p_tipo:'deshacer',p_esperada:seq});if(!SL)return;
@@ -2943,10 +2943,10 @@ async function ejecutarOk(tipo){
   finally{if(SL)SL.okMio=null;if(SL)pintar()}}
 async function cancelarEspera(){SL.esperaO=false;pintar();rpcSala('sala_cancelar_ok',{p_sala:SL.id})}
 /* Cierra la partida: natural = se han alcanzado las vacas (no hace falta OK) */
-async function terminarYa(natural){
+async function terminarYa(natural,jFinal){
   if(!SL||SL.terminando)return;SL.terminando=true;
   try{
-    const j=vistaS(),g=gDe(j),c=SL.cfg,ids=[0,1,2,3].map(idPuesto);
+    const j=jFinal||vistaS(),g=gDe(j),c=SL.cfg,ids=[0,1,2,3].map(idPuesto);
     let w=natural?(g.vc[0]>=c.vacas?0:1):delante(j);if(w<0)return;
     const rec={id:SL.id,t:[[ids[0],ids[1]],[ids[2],ids[3]]],w,cfg:{meta:c.meta,juegos:c.juegos,vacas:c.vacas},fecha:Date.now(),o:j.ord||[],pl:g.pal,rs:g.rs,pz:g.pz,jt:g.jt,vc:[...g.vc],am:c.am?1:0,tn:c.tn||['',''],inv:0,nn:{sg1:'Jugador 1',sg2:'Jugador 2',sg3:'Jugador 3',sg4:'Jugador 4'}};
     if(c.inf){rec.inf=1;rec.jg=[...g.jg]}
@@ -2977,7 +2977,7 @@ function victoriaSala(rec,mi,A,B,sinTr){
     +(nm?'<div class="vk-md">'+(nm>1?nm+' medallas':'Medalla')+'</div>':'')+'</div>'};
   const won=r===rec.w;
   d.innerHTML='<div class="mp vp'+(won?'':' def')+'"><div class="vc-fit"><small>'+(won?'¡Victoria!':'Derrota')+'</small><div class="vg">'+rec.t[r].map(tile).join('')+'</div>'
-    +(rec.am?'<div class="vu">Partida amistosa · sin cambios en los amarracos</div>':rec.inc?'<div class="vu">Partida terminada antes de tiempo · no cuenta como victoria ni derrota</div>':'')+'</div></div><div class="row vrow"><button id="vx" type="button">Volver a inicio</button></div>';
+    +(rec.am?'<div class="vu">Partida amistosa · sin cambios en los amarracos</div>':rec.inc?'<div class="vu">Partida terminada antes de tiempo · no cuenta como victoria ni derrota</div>':'')+'</div><div class="row vrow"><button id="vx" type="button">Volver a inicio</button></div></div>';
   document.body.appendChild(d);if(won)rain(d,34,true,false);
   const fit=()=>fitBox(d,'.mp.vp','.vc-fit',false);fit();window.addEventListener('resize',fit);
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);
@@ -3005,21 +3005,23 @@ function pintar(){
     return '<div class="sl-team t'+k+(jug&&k===mi?' mine':'')+'" data-eq="'+k+'"><div class="sl-nm">'+(tn?'<small>'+esc(tn)+'</small>':'')
       +[2*k,2*k+1].map((q,n)=>'<span><i class="sl-dot'+(presOn(q)?' on':'')+'"></i>'+(n?'y ':'')+esc(nomPuesto(q))+'</span>').join('')+'</div>'
       +'<div class="sl-big">'+p.pts+'</div><div class="sl-jv">J '+p.jg+(c.inf?'':' · V '+p.vc)+'</div></div>'};
+  const tcol=(jug&&mi===1)?'#b3392f':'#1d4f7a';
   const slot=l=>{const n=j.mesa[l];
-    return '<div class="sl-slot'+(n?' has':'')+'"><b class="sl-ln">'+l+'</b>'+(n?'<div class="sl-chip" data-chip="'+l+'"><b>'+ul(n)+'</b>'+lanceIcon(l,16)+'</div>':'<span class="sl-ic"'+(jug?' data-pick="'+l+'"':'')+'>'+lanceIcon(l,34)+'</span>')+'</div>'};
+    return '<div class="slot"><svg class="slotd" aria-hidden="true"><rect x="0" y="0" width="100%" height="100%" rx="13" fill="none" stroke="rgba(224,176,74,.9)" stroke-width="4" stroke-dasharray="16 10"/></svg><b class="cn"'+(jug?' data-pick="'+l+'"':'')+'>'+l+'</b>'
+      +(n?'<div class="chip" data-chip="'+l+'"><b style="color:'+tcol+'">'+ul(n)+'</b>'+lanceIcon(l,20)+(jug&&SL.sel===l?'<button class="del" data-del="'+l+'" aria-label="Quitar puntos">✕</button>':'')+'</div>':'<span class="plus"'+(jug?' data-pick="'+l+'"':'')+'>'+lanceIcon(l,28)+'</span>')+'</div>'};
   const des=deshacible(),off=SL.conn!=='ok',bq=bloqueado();
   let cap='';if(off)cap='Reconectando…';else if(bq)cap=nomPuesto(SL.lock.p)+' está sumando…';
-  const tc=mi===0?'var(--b)':'var(--a)';
-  const botones=jug?'<div class="sl-cap">'+cap+'</div><div class="sl-btns" style="--tc:'+tc+'"><button class="c" data-n="1"'+((off||bq)?' disabled':'')+'>+1</button><button class="c" data-n="5"'+((off||bq)?' disabled':'')+'>+5</button><button class="t" data-n="-1"'+((off||bq)?' disabled':'')+'>−1</button><button class="o" id="slo"'+(off?' disabled':'')+'>Órdago</button></div>'
+  const dis=(off||bq)?' disabled':'';
+  const botones=jug?'<div class="sl-cap">'+cap+'</div><div class="half sl-bw"><div class="btns b2" style="--c:'+col(mi)+'"><button data-n="1"'+dis+'>+1</button><button data-n="5"'+dis+'>+5</button></div><div class="b3"><span class="btns" style="display:contents;--c:'+col(mi)+';--m:'+(mi?'#8f2f28':'#245a8c')+'"><button data-n="-1"'+dis+'>−1</button></span><button class="ord" id="slo"'+(off?' disabled':'')+'>Órdago</button></div></div>'
     :'<div class="sl-cap sl-watch">'+(off?'Reconectando…':'Estás viendo la partida · solo lectura')+'</div>';
   app.innerHTML='<div class="sl-top"><span class="sl-mus">MUS</span><span class="sl-tools">'+(jug?'<button class="sl-ib" id="sllog" aria-label="Últimas acciones">'+ICO_LOG+'</button>':'')+'<button class="sl-ib" id="slpl" aria-label="Jugadores">'+ICO_OJOS+'<em>'+nEsp+'</em></button><button class="sl-chip2" id="slcode" aria-label="Copiar código">SALA <b>'+esc(SL.codigo)+'</b>'+ICO_COPY+'</button></span></div>'
     +(off?'<div class="sl-ban">Reconectando…</div>':'')
-    +tbox(top)+'<div class="sl-mesa"><button class="sl-ib sl-x" id="slx" aria-label="Menú de la partida">'+EXIT+'</button>'+LAN_SL.map(slot).join('')+'</div>'+tbox(bot)+botones
+    +tbox(top)+'<div class="mesa sl-mesa"><button class="sm" id="slx" aria-label="Menú de la partida">'+EXIT+'</button>'+LAN_SL.map(slot).join('')+'</div>'+tbox(bot)+botones
     +(SL.pick?pickSala():'')+(SL.menu?menuSala():'')+(SL.logO?logSala(des):'')+(SL.plO?jugSala():'')+(SL.ordO?ordSala():'')+(SL.esperaO?esperaSala():'');
   ligar(des)}
-const pickSala=()=>{const l=SL.pick,cur=vistaS().mesa[l];
-  return '<div class="ov c" id="slpk"><div class="mp"><b>'+LAN_NM[l]+': ¿cuántos puntos?</b><div class="opts g5">'+Array.from({length:19},(_,i)=>i+2).map(n=>'<button data-amt="'+n+'">'+ul(n)+'</button>').join('')+'<button class="ghost" data-amt="x" aria-label="Cancelar">✕</button>'+(cur?'<button class="ghost" style="grid-column:span 5" data-amt="0">Quitar</button>':'')+'</div></div></div>'};
-const menuSala=()=>'<div class="ov c"><div class="mp"><b>Partida</b><div class="opts g1">'+(esJug()?'<button data-menu="t">Terminar partida</button><button data-menu="r">Reiniciar partida</button>':'')+'<button data-menu="q">Salir al inicio</button><button class="ghost" data-menu="x">Seguir '+(esJug()?'jugando':'viendo')+'</button></div></div></div>';
+const pickSala=()=>{const l=SL.pick,n=SL.betTmp==null?2:SL.betTmp;
+  return '<div class="ov gpn bet"><div style="flex:1 1 0"></div><div class="mp bp"><h3>'+lanceIcon(l,28)+'<span>'+LAN_NM[l]+'</span></h3><div class="num">'+ul(n)+'</div><div class="row3"><button class="neg" data-bet="-1">−1</button><button data-bet="1">+1</button><button data-bet="5">+5</button></div><div class="row2b"><button class="back" data-bet="back">‹ Atrás</button><button class="ok" data-bet="x">Listo</button></div></div></div>'};
+const menuSala=()=>'<div class="ov c"><div class="mp"><b>Partida</b><div class="opts g1">'+(esJug()?'<button data-menu="t">Terminar partida</button><button data-menu="r">Reiniciar partida</button>':'<button data-menu="s">Dejar de ver la partida</button>')+'<button data-menu="q">Salir al inicio</button><button class="ghost" data-menu="x">Seguir '+(esJug()?'jugando':'viendo')+'</button></div></div></div>';
 const ordSala=()=>'<div class="ov c"><div class="mp"><b>¿Quién ha ganado el órdago?</b><div class="opts g1 odo">'+[0,1].map(i=>'<button data-od="'+i+'">'+esc(nomPuesto(2*i))+' y '+esc(nomPuesto(2*i+1))+'</button>').join('')+'<button class="ghost odb" data-od="x">‹ Atrás</button></div></div></div>';
 const esperaSala=()=>'<div class="ov c"><div class="mp"><b>Esperando el OK de los demás jugadores…</b><div class="row"><button class="ghost" id="sles">Cerrar</button></div></div></div>';
 function txtEv(e){
@@ -3042,24 +3044,29 @@ function ligar(des){
   if(q('#sllog'))q('#sllog').onclick=()=>{SL.logO=true;pintar()};
   qa('[data-n]').forEach(b=>b.onclick=()=>tocar(+b.dataset.n));
   if(q('#slo'))q('#slo').onclick=()=>{SL.ordO=true;pintar()};
-  qa('[data-pick]').forEach(e=>e.onclick=()=>{SL.pick=e.dataset.pick;pintar()});
-  qa('[data-amt]').forEach(b=>b.onclick=()=>{const v=b.dataset.amt,l=SL.pick;SL.pick=null;pintar();if(v!=='x')fichaPoner(l,+v)});
+  qa('[data-pick]').forEach(e=>e.onclick=()=>{SL.pick=e.dataset.pick;SL.sel=null;SL.betTmp=vistaS().mesa[SL.pick]||2;pintar()});
+  qa('[data-bet]').forEach(b=>b.onclick=()=>{const v=b.dataset.bet,l=SL.pick;
+    if(v==='back'){SL.pick=null;SL.betTmp=null;pintar();return}
+    if(v==='x'){const n=SL.betTmp;SL.pick=null;SL.betTmp=null;pintar();fichaPoner(l,n);return}
+    SL.betTmp=Math.max(1,Math.min(60,SL.betTmp+ +v));pintar()});
+  qa('[data-del]').forEach(b=>b.onclick=()=>{const l=b.dataset.del;SL.sel=null;pintar();fichaPoner(l,0)});
   qa('[data-od]').forEach(b=>b.onclick=()=>{const v=b.dataset.od;SL.ordO=false;pintar();if(v!=='x')ordago(+v)});
-  qa('[data-menu]').forEach(b=>b.onclick=()=>{const v=b.dataset.menu;if(v==='x'){SL.menu=false;pintar()}else if(v==='q'){SL.menu=false;salaSoltar();go('home')}else{SL.menu=false;pintar();pedirOk(v==='t'?'terminar':'reiniciar')}});
+  qa('[data-menu]').forEach(b=>b.onclick=()=>{const v=b.dataset.menu;if(v==='x'){SL.menu=false;pintar()}else if(v==='q'){SL.menu=false;salaSoltar();go('home')}
+    else if(v==='s'){SL.menu=false;pintar();dlg('¿Dejar de ver la partida?',{cancel:1,ok:'Dejar de ver',cr:1},async()=>{try{await rpcSala('sala_salir',{p_sala:SL.id})}catch(e){}salaSoltar();SL=null;S.game=null;save();go('home')})}else{SL.menu=false;pintar();pedirOk(v==='t'?'terminar':'reiniciar')}});
   if(q('#sles'))q('#sles').onclick=cancelarEspera;
   if(q('#slcl'))q('#slcl').onclick=()=>{SL.logO=false;pintar()};
   if(q('#sldes'))q('#sldes').onclick=()=>{SL.logO=false;pintar();deshacer(des.seq)};
   if(q('#slpc'))q('#slpc').onclick=()=>{SL.plO=false;pintar()};
   qa('[data-ex]').forEach(b=>b.onclick=()=>{const u=b.dataset.ex;dlg('¿Expulsar a este jugador de la partida?',{cancel:1,ok:'Expulsar',cr:1},async()=>{const r=await rpcSala('sala_expulsar',{p_sala:SL.id,p_user:u});if(!r.ok)toast(MSG[r.motivo]||'No se ha podido expulsar.');else cargarMiembros()})});
   /* Fichas: se arrastran solo a MI equipo; un toque abre el cuadro para cambiar o quitar */
-  qa('.sl-chip').forEach(ch=>{
+  qa('.chip').forEach(ch=>{
     if(!esJug())return;let sx,sy,mv=false,on=false;
-    ch.onpointerdown=e=>{sx=e.clientX;sy=e.clientY;mv=false;on=true;SL.drag=true;ch.setPointerCapture(e.pointerId);ch.style.zIndex=20};
+    ch.onpointerdown=e=>{if(e.target.closest('button'))return;sx=e.clientX;sy=e.clientY;mv=false;on=true;SL.drag=true;ch.setPointerCapture(e.pointerId);ch.style.zIndex=20};
     ch.onpointermove=e=>{if(!on)return;const dx=e.clientX-sx,dy=e.clientY-sy;if(Math.abs(dx)+Math.abs(dy)>8)mv=true;if(mv)ch.style.transform='translate('+dx+'px,'+dy+'px) scale(1.25)'};
-    ch.onpointerup=e=>{if(!on)return;on=false;SL.drag=false;
-      if(!mv){SL.pick=ch.dataset.chip;pintar();return}
+    ch.onpointerup=e=>{if(!on)return;on=false;
+      SL.drag=false;if(!mv){SL.sel=SL.sel===ch.dataset.chip?null:ch.dataset.chip;pintar();return}
       ch.style.visibility='hidden';const h=document.elementsFromPoint(e.clientX,e.clientY).find(x=>x.classList&&x.classList.contains('sl-team'));ch.style.visibility='';
-      if(h&&h.classList.contains('mine'))tocar(vistaS().mesa[ch.dataset.chip],ch.dataset.chip);
+      SL.sel=null;if(h&&h.classList.contains('mine'))tocar(vistaS().mesa[ch.dataset.chip],ch.dataset.chip);
       else{if(h)toast('Solo puedes sumar puntos a tu equipo.');pintar()}};
     ch.onpointercancel=()=>{on=false;SL.drag=false;pintar()}})}
 
@@ -3073,17 +3080,12 @@ function invPoll(){
     invT=setTimeout(paso,15000)};
   paso()}
 function modoDlg(){
-  const G=AUTH==='guest',d=document.createElement('div');d.className='ov c';
-  d.innerHTML='<div class="mp"><b>¿Cómo quieres llevar el conteo?</b><div class="opts g1 sl-modos"><button id="m1" class="sl-m"><span>Todo en este dispositivo</span>'+help('modoLocal')+'</button><button id="m2" class="sl-m'+(G?' glk':'')+'"><span>Conectando varios dispositivos</span>'+help('modoConectado')+(G?PLK:'')+'</button><button class="ghost" id="m0">Cancelar</button></div></div>';
+  const G=AUTH==='guest',d=document.createElement('div');d.className='ov c sl-modo';
+  d.innerHTML='<div class="mp"><b>¿Cómo quieres llevar el conteo?</b><div class="sl-m2"><button class="ghost sl-mb" id="m1" type="button"><span>Local</span>'+help('modoLocal')+'</button><button class="ghost sl-mb'+(G?' glk':'')+'" id="m2" type="button"><span>Conectando dispositivos</span>'+help('modoConectado')+'</button></div><button class="ghost" id="m0" type="button">Cancelar</button></div>';
   document.body.appendChild(d);
   d.querySelector('#m0').onclick=()=>d.remove();
   d.querySelector('#m1').onclick=()=>{d.remove();SETUP_CONN=false;SETUP_SALA=null;go('setup')};
   d.querySelector('#m2').onclick=()=>{d.remove();if(G){lockMsg('crear partidas con varios dispositivos');return}SETUP_CONN=true;SETUP_SALA=null;go('setup')}}
-function abandonarDlg(){
-  const sala=S.game&&S.game.sala;
-  dlg(sala?'¿Abandonar la partida? Dejarás la sala; los demás pueden seguir jugando.':'¿Abandonar la partida? Se perderán sus puntos, juegos, vacas y fichas.',{cancel:1,ok:'Abandonar',cr:1},async()=>{
-    if(sala){try{await rpcSala('sala_salir',{p_sala:sala.id})}catch(e){}}
-    salaSoltar();SL=null;S.game=null;save();draw()})}
 function conectarDlg(){
   if(S.game){dlg('Ya tienes una partida a medias. Termínala o abandónala antes de conectarte a otra.',{});return}
   const d=document.createElement('div');d.className='ov c';const inv=INV[0];
@@ -3709,22 +3711,8 @@ html body #app.friends .rqbtn .rqc>*{position:relative}
 .sl-dot.on{background:#8df0a8;box-shadow:0 0 6px #8df0a8}
 .sl-big{position:absolute;right:20px;bottom:30px;font:800 clamp(86px,28vw,150px)/.9 Literata,Georgia,serif;color:#fbf0d9;text-shadow:0 5px 0 rgba(0,0,0,.28)}
 .sl-jv{position:relative;z-index:1;font:700 clamp(15px,4.3vw,19px) Literata,Georgia,serif;letter-spacing:.12em;opacity:.8}
-.sl-mesa{flex:0 0 auto;display:flex;gap:7px;align-items:stretch}
-.sl-x{flex:0 0 clamp(48px,14vw,62px);justify-content:center;border-radius:16px;background:#1f4631;border-color:#c8a050}
-.sl-slot{position:relative;flex:1;height:clamp(66px,10.5vh,88px);border:2.5px dashed #c8a050;border-radius:17px;display:flex;align-items:center;justify-content:center}
-.sl-ln{position:absolute;top:3px;left:8px;font:800 17px Literata,Georgia,serif;color:#e0b04a}
-.sl-ic{display:flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:50%;background:rgba(0,0,0,.4)}
-.sl-chip{touch-action:none;display:flex;flex-direction:column;align-items:center;gap:1px;padding:5px 9px;min-width:40px;border:2px solid #c8962b;border-radius:9px;background:#f6efdc;color:#1d2a44;box-shadow:0 3px 0 rgba(0,0,0,.4);position:relative}
-.sl-chip b{font:800 21px/1 Literata,Georgia,serif}
 .sl-cap{flex:0 0 auto;min-height:18px;text-align:center;font:700 14px Literata,Georgia,serif;color:#f4d98a}
 .sl-watch{color:#cfc7ae;font-weight:600}
-.sl-btns{flex:0 0 auto;display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.sl-btns button{padding:clamp(11px,2.4vh,20px) 0;border:0;border-radius:20px;font:800 clamp(26px,7.4vw,36px) Literata,Georgia,serif;box-shadow:0 5px 0 rgba(0,0,0,.4)}
-.sl-btns .c{background:linear-gradient(#fbf0d9,#ecdcb2);color:#2b1a12}
-.sl-btns .t{background:var(--tc);color:#fff3d6}
-.sl-btns .o{background:linear-gradient(#f2c95a,#cf9d2c);color:#2a1a08}
-.sl-btns button:disabled{opacity:.45;box-shadow:none}
-.sl-btns button:active:not(:disabled){transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.4)}
 .sl-toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 18px);transform:translateX(-50%);max-width:86%;z-index:60;background:rgba(20,40,28,.96);color:#fbf0d9;border:1.5px solid #c8a050;border-radius:14px;padding:10px 16px;font:700 15px Literata,Georgia,serif;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,.5)}
 .sl-log{display:flex;flex-direction:column;gap:2px;max-height:46vh;overflow-y:auto;text-align:left}
 .sl-log p{margin:0;padding:7px 2px;border-bottom:1px dashed rgba(200,160,80,.3);font-size:15px}
@@ -3735,22 +3723,44 @@ html body #app.friends .rqbtn .rqc>*{position:relative}
 .sl-or{margin:2px 0;text-align:center;font-size:14px;opacity:.85}
 .sl-inv{border:1.5px solid rgba(200,160,80,.55);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:10px}
 .sl-inv p{margin:0;font-size:16px}
-.sl-m{display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left}
-.sl-m span:first-child{flex:1}
 #app.home .menu button.late{animation:late 2.4s ease-in-out infinite}
 @keyframes late{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.025);filter:brightness(1.22)}}
 @media (prefers-reduced-motion:reduce){#app.home .menu button.late{animation:none}}
-.ab{align-self:center;background:none!important;box-shadow:none!important;border:0!important;color:#f0a898!important;font:600 14px Literata,Georgia,serif;text-decoration:underline;padding:4px 10px!important}
-.vic.one .mp.vp{flex:1}
 .setup-code{margin-left:auto}
 .sl-chip3{margin-left:auto;padding:6px 10px;border-radius:12px;background:#cfa63d;color:#2a1a08;font:700 10px Literata,Georgia,serif;letter-spacing:.12em;white-space:nowrap;flex:0 0 auto}
 .sl-chip3 b{font:800 16px Literata,Georgia,serif;letter-spacing:.08em}
-#app.home .menu #cn{font-size:clamp(17px,calc(2.5*var(--vh)),21px);padding:clamp(11px,calc(2*var(--vh)),15px) 14px;letter-spacing:.02em;position:relative}
 .sl-mus{font-size:24px;letter-spacing:.14em}
 .sl-top{flex-wrap:nowrap}.sl-tools{min-width:0;gap:6px}
 .sl-ib{padding:7px 9px}
 .sl-chip2{padding:7px 10px;gap:6px;font-size:11px;letter-spacing:.1em;min-width:0}
 .sl-chip2 b{font-size:18px;letter-spacing:.06em}
+
+/* ---- conteo: botones y fichas con el aspecto del modo local ---- */
+.sl-mesa{flex:0 0 auto}
+.sl-bw{background:none!important;border:0!important;box-shadow:none!important;padding:0!important;margin:0!important;flex:0 0 auto;display:flex!important;flex-direction:column;gap:8px;transform:none!important}
+.sl-bw button:disabled{opacity:.45;filter:saturate(.7)}
+#app.game.sl .chip{touch-action:none}
+/* ---- cuadro «¿Cómo quieres llevar el conteo?» ---- */
+.sl-modo .mp{gap:14px}
+.sl-m2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sl-m2 .sl-mb{position:relative;display:flex!important;align-items:center;justify-content:center;text-align:center;min-height:78px;padding:12px 38px 12px 12px!important;font-size:17px;line-height:1.15;color:#f6efdc}
+.sl-m2 .sl-mb .hq{position:absolute;right:10px;top:50%;margin:-11px 0 0 0}
+.sl-m2 .sl-mb.glk{opacity:.8}
+/* ---- inicio: botones algo más pequeños ---- */
+#app.home .menu #cn{font-size:clamp(15px,calc(2.1*var(--vh)),18px);padding:clamp(9px,calc(1.6*var(--vh)),13px) 14px;position:relative}
+#app.home .menu .nav button{font-size:clamp(15px,calc(1.9*var(--vh)),17px);padding:clamp(9px,calc(1.6*var(--vh)),13px) 8px}
+/* ---- final de partida: el cartel ocupa toda la pantalla y el botón queda dentro del marco ---- */
+.ov.vic.one{padding:max(8px,env(safe-area-inset-top,0px)) 8px max(8px,env(safe-area-inset-bottom,0px))!important}
+.vic.one .mp.vp{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding-bottom:20px!important}
+.vic.one .mp.vp .vc-fit{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0}
+.vic.one .mp.vp .vrow{position:relative;z-index:3;flex:0 0 auto;width:100%;display:flex;justify-content:center;padding:6px 0 0}
+/* botones azules con borde dorado (cuadro de modo) */
+.ov.c.sl-modo .mp button{background:linear-gradient(180deg,#34509a 0%,#27407f 45%,#1c2f63 100%)!important;border:2.5px solid #c9a24e!important;border-radius:16px!important;color:#f6efdc!important;font-weight:700!important;text-shadow:0 1px 0 rgba(0,0,0,.45);box-shadow:inset 0 2px 0 rgba(255,255,255,.22),inset 0 -3px 6px rgba(0,0,0,.28),0 3px 0 rgba(0,0,0,.55),0 6px 10px rgba(0,0,0,.35)!important}
+.ov.c.sl-modo .mp button:active{transform:translateY(2px);box-shadow:inset 0 2px 6px rgba(0,0,0,.45),0 1px 0 rgba(0,0,0,.55)!important}
+.ov.c.sl-modo #m0{padding:14px!important;font-size:18px!important}
+.sl-bw .b3 button[data-n="-1"]{background:linear-gradient(180deg,rgba(255,255,255,.2) 0%,rgba(255,255,255,.05) 55%,rgba(0,0,0,.14) 100%),var(--m)!important}
+.vic.one .vrow #vx{color:#f6efdc!important;opacity:1!important}
+#app.home .menu{padding-bottom:6px}
 </style>
 </body>
 </html>
