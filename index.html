@@ -1910,7 +1910,7 @@ const hueco=id=>{const f=S.friends.find(x=>x.id===id);if(f&&f.gen)return true;if
 const sinCuenta=id=>hueco(id)||/^sg[1-4]$/.test(String(id));
 const oculto=id=>gone(id)||hueco(id);
 const gone=id=>/(^|_)del_[0-9a-f]{8}$/.test(String(id))||!!(S.gone&&S.gone[id]);
-const VERSION='E-15';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
+const VERSION='E-16';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
 /* ===== Perfiles públicos (fase I) ===== */
 const RESERVADO=/^(yo|invitado|jugador( ?[1-4])?|jugador eliminado)$/i; // mismos nombres que bloquea la base de datos
 const NOMBRE_NO='Nombre no disponible';
@@ -3803,7 +3803,7 @@ html body .ov.gpn.sl1 .mp .opts.g1>button{padding:15px 10px}
 html body .ov.c:not(.gpn) .mp .opts>button:not(.ghost):not([style]):not(.pr):not(:active){border:1.5px solid #101010!important;
 box-shadow:inset 0 1.5px 0 rgba(255,255,255,.9),inset 0 -3px 6px rgba(120,86,24,.3),inset 0 0 9px rgba(120,86,24,.28),0 3px 0 #0f2418,0 6px 9px rgba(0,0,0,.4)!important}
 /* VS en modo conectado: rival arriba y sin girar; mi equipo abajo */
-html body .vsi.conn .vb-half.t .vb-in{transform:none;justify-content:flex-start;padding:calc(18px + env(safe-area-inset-top,0px)) 28px var(--pt)}
+html body .vsi.conn .vb-half.t .vb-in{transform:none;justify-content:flex-start;padding:calc(34px + env(safe-area-inset-top,0px)) 28px var(--pt)}
 /* ===== E-15 ===== */
 /* «‹ Atrás» del menú del órdago: un verde claro que se distingue del fondo (local y conectado) */
 html body .ov.gpn .mp .opts.odo>button.odb{background:linear-gradient(180deg,#6fb585 0%,#4a9565 48%,#357a4e 100%) padding-box!important;border:1.5px solid #101010!important;color:#fff!important;text-shadow:0 1px 0 rgba(0,0,0,.5)!important;box-shadow:inset 0 1.5px 0 rgba(255,255,255,.5),inset 0 -3px 5px rgba(0,0,0,.22),0 3px 0 #0f2418,0 6px 9px rgba(0,0,0,.4)!important}
@@ -3821,8 +3821,17 @@ html body .sl-nm .sl-pn em{line-height:1.32;padding-bottom:.12em}
 .ov.lgn .lgn-t{margin:6px 0 14px;font-size:24px;color:#f2d98a;letter-spacing:.03em}
 .ov.lgn .lgn-b{display:flex;flex-direction:column;align-items:center;gap:12px;margin:0 0 18px}
 .ov.lgn .lgn-n{font:700 18px Literata,Georgia,serif;color:#f6efdc}
-.ov.lgn .plg{width:100%;margin:6px 0 18px;position:relative}
-.ov.lgn .plg .nd{width:100%}
+.ov.lgn .plg{width:100%;margin:0 0 14px;padding:16px 8px;box-sizing:border-box;position:relative}
+.ov.lgn .plg .nd{width:100%;box-sizing:border-box}
+/* brillo suave que cabe dentro del cartel (antes se cortaba y se veía un recuadro) */
+html body .ov.lgn .plg .nd.cur[data-l]{filter:none!important;box-shadow:0 0 0 2px #e0b04a,0 0 9px 3px rgba(224,176,74,.5)!important}
+/* tapete del cartel: emblema y nombre ajustados al ancho disponible */
+.ov.lgn .plg .nd .emb .av.lge{--s:clamp(44px,14.5vw,58px)!important}
+.ov.lgn .plg .nd .nt{gap:10px!important;padding-right:6px}
+.ov.lgn .plg .nd .nt .emb{margin-left:2px!important}
+.ov.lgn .plg .nd .nt .ni{min-width:0;flex:1 1 0;padding-right:0}
+html body .ov.lgn .plg .nd[data-l] .nm{font-size:clamp(18px,6.2vw,26px)!important;max-width:100%;white-space:nowrap;text-align:center}
+html body .ov.lgn .plg .nd[data-l] .nm.nmx{font-size:clamp(17px,5.6vw,23px)!important;white-space:normal;line-height:1.1;text-align:center}
 /* configurar partida: «Elige jugador» cabe entero aunque la columna sea estrecha */
 #app.setup label.pl:not(.has) button.csel{font-size:15px;padding:12px 30px 12px 10px}
 /* botones del conteo conectado más grandes (aprovechan el hueco) */
