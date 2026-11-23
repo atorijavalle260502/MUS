@@ -1126,6 +1126,7 @@ html body #app.home.hc .logo{font-size:min(clamp(50px,calc(12*var(--vh)),104px),
 #app.setup label.pl .sbx{flex:0 0 auto;width:100%;max-width:none;margin:0;min-height:0;min-width:0;display:block;position:static;align-items:initial}
 #app.setup label.pl.has{gap:8px;padding:9px 7px 8px;background:rgba(0,0,0,.22);border:2px solid var(--cf);border-radius:14px}
 #app.setup label.pl.has .sbx{order:-1}
+#app.setup label.pl .sbx:empty{display:none!important}
 #app.setup label.pl.has button.csel{text-align:center;padding:12px 30px 12px 10px}
 .pk{position:relative;padding:6px 4px;border-radius:10px;border:1px solid rgba(255,214,110,.30);background:radial-gradient(ellipse 60% 120% at 22% 50%,rgba(255,214,110,.34),rgba(255,214,110,0) 72%),radial-gradient(ellipse 70% 130% at 78% 50%,rgba(255,236,170,.14),rgba(255,236,170,0) 75%),linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.02) 55%,rgba(0,0,0,.12));box-shadow:inset 0 1px 0 rgba(255,255,255,.28),inset 0 0 14px rgba(255,214,110,.12);display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);align-items:center;column-gap:4px}
 .pk .av{--s:clamp(40px,11.5vw,48px)!important;margin:0;justify-self:center}
@@ -1909,7 +1910,7 @@ const hueco=id=>{const f=S.friends.find(x=>x.id===id);if(f&&f.gen)return true;if
 const sinCuenta=id=>hueco(id)||/^sg[1-4]$/.test(String(id));
 const oculto=id=>gone(id)||hueco(id);
 const gone=id=>/(^|_)del_[0-9a-f]{8}$/.test(String(id))||!!(S.gone&&S.gone[id]);
-const VERSION='E-13';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
+const VERSION='E-14';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
 /* ===== Perfiles públicos (fase I) ===== */
 const RESERVADO=/^(yo|invitado|jugador( ?[1-4])?|jugador eliminado)$/i; // mismos nombres que bloquea la base de datos
 const NOMBRE_NO='Nombre no disponible';
@@ -2602,9 +2603,10 @@ function vsIntro(){
   const d=document.createElement('div');d.className='ov vsi';
   const player=id=>{const f=S.friends.find(x=>x.id===id)||PUB[id]||{},p=PG[id]||(PUB[id]&&PUB[id].res?pPub(PUB[id].res):blank());
     return '<div class="vb-pw"><div class="vb-p"><div class="vb-pf"><div class="vb-av">'+avatarHTML(f,p,88)+'</div><div class="vb-nm">'+esc(fname(id))+'</div><div class="vb-lg">'+lgBadge(p.lg,16)+'<span>'+LEAGUES[p.lg][0]+'</span></div><div class="vb-tr">'+trIcon(18)+'<b>'+fmt(p.tr)+'</b></div></div></div></div>'};
+  const cn=typeof SL!=='undefined'&&!!SL&&miEq()!=null,bot=cn?miEq():0; /* conectado: mi equipo abajo, el rival arriba y todo derecho */
   const grp=i=>{const ids=g.p.slice(i*2,i*2+2);
-    return '<div class="vb-half '+(i?'t':'b')+' k'+i+'"><div class="vb-in"><div class="vb-fit"><div class="vb-tw"><div class="vb-t"><div class="vb-tf"><span>'+esc(tname(i))+'</span></div></div></div><div class="vb-ps"><i class="vb-rod"></i>'+player(ids[0])+player(ids[1])+'</div></div></div></div>'};
-  if(g.am&&!g.guest)d.classList.add('am');if(g.guest)d.classList.add('inv');
+    return '<div class="vb-half '+(cn?(i===bot?'b':'t'):(i?'t':'b'))+' k'+i+'"><div class="vb-in"><div class="vb-fit"><div class="vb-tw"><div class="vb-t"><div class="vb-tf"><span>'+esc(tname(i))+'</span></div></div></div><div class="vb-ps"><i class="vb-rod"></i>'+player(ids[0])+player(ids[1])+'</div></div></div></div>'};
+  if(g.am&&!g.guest)d.classList.add('am');if(g.guest)d.classList.add('inv');if(cn)d.classList.add('conn');
   d.innerHTML=grp(1)+grp(0)+'<div class="vb-seam"></div><i class="vb-line l"></i><i class="vb-line r"></i><div class="vs-logo"><img src="'+VS_IMG[VS_LOGO]+'" alt="VS" draggable="false"></div>'+(g.guest?'':g.am?'<div class="vs-am">Partida amistosa · sin amarracos</div>':'');
   document.body.appendChild(d);
   const fitNames=()=>{if(!g.guest)return;d.querySelectorAll('.vb-nm').forEach(el=>{el.style.removeProperty('font-size');let fs=parseFloat(getComputedStyle(el).fontSize);while(el.scrollWidth>el.clientWidth+0.5&&fs>11){fs-=.5;el.style.setProperty('font-size',fs+'px','important')}})};const fit=()=>{fitNames();fitBox(d,'.vb-in','.vb-fit',true)};fit();window.addEventListener('resize',fit);
@@ -3781,6 +3783,9 @@ html body .ov.gpn.sl1 .mp .opts.g1>button{padding:15px 10px}
 /* botones crema de las listas de opciones de los cuadros (p. ej. «¿Qué jugador eres?»): línea negra fina */
 html body .ov.c:not(.gpn) .mp .opts>button:not(.ghost):not([style]):not(.pr):not(:active){border:1.5px solid #101010!important;
 box-shadow:inset 0 1.5px 0 rgba(255,255,255,.9),inset 0 -3px 6px rgba(120,86,24,.3),inset 0 0 9px rgba(120,86,24,.28),0 3px 0 #0f2418,0 6px 9px rgba(0,0,0,.4)!important}
+/* VS en modo conectado: rival arriba y sin girar; mi equipo abajo */
+html body .vsi.conn .vb-half.t .vb-in{transform:none;justify-content:flex-end;padding:calc(18px + env(safe-area-inset-top,0px)) 28px var(--pt)}
+html body .vsi.conn .vb-half.t .vb-fit{display:flex;flex-direction:column-reverse;align-items:center;gap:inherit}
 /* configurar partida: «Elige jugador» cabe entero aunque la columna sea estrecha */
 #app.setup label.pl:not(.has) button.csel{font-size:15px;padding:12px 30px 12px 10px}
 /* botones del conteo conectado más grandes (aprovechan el hueco) */
