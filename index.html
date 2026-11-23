@@ -1126,6 +1126,7 @@ html body #app.home.hc .logo{font-size:min(clamp(50px,calc(12*var(--vh)),104px),
 #app.setup label.pl .sbx{flex:0 0 auto;width:100%;max-width:none;margin:0;min-height:0;min-width:0;display:block;position:static;align-items:initial}
 #app.setup label.pl.has{gap:8px;padding:9px 7px 8px;background:rgba(0,0,0,.22);border:2px solid var(--cf);border-radius:14px}
 #app.setup label.pl.has .sbx{order:-1}
+#app.setup label.pl .sbx:empty{display:none!important}
 #app.setup label.pl.has button.csel{text-align:center;padding:12px 30px 12px 10px}
 .pk{position:relative;padding:6px 4px;border-radius:10px;border:1px solid rgba(255,214,110,.30);background:radial-gradient(ellipse 60% 120% at 22% 50%,rgba(255,214,110,.34),rgba(255,214,110,0) 72%),radial-gradient(ellipse 70% 130% at 78% 50%,rgba(255,236,170,.14),rgba(255,236,170,0) 75%),linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.02) 55%,rgba(0,0,0,.12));box-shadow:inset 0 1px 0 rgba(255,255,255,.28),inset 0 0 14px rgba(255,214,110,.12);display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);align-items:center;column-gap:4px}
 .pk .av{--s:clamp(40px,11.5vw,48px)!important;margin:0;justify-self:center}
@@ -1420,10 +1421,25 @@ background:linear-gradient(180deg,rgba(255,226,140,.24),rgba(255,226,140,.07)),r
 .nd .tro svg{width:clamp(20px,6.6vw,26px)!important;height:auto!important}
 #app.senda .top h2{font-size:clamp(17px,5.8vw,24px);white-space:nowrap}
 </style>
+<style id="fase-i">
+/* Fase I: tabla de parejas más ligera, nombre pinchable, aviso de nombre */
+.mtw{overflow-x:auto}
+table.mt{border-collapse:collapse;width:100%;font-size:15px;font-variant-numeric:tabular-nums}
+table.mt th{padding:4px 6px 7px;text-align:center;font:800 12px Literata,Georgia,serif;letter-spacing:.09em;text-transform:uppercase;color:#e0b04a;border-bottom:1.5px solid rgba(224,176,74,.6)}
+table.mt td{padding:9px 6px;text-align:center;color:var(--ink);border-bottom:1px solid rgba(200,160,80,.16)}
+table.mt tbody tr:last-child td{border-bottom:0}
+table.mt th.l,table.mt td.l{text-align:left;padding-left:2px}
+table.mt td.mpc{color:#f2d98a;font-weight:700}
+table.mt .mrk{display:inline-block;min-width:1.35em;margin-right:2px;color:var(--mute);font-size:13px}
+table.mt .mnl{cursor:pointer;color:#f2d98a;font:700 15px/1.25 Literata,Georgia,serif;text-decoration:none;-webkit-tap-highlight-color:transparent}
+table.mt .mnl:active{filter:brightness(1.25)}
+.pnerr{margin:2px 0 0;font-size:13.5px;line-height:1.35;color:#ff9a8c}
+.pnerr:empty{display:none}
+</style>
 <script src="supabase.js"></script>
 <script>
 const ASES=['img/as-oros.webp?v=3','img/as-copas.webp?v=3','img/as-espadas.webp?v=3','img/as-bastos.webp?v=3'];
-const HELP={senda:'Vence rivales. Gana amarracos. Asciende por 10 ligas.',medallas:'Premios por tus logros. Suben de nivel según avanzas.',especiales:'Medallas ocultas que se logran con hazañas concretas.',amistosa:'No cambia amarracos, historial, rachas ni medallas.',infinita:'Jugad hasta que os canseis.'};
+const HELP={senda:'Vence rivales. Gana amarracos. Asciende por 10 ligas.',medallas:'Premios por tus logros. Suben de nivel según avanzas.',especiales:'Medallas ocultas que se logran con hazañas concretas.',amistosa:'No cambia amarracos, historial, rachas ni medallas.',infinita:'Jugad hasta que os canseis.',modoLocal:'Ambos equipos cuentan en ese dispositivo.',modoConectado:'Cada jugador cuenta en su móvil.'};
 const help=k=>'<span class="hq" role="button" tabindex="0" data-help="'+k+'" aria-label="Ayuda">?</span>';
 (function(){let pop=null;const close=()=>{if(pop){pop.remove();pop=null}};
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.hq');
@@ -1445,7 +1461,9 @@ const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 S.hist.forEach((h,i)=>{if(!h.id)h.id='h'+h.fecha+'x'+i});
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const $=s=>document.querySelector(s), app=$('#app');
-const fname=id=>{const f=S.friends.find(x=>x.id===id);if(f)return f.name;const m=/^inv([1-4])$/.exec(id);return m?((S.invNames&&S.invNames[id])||'Jugador '+m[1]):'(borrado)'}; // inv1..inv4: jugadores del modo invitado (no son amigos)
+const PUB={}; // perfiles de otras personas traídos de la nube (no se guardan)
+const SLNOM={}; // nombres de los jugadores de una sala conectada (id → nombre)
+const fname=id=>{const f=S.friends.find(x=>x.id===id);if(f)return f.name;if(SLNOM[id])return SLNOM[id];{const sg=/^sg([1-4])$/.exec(id);if(sg)return 'Jugador '+sg[1]}if(S.ext&&S.ext[id])return S.ext[id];if(PUB[id]&&PUB[id].name)return PUB[id].name;const m=/^inv([1-4])$/.exec(id);return m?((S.invNames&&S.invNames[id])||'Jugador '+m[1]):'(borrado)'}; // inv1..inv4: jugadores del modo invitado (no son amigos)
 const live=()=>S.friends.filter(f=>!f.deleted);
 {const c=S.cfg||{};if(!S.cfg||(+c.meta===40&&+c.juegos===3&&+c.vacas===3))S.cfg={meta:30,juegos:3,vacas:1};
 {let t=S.friends.find(f=>!f.deleted&&f.id===S.me)||S.friends.find(f=>!f.deleted&&f.name==='Yo');
@@ -1483,10 +1501,14 @@ if(PRUEBA_SOLICITUDES&&!S.seedSol){
   S.reqIn=['u_marta','u_nacho'];S.seedSol=1;save();
 }
 const reqList=()=>(S.reqIn||[]).map(id=>(S.users||[]).find(u=>u.id===id)).filter(Boolean);
-function acceptReq(id){const u=(S.users||[]).find(x=>x.id===id);if(!u)return;
+async function acceptReq(id){
+  if(isUuid(id)){const{error}=await sb.from('amistades').update({estado:'aceptada'}).eq('de',id).eq('a',S.uid);if(error){cloudErr();return}await sincAmistades();return}
+  const u=(S.users||[]).find(x=>x.id===id);if(!u)return;
   if(!S.friends.some(f=>f.id===id))S.friends.push({id:u.id,name:u.name,musId:u.musId,medals:[]});
   S.users=S.users.filter(x=>x.id!==id);S.reqIn=S.reqIn.filter(x=>x!==id);S.reqOut=(S.reqOut||[]).filter(x=>x!==id);save()}
-function rejectReq(id){S.reqIn=(S.reqIn||[]).filter(x=>x!==id);save()}
+async function rejectReq(id){
+  if(isUuid(id)){const{error}=await sb.from('amistades').delete().eq('de',id).eq('a',S.uid);if(error){cloudErr();return}await sincAmistades();return}
+  S.reqIn=(S.reqIn||[]).filter(x=>x!==id);save()}
 const SV={"o": "<circle cx=\"24\" cy=\"24\" r=\"21.5\" fill=\"#e8b83a\" stroke=\"#1d2a44\" stroke-width=\"2.2\"/><circle cx=\"24\" cy=\"24\" r=\"17.4\" fill=\"#f6d869\" stroke=\"#1d2a44\" stroke-width=\"1.3\"/><circle cx=\"24\" cy=\"24\" r=\"11.6\" fill=\"none\" stroke=\"#b5801a\" stroke-width=\"2.4\" stroke-dasharray=\"2.3 2.7\"/><circle cx=\"24\" cy=\"24\" r=\"6.2\" fill=\"#e8b83a\" stroke=\"#1d2a44\" stroke-width=\"1.6\"/>", "c": "<path d=\"M9.6 7.6H38.4C38.4 19.4 32.8 25.4 24 25.4S9.6 19.4 9.6 7.6Z\" fill=\"#c1403a\" stroke=\"#1d2a44\" stroke-width=\"2.2\" stroke-linejoin=\"round\"/>\n<path d=\"M11.2 13.6C18 17.4 30 17.4 36.8 13.6\" fill=\"none\" stroke=\"#f1c24a\" stroke-width=\"2.6\" stroke-linecap=\"round\"/>\n<ellipse cx=\"24\" cy=\"7.6\" rx=\"14.4\" ry=\"3.3\" fill=\"#f1c24a\" stroke=\"#1d2a44\" stroke-width=\"2\"/>\n<path d=\"M21.2 25 H26.8 L26.2 36.6 H21.8Z\" fill=\"#f1c24a\" stroke=\"#1d2a44\" stroke-width=\"2\" stroke-linejoin=\"round\"/>\n<ellipse cx=\"24\" cy=\"30.4\" rx=\"5.8\" ry=\"2.4\" fill=\"#f1c24a\" stroke=\"#1d2a44\" stroke-width=\"1.9\"/>\n<path d=\"M12.4 44C12.4 39.4 17.4 36.4 24 36.4S35.6 39.4 35.6 44Z\" fill=\"#f1c24a\" stroke=\"#1d2a44\" stroke-width=\"2.2\" stroke-linejoin=\"round\"/>", "e": "<path d=\"M24 1.8C25.6 6.6 27.2 11 27.2 16.6V32H20.8V16.6C20.8 11 22.4 6.6 24 1.8Z\" fill=\"#d9e0ea\" stroke=\"#1d2a44\" stroke-width=\"2.2\" stroke-linejoin=\"round\"/>\n<path d=\"M24 9V29\" stroke=\"#8c97a8\" stroke-width=\"1.6\" stroke-linecap=\"round\"/>\n<path d=\"M11 30.6C13.6 35.8 20 35.4 24 33.6 28 35.4 34.4 35.8 37 30.6\" fill=\"none\" stroke=\"#1d2a44\" stroke-width=\"6.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<path d=\"M11 30.6C13.6 35.8 20 35.4 24 33.6 28 35.4 34.4 35.8 37 30.6\" fill=\"none\" stroke=\"#f1c24a\" stroke-width=\"3.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n<rect x=\"21.9\" y=\"34.4\" width=\"4.2\" height=\"8\" rx=\"1.2\" fill=\"#9a6428\" stroke=\"#1d2a44\" stroke-width=\"2\"/>\n<circle cx=\"24\" cy=\"44.6\" r=\"2.6\" fill=\"#f1c24a\" stroke=\"#1d2a44\" stroke-width=\"2\"/>", "b": "<g transform=\"translate(24 0) scale(1.12 1) translate(-24 0)\"><clipPath id=\"CPID\"><path d=\"M24 2.2C26.2 10 29.6 20 31.2 29.6 32.4 38 29.2 46 24 46 18.8 46 15.6 38 16.8 29.6 18.4 20 21.8 10 24 2.2Z\"/></clipPath>\n<path d=\"M24 2.2C26.2 10 29.6 20 31.2 29.6 32.4 38 29.2 46 24 46 18.8 46 15.6 38 16.8 29.6 18.4 20 21.8 10 24 2.2Z\" fill=\"#b07a40\"/>\n<g clip-path=\"url(#CPID)\"><path d=\"M12 21L36 14V21L12 28Z\" fill=\"#f1c24a\" stroke=\"#1d2a44\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><path d=\"M12 34.4L36 27.4V34.4L12 41.4Z\" fill=\"#c1403a\" stroke=\"#1d2a44\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/></g>\n<path d=\"M24 2.2C26.2 10 29.6 20 31.2 29.6 32.4 38 29.2 46 24 46 18.8 46 15.6 38 16.8 29.6 18.4 20 21.8 10 24 2.2Z\" fill=\"none\" stroke=\"#1d2a44\" stroke-width=\"2.2\" stroke-linejoin=\"round\"/>\n<path d=\"M22 12C21 19 19.6 25 19.4 31\" fill=\"none\" stroke=\"#d9a468\" stroke-width=\"1.6\" stroke-linecap=\"round\"/>\n<path d=\"M26.8 14.6C29.4 12 33 12 34.8 13.8 32.8 16.2 29.4 16.6 27 15.8Z\" fill=\"#6aa23c\" stroke=\"#1d2a44\" stroke-width=\"1.6\" stroke-linejoin=\"round\"/>\n<path d=\"M20.6 24.6C18 22.4 14.6 22.6 12.8 24.4 14.8 26.8 18.2 27.2 20.6 26.4Z\" fill=\"#6aa23c\" stroke=\"#1d2a44\" stroke-width=\"1.6\" stroke-linejoin=\"round\"/></g>"};
 const SUITSVG={o:'<use href="#su-o"/>',c:'<use href="#su-c"/>',e:'<use href="#su-e"/>',b:'<use href="#su-b"/>'};
 const art=k=>SUITSVG[k];
@@ -1510,7 +1532,7 @@ const LV=['Bronce','Plata','Oro','Rubí','Diamante','Leyenda'],SPEC=7;
 const FAM=[
 {id:'rc',name:'Rachas',desc:'Qué alguien me pare',goals:[2,3,5,6,8,10],val:s=>s.best,req:g=>'Gana '+g+' partidas seguidas'},
 {id:'vw',name:'Victorias',desc:'Cada victoria cuenta.',goals:[3,10,25,50,100,150],val:s=>s.w,req:g=>'Gana '+g+' partidas'},
-{id:'pr',name:'Parejas',desc:'Juntos somos imparables',goals:[3,8,20,35,60,90],val:s=>s.pairW,req:g=>'Gana '+g+' partidas con la misma pareja'},
+{id:'pr',name:'Parejas',desc:'Juntos somos imparables',goals:[3,8,20,35,60,90],val:s=>s.pairW,req:g=>'Gana '+g+' partidas con la misma pareja*',notaF:p=>parejaNota(p)},
 {id:'od',name:'Órdagos',desc:'Todo o nada',goals:[1,3,8,15,30,50],val:s=>s.ord,req:g=>'Gana '+g+(g>1?' órdagos':' órdago')},
 {id:'vd',name:'Verdugo',desc:'No es nada personal',goals:[3,8,20,40,75,110],val:s=>s.oppW,req:g=>'Vence '+g+' veces al mismo rival'},
 {id:'paz',name:'Palizón',desc:'Nunca hubo opción',goals:[1,3,6,12,20,35],val:s=>s.paz,req:g=>'Gana '+g+(g>1?' vacas':' vaca')+' dejando al rival en 0 juegos*',nota:'Mínimo 3 juegos en la vaca'},
@@ -1524,10 +1546,13 @@ const SEC=[
 {id:'pal',name:'¿Hay rival?',desc:'Así me aburro',req:'Gana un juego dejando al rival en 0 puntos'},
 {id:'rom',name:'Rompe rachas',desc:'Para que os relajéis',req:'Gana a una pareja que llevaba 5 o más victorias seguidas'}];
 const lvl=(p,k)=>(p.md[k]||{lvl:0}).lvl;
-const featured=(f,p)=>[...new Set((f.medals||[]).map(id=>String(id).replace(/\d+$/,'')))].map(id=>FAM.find(m=>m.id===id)).filter(m=>m&&effLvl(f,p,m.id)>0).slice(0,4);
+/* Especial conseguida (en mi perfil, además reclamada) */
+const secOk=(f,p,id)=>{if(!p.sec[id])return false;if(f&&f.id===meId())return !!(((S.claim||{})[f.id]||{})[id]);return true};
+const featured=(f,p)=>[...new Set((f.medals||[]).map(id=>String(id).replace(/\d+$/,'')))].map(id=>FAM.find(m=>m.id===id)||SEC.find(m=>m.id===id)).filter(m=>m&&(SEC.includes(m)?secOk(f,p,m.id):effLvl(f,p,m.id)>0)).slice(0,4);
+const fmedal=(f,p,m,s)=>SEC.includes(m)?medal(m,SPEC,s):medal(m,effLvl(f,p,m.id),s);
 const blank=()=>({tr:0,floor:0,lg:0,peak:0,streak:0,best:0,bestPair:0,w:0,l:0,g:0,pt:{},op:{},people:new Set(),days:{},ord:0,md:{},sec:{},paz:0,rev:0,soc:0,prev:null,last:null});
 const mx=(o,k)=>Math.max(0,...Object.values(o).map(r=>r[k]));
-const stat=p=>({w:p.w,best:p.best,pair:p.bestPair,peak:p.peak,people:p.people.size,partners:Object.keys(p.pt).length,oppG:mx(p.op,'g'),oppW:mx(p.op,'w'),pairW:mx(p.pt,'w'),paz:p.paz,rev:p.rev,soc:p.soc,day:Math.max(0,...Object.values(p.days)),ord:p.ord});
+const stat=p=>p._st||({w:p.w,best:p.best,pair:p.bestPair,peak:p.peak,people:p.people.size,partners:Object.keys(p.pt).length,oppG:mx(p.op,'g'),oppW:mx(p.op,'w'),pairW:mx(p.pt,'w'),paz:p.paz,rev:p.rev,soc:p.soc,day:Math.max(0,...Object.values(p.days)),ord:p.ord});
 const PRUEBA_TROFEOS=false; // SOLO PRUEBAS: da 3.500 amarracos al Jugador 1 (todas las ligas desbloqueadas). Poner false para quitarlo
 const PRUEBA_LIGAS=false; // SOLO PRUEBAS: reparte ligas distintas entre los jugadores (Jugador 1 Maestro, 2 Veterano, 3 Leyenda, 4 Aprendiz...). Poner false para quitarlo
 const PRUEBA_MEDALLAS=false; // SOLO PRUEBAS: da medallas de todos los niveles al Jugador 1. Poner false para quitarlo
@@ -1675,6 +1700,8 @@ const SIMULAR=false; // SOLO PRUEBAS: cuentas simuladas en este dispositivo y bo
 const KEY_SES='mus-sesion'; // solo una marca de «sesión iniciada» en este dispositivo (sin correo ni contraseña)
 const EMAIL_RE=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/,PASS_MIN=6;
 const SB_URL='https://ksxrjrnecjilntkefltm.supabase.co',SB_KEY='sb_publishable_J121b3gCkI5P1UI5my-k-Q_R5dwTOea'; // claves públicas: la seguridad la ponen las reglas (RLS) de la base de datos
+const HASH0=location.hash,SEARCH0=location.search; // se guardan antes de que la librería lea (y borre) los datos del enlace del correo
+const APP_URL=location.protocol==='https:'?location.origin+location.pathname.replace(/[^\/]*$/,''):undefined; // a dónde vuelve el enlace del correo (la propia app, p. ej. https://…github.io/MUS/); debe estar en «Redirect URLs» de Supabase
 const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const errAuth=e=>{const m=String((e&&e.message)||''),c=String((e&&e.code)||'');
   if(/invalid login|invalid_credentials/i.test(m+c))return'Correo o contraseña incorrectos.';
@@ -1684,7 +1711,7 @@ const errAuth=e=>{const m=String((e&&e.message)||''),c=String((e&&e.code)||'');
   return'No se ha podido completar. Revisa tu conexión e inténtalo de nuevo.'};
 const API={
   /* Crea la cuenta y envía el correo de confirmación → {ok} | {error} */
-  async registrar(email,pw){try{const{data,error}=await sb.auth.signUp({email,password:pw});
+  async registrar(email,pw){try{const{data,error}=await sb.auth.signUp({email,password:pw,options:APP_URL?{emailRedirectTo:APP_URL}:{}});
     if(error)return{error:errAuth(error)};
     if(data&&data.user&&Array.isArray(data.user.identities)&&!data.user.identities.length)return{error:'Ya existe un perfil con ese correo.'};
     return{ok:true}}catch(e){return{error:errAuth(e)}}},
@@ -1693,8 +1720,10 @@ const API={
     if(error){if(/not confirmed|email_not_confirmed/i.test(String(error.message)+String(error.code)))return{pendiente:true};return{error:errAuth(error)}}
     return{ok:true}}catch(e){return{error:errAuth(e)}}},
   /* Envía el correo para elegir otra contraseña. Responde siempre igual, exista o no la cuenta */
-  async recuperar(email){try{await sb.auth.resetPasswordForEmail(email)}catch(e){}return{ok:true}},
+  async recuperar(email){try{await sb.auth.resetPasswordForEmail(email,APP_URL?{redirectTo:APP_URL}:{})}catch(e){}return{ok:true}},
   async salir(){try{await sb.auth.signOut()}catch(e){}},
+  /* Borra mi cuenta con la función SQL eliminar_mi_cuenta() (solo borra a quien la llama) → {ok} | {error} */
+  async eliminarCuenta(){try{const{error}=await sb.rpc('eliminar_mi_cuenta');if(error)return{error:errTxt(error)};return{ok:true}}catch(e){return{error:'Excepción: '+(e&&e.message||e)}}},
   async confirmarSim(email){}
 };
 /* Sesión recordada en este dispositivo: al abrir la app entra sola. Solo se guarda que hay sesión, ningún dato escrito. Con la base de datos se guardará el token de sesión */
@@ -1708,13 +1737,15 @@ function authDlg(modo,prefill){
   d.innerHTML='<div class="mp"><b>'+(up?'Crear perfil':'Iniciar sesión')+'</b>'
    +'<label class="alb" for="ae">Correo electrónico</label><input id="ae" type="email" inputmode="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="nombre@correo.com">'
    +'<label class="alb" for="ap">Contraseña</label><input id="ap" type="password" autocomplete="'+(up?'new-password':'current-password')+'" placeholder="'+(up&&!SIMULAR?'Mínimo '+PASS_MIN+' caracteres':'Tu contraseña')+'">'
+   +(up?'<label class="alb" for="ap2">Repetir contraseña</label><input id="ap2" type="password" autocomplete="new-password" placeholder="Escríbela otra vez">':'')
    +(up?'':'<button type="button" class="alk" id="af" style="background:none">¿Has olvidado tu contraseña?</button>')
    +(up?'':'<button type="button" class="alk" id="an" style="background:none">¿No tienes perfil? Crear perfil</button>')
    +'<p class="aerr" id="aer" role="alert"></p>'
    +'<div class="row"><button class="ghost cr2" id="dc">Cancelar</button><button id="dk" class="cr">Aceptar</button></div></div>';
   document.body.appendChild(d);
   const E=d.querySelector('#ae'),P=d.querySelector('#ap'),R=d.querySelector('#aer'),K=d.querySelector('#dk');
-  if(prefill)E.value=prefill;
+  const P2=d.querySelector('#ap2');
+  if(prefill)E.value=prefill;ojoPass(P);if(P2)ojoPass(P2);
   const err=t=>{R.textContent=t||''},close=()=>d.remove();
   d.querySelector('#dc').onclick=close;
   const N=d.querySelector('#an');if(N)N.onclick=()=>{const m=E.value.trim();close();authDlg('up',m)};
@@ -1724,7 +1755,9 @@ function authDlg(modo,prefill){
     if(!SIMULAR){ // en la simulación vale cualquier cosa
       if(!EMAIL_RE.test(m)){err('Escribe un correo electrónico válido.');E.focus();return}
       if(!p){err('Escribe tu contraseña.');P.focus();return}
-      if(up&&p.length<PASS_MIN){err('La contraseña debe tener al menos '+PASS_MIN+' caracteres.');P.focus();return}}
+      if(up&&p.length<PASS_MIN){err('La contraseña debe tener al menos '+PASS_MIN+' caracteres.');P.focus();return}
+      if(up&&!P2.value){err('Repite la contraseña.');P2.focus();return}
+      if(up&&P2.value!==p){err('Las contraseñas no coinciden.');P2.focus();return}}
     K.disabled=true;
     const r=await (up?API.registrar(m,p):API.entrar(m,p));
     K.disabled=false;
@@ -1735,7 +1768,7 @@ function authDlg(modo,prefill){
     await entrarUsuario();
   };
   K.onclick=enviar;
-  [E,P].forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();enviar()}}));
+  [E,P,P2].filter(Boolean).forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();enviar()}}));
 }
 /* Aviso de «revisa tu correo»: la cuenta no se activa hasta confirmar el correo */
 function confirmarDlg(m,reintento){
@@ -1744,7 +1777,11 @@ function confirmarDlg(m,reintento){
    +'<p class="atx"></p>'
    +(SIMULAR?'<p class="asim">Solo pruebas: aún no hay servidor de correo.</p><button type="button" id="ac" class="ghost cr2">Simular que he confirmado</button>':'')
    +'<div class="row"><button id="dk" class="cr">Aceptar</button></div></div>';
-  d.querySelector('.atx').textContent=(reintento?'Tu perfil todavía no está activado. ':'Te hemos enviado un correo a ')+(reintento?'Abre el enlace del correo que enviamos a ':'')+m+(reintento?'':' con un enlace para activar tu perfil.')+' Cuando lo confirmes, podrás iniciar sesión.';
+  const ps=reintento
+    ?['Tu perfil todavía no está activado. Abre el enlace del correo que enviamos a '+m+'.','El enlace se abre en el navegador. Después vuelve a la app e inicia sesión. Si ves una página de error, tranquilo: el perfil queda activado igualmente.','¿No lo encuentras? Mira en la carpeta de spam.']
+    :['Te hemos enviado un correo a '+m+' para activar tu perfil.','Abre el enlace (se abre en el navegador) y después vuelve a la app e inicia sesión. Si ves una página de error, tranquilo: el perfil queda activado igualmente.','¿No te llega? Mira en la carpeta de spam.'];
+  const box=d.querySelector('.atx'),pad=box.parentNode;
+  ps.forEach(t=>{const e=document.createElement('p');e.className='atx just';e.textContent=t;pad.insertBefore(e,box)});box.remove();
   document.body.appendChild(d);
   d.querySelector('#dk').onclick=()=>d.remove();
   const c=d.querySelector('#ac');if(c)c.onclick=async()=>{await API.confirmarSim(m);d.remove();dlg('Correo confirmado. Ya puedes iniciar sesión.',{ok:'Iniciar sesión'},()=>authDlg('in',m))};
@@ -1768,19 +1805,26 @@ function recuperarDlg(prefill){
 /* Punto único de inicio de sesión: abre el menú de acceso. Lo usan la portada, el invitado y los avisos de secciones bloqueadas */
 function login(){authDlg('in')}
 function crearPerfil(){authDlg('up')}
+/* ===== Ojo para ver/ocultar la contraseña ===== */
+const ICO_OJO='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3.2"/></svg>';
+const ICO_OJO_X='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3.2"/><path d="M3.5 3.5l17 17"/></svg>';
+function ojoPass(I){const w=document.createElement('span');w.className='pw';I.parentNode.insertBefore(w,I);w.appendChild(I);
+  const b=document.createElement('button');b.type='button';b.className='pwe';b.setAttribute('aria-label','Mostrar contraseña');b.innerHTML=ICO_OJO;w.appendChild(b);
+  b.onpointerdown=e=>e.preventDefault(); // no quita el foco del campo (el teclado del móvil sigue abierto)
+  b.onclick=()=>{const ver=I.type==='password';I.type=ver?'text':'password';b.innerHTML=ver?ICO_OJO_X:ICO_OJO;b.setAttribute('aria-label',ver?'Ocultar contraseña':'Mostrar contraseña');I.focus()}}
 /* ===== Perfil en la nube (fase A) ===== */
 const cloudErr=()=>dlg('No se ha podido conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.',{},()=>{});
-/* Pide el nombre de perfil la primera vez (no se puede cancelar; se puede cambiar luego en Mi perfil; se permiten repetidos) */
+/* Pide el nombre de perfil la primera vez (no se puede cancelar; se puede cambiar luego en Mi perfil; es único, sin distinguir mayúsculas) */
 function nombreDlg(){return new Promise(res=>{
   const d=document.createElement('div');d.className='ov c auth';
-  d.innerHTML='<div class="mp"><b>Elige tu nombre de perfil</b><p class="atx">Es el nombre que verán tus amigos. Podrás cambiarlo después en Mi perfil.</p>'
+  d.innerHTML='<div class="mp"><b>Elige tu nombre de perfil</b><p class="atx">Es el nombre que verán los demás jugadores y no puede repetirse. Podrás cambiarlo después en Mi perfil.</p>'
    +'<label class="alb" for="nm">Nombre</label><input id="nm" maxlength="'+NAME_MAX+'" autocomplete="off" placeholder="Tu nombre">'
    +'<p class="aerr" id="aer" role="alert"></p><div class="row"><button id="dk" class="cr">Aceptar</button></div></div>';
   document.body.appendChild(d);
   const I=d.querySelector('#nm'),R=d.querySelector('#aer'),K=d.querySelector('#dk');I.focus();
-  const ok=async()=>{const v=I.value.trim().replace(/\s+/g,' ').slice(0,NAME_MAX);if(!v){R.textContent='Escribe un nombre.';return}
+  const ok=async()=>{const v=I.value.trim().replace(/\s+/g,' ').slice(0,NAME_MAX);if(!v){R.textContent='Escribe un nombre.';return}if(RESERVADO.test(v)){R.textContent=NOMBRE_NO;return}
     K.disabled=true;const{error}=await sb.from('perfiles').update({nombre:v}).eq('id',(await sb.auth.getUser()).data.user.id);
-    K.disabled=false;if(error){R.textContent='No se ha podido guardar. Inténtalo de nuevo.';return}
+    K.disabled=false;if(error){R.textContent=nombreMalo(error)?NOMBRE_NO:'No se ha podido guardar. Inténtalo de nuevo.';return}
     d.remove();res(v)};
   K.onclick=ok;I.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ok()}})})}
 /* Sustituye el id local de mi perfil por el de la cuenta en todos los datos */
@@ -1796,22 +1840,240 @@ async function prepararPerfil(user){
 let entrando=false;
 async function entrarUsuario(){if(entrando)return;entrando=true;
   try{const{data}=await sb.auth.getSession(),u=data&&data.session&&data.session.user;
-    if(!u){return}
-    if(await prepararPerfil(u))enterMode('user')}
+    if(!u||u.is_anonymous){return}
+    if(await prepararPerfil(u)){enterMode('user');refrescarAmigos()}}
   catch(e){cloudErr()}finally{entrando=false}}
+/* Enlace del correo gastado o caducado (otp_expired): hay que avisar con calma, porque la cuenta suele haber quedado confirmada de todos modos */
+function avisoEnlace(){
+  const q=new URLSearchParams((HASH0||'').replace(/^#/,'')+'&'+(SEARCH0||'').replace(/^\?/,''));
+  if(q.get('type')==='signup'&&!(q.get('error')||q.get('error_code'))){ // correo confirmado: el enlace se abre en el navegador, no en la app del icono
+    setTimeout(()=>dlg('¡Correo confirmado! Tu perfil ya está activo. Ahora cierra esta pestaña, abre la app desde el icono de tu pantalla de inicio e inicia sesión con tu correo y contraseña.',{ok:'Entendido'}),600);return}
+  if(!(q.get('error')||q.get('error_code')))return;
+  try{history.replaceState(null,'',location.pathname)}catch(e){}
+  setTimeout(()=>dlg('Este enlace ya se ha usado o ha caducado. No te preocupes: si ya lo abriste antes, tu perfil está activado y puedes iniciar sesión. Si no, crea el perfil o pide la contraseña de nuevo para recibir otro correo.',{ok:'Iniciar sesión'},()=>authDlg('in')),400)}
 /* Cambiar contraseña (tras pulsar el enlace del correo de recuperación) */
 function nuevaPassDlg(){
   const d=document.createElement('div');d.className='ov c auth';
   d.innerHTML='<div class="mp"><b>Elige una contraseña nueva</b><label class="alb" for="np">Contraseña nueva</label><input id="np" type="password" autocomplete="new-password" placeholder="Mínimo '+PASS_MIN+' caracteres">'
    +'<p class="aerr" id="aer" role="alert"></p><div class="row"><button id="dk" class="cr">Guardar</button></div></div>';
   document.body.appendChild(d);
-  const I=d.querySelector('#np'),R=d.querySelector('#aer'),K=d.querySelector('#dk');
+  const I=d.querySelector('#np'),R=d.querySelector('#aer'),K=d.querySelector('#dk');ojoPass(I);
   const ok=async()=>{if(I.value.length<PASS_MIN){R.textContent='La contraseña debe tener al menos '+PASS_MIN+' caracteres.';return}
     K.disabled=true;const{error}=await sb.auth.updateUser({password:I.value});K.disabled=false;
-    if(error){R.textContent=errAuth(error);return}d.remove();dlg('Contraseña cambiada.',{},()=>{});entrarUsuario()};
+    if(error&&!/same_password|different from the old/i.test(String(error.code||'')+String(error.message||''))){R.textContent=errAuth(error);return} // si pone la misma contraseña que ya tenía, no es un error: se da por hecho
+    d.remove();dlg('Contraseña cambiada.',{},()=>{});entrarUsuario()};
   K.onclick=ok;I.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ok()}})}
 sb.auth.onAuthStateChange(ev=>{if(ev==='PASSWORD_RECOVERY')setTimeout(nuevaPassDlg,0)});
+/* ===== Amistades en la nube (fase C) ===== */
+const isUuid=x=>/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(x));
+let BUSQ=[]; // resultados de búsqueda por Mus ID (no se guardan)
+const usersAll=()=>{const s=S.users||[];return s.concat(BUSQ.filter(b=>!s.some(u=>u.id===b.id)))};
+/* Envía una solicitud de amistad */
+async function enviarSol(id){
+  try{const{error}=await sb.from('amistades').insert({de:S.uid,a:id});
+    if(error&&error.code!=='23505'){cloudErr();return}}catch(e){cloudErr();return}
+  await sincAmistades()}
+/* Elimina la amistad con un jugador (la regla de la base de datos deja borrarla a cualquiera de los dos). Las partidas jugadas juntos se conservan */
+async function borrarAmigo(id){
+  try{const{error}=await sb.from('amistades').delete().or('and(de.eq.'+S.uid+',a.eq.'+id+'),and(de.eq.'+id+',a.eq.'+S.uid+')');
+    if(error){cloudErr();return false}}catch(e){cloudErr();return false}
+  await sincAmistades();return true}
+/* Trae de la nube las solicitudes y los amigos; devuelve true si algo ha cambiado */
+async function sincAmistades(){
+  if(AUTH!=='user'||!S.uid)return false;
+  const antes=JSON.stringify([S.reqIn,S.reqOut,live().map(f=>f.id+'|'+f.name+'|'+f.musId)]);
+  try{
+    const{data:rows,error}=await sb.from('amistades').select('de,a,estado');if(error||!rows)return false;
+    const otros=[...new Set(rows.map(r=>r.de===S.uid?r.a:r.de))];let pf=[];
+    if(otros.length){pf=await traerPerfiles(otros);if(!pf)return false;const faltan=[];pf.forEach(r=>{const x=PUB[r.id];if(x&&x.res)idsPareja(x.res).forEach(i=>{if(!PUB[i]&&!S.friends.some(f=>f.id===i))faltan.push(i)})});if(faltan.length)await cargarPub(faltan)}
+    const por=Object.fromEntries(pf.map(p=>[p.id,p])),acept=new Set(),prevOut=new Set(S.reqOut||[]);
+    S.users=[];S.reqIn=[];S.reqOut=[];
+    rows.forEach(r=>{const o=r.de===S.uid?r.a:r.de,p=por[o];if(!p)return;const nom=p.nombre||'Jugador';
+      if(r.estado==='aceptada'){acept.add(o);
+        if(prevOut.has(o)){S.avisoAm=S.avisoAm||[];if(!S.avisoAm.some(x=>x.id===o))S.avisoAm.push({id:o,name:nom})} // te han aceptado la solicitud que enviaste
+        let f=S.friends.find(x=>x.id===o);
+        if(!f){f={id:o,name:nom,musId:p.mus_id,medals:[]};S.friends.push(f)}else{f.deleted=false;f.name=nom;f.musId=p.mus_id}if(PUB[o]&&PUB[o].av)f.av=PUB[o].av}
+      else{S.users.push({id:o,name:nom,musId:p.mus_id,tr:(PUB[o]&&PUB[o].res&&PUB[o].res.tr)||0});(r.de===S.uid?S.reqOut:S.reqIn).push(o)}});
+    S.friends.forEach(f=>{if(isUuid(f.id)&&f.id!==S.uid&&!acept.has(f.id))f.deleted=true});
+    /* ¿Alguno de esos ya no tiene perfil? Entonces su cuenta se eliminó (no solo la amistad) */
+    const cand=[...new Set([...S.friends.filter(f=>f.deleted).map(f=>f.id),...Object.keys(S.ext||{}).filter(isUuid)])].filter(id=>id!==S.uid).slice(0,100);
+    if(cand.length){const q=await sb.rpc('perfiles_existentes',{p_ids:cand});if(!q.error&&Array.isArray(q.data)){const vivos=new Set(q.data.map(x=>typeof x==='string'?x:Object.values(x)[0]));S.gone=S.gone||{};cand.forEach(id=>{if(vivos.has(id))delete S.gone[id];else S.gone[id]=1})}}
+    BUSQ=BUSQ.filter(b=>!rows.some(r=>r.de===b.id||r.a===b.id));
+    save();
+  }catch(e){return false}
+  return antes!==JSON.stringify([S.reqIn,S.reqOut,live().map(f=>f.id+'|'+f.name+'|'+f.musId)])}
+/* ===== Partidas en la nube (fase B) ===== */
+const idsJug=h=>[...new Set([...h.t[0],...h.t[1]])];
+/* Jugador de una cuenta eliminada: sus partidas siguen contando, pero no aparece en las tablas de parejas */
+/* Hueco de la mesa («Jugador 1-4»: hoy Carlos, mañana Pepe…): no es una pareja real y no sale en las tablas de parejas */
+const hueco=id=>{const f=S.friends.find(x=>x.id===id);if(f&&f.gen)return true;if(!f&&/^(.*_)?inv[1-4]$/.test(String(id)))return true;return !f&&!isUuid(id)&&/^Jugador [1-4]$/.test(fname(id))};
+const sinCuenta=id=>hueco(id)||/^sg[1-4]$/.test(String(id));
+const oculto=id=>gone(id)||hueco(id);
+const gone=id=>/(^|_)del_[0-9a-f]{8}$/.test(String(id))||!!(S.gone&&S.gone[id]);
+const VERSION='E-15';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
+/* ===== Perfiles públicos (fase I) ===== */
+const RESERVADO=/^(yo|invitado|jugador( ?[1-4])?|jugador eliminado)$/i; // mismos nombres que bloquea la base de datos
+const NOMBRE_NO='Nombre no disponible';
+const nombreMalo=e=>!!e&&(e.code==='23505'||e.code==='23514'||/perfiles_nombre/.test(String(e.message||'')));
+/* Puntuación de una pareja: límite inferior de Wilson con z = 1,28 (≈ 90 % a una cara). Pondera el % de victorias por el nº de partidas */
+const WZ=1.2816;
+const wilson=(w,g)=>{if(!g)return 0;const p=w/g,z=WZ*WZ;return Math.max(0,(p+z/(2*g)-WZ*Math.sqrt((p*(1-p)+z/(4*g))/g))/(1+z/g))};
+const cmpMate=(a,b)=>wilson(b.w,b.g)-wilson(a.w,a.g)||b.g-a.g||b.w-a.w;
+/* Parejas de mejor a peor, solo amigos, sin «Jugador 1-4» ni cuentas eliminadas. De otra persona se usan sus parejas publicadas */
+function matesOf(id,p,res){
+  if(res&&res.v)return(res.bp||[]).map(([i,g,w])=>({id:i,g:g,w:w,l:g-w})).filter(r=>r.g>0&&!oculto(r.id)).sort(cmpMate);
+  const amigos=new Set(live().filter(f=>!f.gen&&f.id!==id).map(f=>f.id));
+  return Object.entries(p.pt).filter(([i,r])=>amigos.has(i)&&!oculto(i)&&r.g>0).map(([i,r])=>({id:i,g:r.g,w:r.w,l:r.l})).sort(cmpMate)}
+const mejorDe=a=>a.length&&a[0].w>0?a[0]:null;
+/* Nota de la medalla de Parejas: con quién se está consiguiendo */
+function parejaNota(p){
+  let id=null,w=0,nm='';
+  if(p._pm){id=p._pm[0];w=+p._pm[1]||0;nm=p._pm[2]||''}
+  else{const e=Object.entries(p.pt).sort((a,b)=>b[1].w-a[1].w||b[1].g-a[1].g)[0];if(e){id=e[0];w=e[1].w}}
+  if(!w)return'Cuenta la pareja con la que más victorias se acumulan';
+  const n=id?fname(id):'',nombre=(n&&n!=='(borrado)')?n:(nm||'una pareja que ya no está');
+  return'Ahora mismo, con '+nombre+' ('+w+(w===1?' victoria':' victorias')+')'}
+/* Datos publicados de otras personas */
+const PUB_COLS='id,nombre,mus_id,avatar,destacadas,resumen';
+function guardarPub(r){PUB[r.id]={id:r.id,name:r.nombre||'Jugador',musId:r.mus_id,av:r.avatar||null,medals:Array.isArray(r.destacadas)?r.destacadas:[],res:(r.resumen&&typeof r.resumen==='object'&&r.resumen.v)?r.resumen:null}}
+async function traerPerfiles(ids){
+  try{let r=await sb.from('perfiles').select(PUB_COLS).in('id',ids);
+    if(r.error)r=await sb.from('perfiles').select('id,nombre,mus_id').in('id',ids); // por si la fase I aún no está pegada
+    if(r.error||!r.data)return null;r.data.forEach(guardarPub);return r.data}catch(e){return null}}
+async function cargarPub(ids){ids=[...new Set(ids)].filter(i=>isUuid(i)&&i!==S.uid);for(let k=0;k<ids.length;k+=80)await traerPerfiles(ids.slice(k,k+80))}
+const idsPareja=r=>r?(r.bp||[]).map(x=>x[0]).concat(r.pm&&r.pm[0]?[r.pm[0]]:[]):[]; // ids de las parejas publicadas (para poder poner sus nombres)
+/* Perfil publicado → el mismo formato que calcula progress() para que el perfil se dibuje igual */
+function pPub(res){const p=blank();p.tr=+res.tr||0;p.lg=+res.lg||0;p.peak=+res.pk||p.tr;p.w=+res.w||0;p.l=+res.l||0;p.best=+res.b||0;p._st=res.st||{};p._pm=res.pm||null;
+  Object.entries(res.md||{}).forEach(([k,n])=>{p.md[k]={lvl:+n||0,t:[],w:[]}});(res.sec||[]).forEach(k=>{p.sec[k]={t:0}});return p}
+/* Qué se enseña de una persona: yo y los amigos sin datos publicados salen del historial de este móvil; el resto, de lo que ha publicado */
+function vistaPerfil(id){
+  const fr=S.friends.find(x=>x.id===id),pub=PUB[id],res=pub&&pub.res?pub.res:null,mine=id===meId(),amigo=!!fr&&!fr.deleted;
+  if(mine||(amigo&&!res)){if(!fr)return null;return{f:fr,p:progress()[id]||blank(),mine:mine,amigo:true,res:null}}
+  if(!pub)return null;
+  const f=Object.assign({},amigo?fr:{},{id:id,name:pub.name||(fr&&fr.name)||'Jugador',musId:pub.musId,av:pub.av||(fr&&fr.av)||null,medals:pub.medals||[]});
+  return{f:f,p:res?pPub(res):blank(),mine:false,amigo:amigo,res:res}}
+const profPila=[]; // perfiles por los que se ha ido pasando (para «Atrás»)
+function profAtras(){const a=profPila.pop();if(a){S.profile=a.id;profBack=a.back;go('profile')}else go(profBack)}
+async function abrirPerfil(id,desde){
+  if(desde)profPila.push({id:S.profile,back:profBack});else profPila.length=0;
+  await cargarPub([id]);{const pb=PUB[id];if(pb&&pb.res)await cargarPub(idsPareja(pb.res).filter(i=>!PUB[i]))}
+  const fr=S.friends.find(x=>x.id===id&&!x.deleted);
+  if(id!==meId()&&!fr&&!PUB[id]){if(desde)profPila.pop();dlg('Este perfil ya no existe.',{},()=>{});return}
+  S.profile=id;if(desde)profBack='perfil';go('profile');app.scrollTop=0;requestAnimationFrame(()=>{app.scrollTop=0;window.scrollTo(0,0)})}
+const solBtn=id=>{const got=(S.reqIn||[]).includes(id),sent=(S.reqOut||[]).includes(id);
+  return got?'<button class="sgb" type="button" id="fsol" data-k="acc">Aceptar solicitud</button>':sent?'<button class="sgb sent" type="button" disabled>Solicitud enviada</button>':'<button class="sgb" type="button" id="fsol" data-k="env">Enviar solicitud de amistad</button>'};
+/* Búsqueda: por Mus ID exacto y/o por nombre (contiene el texto, sin distinguir mayúsculas, máx. 20) */
+async function buscarMusId(q){
+  if(AUTH!=='user')return;q=String(q||'').trim();if(!q)return;
+  const soloId=/^(#|mus\s*id)/i.test(q),id=q.toUpperCase().replace(/^(MUS\s*ID\s*:?\s*|#)/,'').replace(/\s/g,'');
+  const add=r=>{if(!r||r.id===S.uid||live().some(f=>f.id===r.id))return;const b=PUB[r.id];BUSQ=BUSQ.filter(x=>x.id!==r.id);BUSQ.push({id:r.id,name:r.nombre||'Jugador',musId:r.mus_id,tr:(b&&b.res&&b.res.tr)||0})};
+  try{
+    if(/^[A-Z0-9]{6}$/.test(id)){const{data:filas,error}=await sb.rpc('buscar_por_mus_id',{p_mus_id:id});const d=filas&&filas[0];if(!error&&d){await cargarPub([d.id]);add(d)}}
+    if(!soloId){const pat='%'+q.replace(/[\\%_]/g,'\\$&')+'%';
+      const{data,error}=await sb.from('perfiles').select(PUB_COLS).ilike('nombre',pat).limit(20);
+      if(!error&&data)data.forEach(r=>{guardarPub(r);add(r)})}
+  }catch(e){}}
+/* Publica mi resumen (amarracos, liga, victorias, medallas reclamadas, mejores parejas), avatar y destacadas para que los demás vean mi perfil */
+function resumenMio(){
+  const P=progress(),id=meId(),p=P[id]||blank();ensureClaims(P);const CL=(S.claim||{})[id]||{},md={},sec=[];
+  FAM.forEach(m=>{if(m.soon)return;const n=Math.min(lvl(p,m.id),CL[m.id]||0);if(n)md[m.id]=n});
+  SEC.forEach(m=>{if(p.sec[m.id]&&CL[m.id])sec.push(m.id)});
+  const e=Object.entries(p.pt).sort((a,b)=>b[1].w-a[1].w||b[1].g-a[1].g)[0];
+  const pm=e&&e[1].w>0?[e[0],e[1].w,String(fname(e[0])).slice(0,NAME_MAX)]:null;
+  const bp=matesOf(id,p,null).filter(r=>isUuid(r.id)).slice(0,8).map(r=>[r.id,r.g,r.w]);
+  return{v:1,tr:p.tr,lg:p.lg,pk:p.peak,w:p.w,l:p.l,b:p.best,st:stat(p),md:md,sec:sec,pm:pm,bp:bp}}
+let resSig='',resT=null;
+async function subirResumenYa(){
+  if(AUTH!=='user'||!S.uid||BORRANDO)return;
+  try{const me=S.friends.find(f=>f.id===S.me);if(!me)return;
+    const res=resumenMio(),av=me.av&&ACES.includes(me.av.a)?{a:me.av.a,f:Number.isInteger(me.av.f)?me.av.f:-1}:null,dest=(me.medals||[]).slice(0,4);
+    const sig=JSON.stringify([res,av,dest]);if(sig===resSig)return;
+    const{error}=await sb.from('perfiles').update({resumen:res,avatar:av,destacadas:dest}).eq('id',S.uid);
+    if(!error)resSig=sig;else DBG.res=errTxt(error)}catch(e){}}
+function subirResumen(){clearTimeout(resT);resT=setTimeout(subirResumenYa,1500)}
+/* Sube una partida (una sola vez). Devuelve true si queda guardada en la nube */
+async function subirPartida(h){
+  if(AUTH!=='user'||!S.uid||h._cl)return false;
+  if(h._err&&Date.now()-h._err<300000)return false; // tras un rechazo, reintenta pasados 5 minutos
+  try{const c=JSON.parse(JSON.stringify(h));delete c._cl;delete c._by;delete c._err;
+    const ids=idsJug(h),nn={};ids.filter(x=>!isUuid(x)).forEach(x=>nn[x]=fname(x));c.nn=nn;
+    const row={local_id:String(h.id),creador:S.uid,jugadores:ids.filter(isUuid),datos:c,fecha:new Date(h.fecha).toISOString()};
+    const{error}=await sb.from('partidas').upsert(row,{onConflict:'creador,local_id',ignoreDuplicates:true});
+    if(!error){h._cl=1;delete h._err;DBG.sub=null;return true}
+    DBG.sub=(error.code?error.code+': ':'')+(error.message||'error');if(error.code)h._err=Date.now(); // con código = la base de datos la ha rechazado; sin código = fallo de conexión
+  }catch(e){DBG.sub='Excepción: '+(e&&e.message||e)}
+  return false}
+/* Sube las pendientes y baja las que faltan (las tuyas en otros dispositivos y las de tus amigos); true si llega algo nuevo */
+async function sincPartidas(){
+  if(AUTH!=='user'||!S.uid)return false;
+  try{
+    let subidas=0;for(const h of S.hist.slice())if(await subirPartida(h))subidas++;
+    const{data,error}=await sb.from('partidas').select('local_id,creador,datos').order('fecha',{ascending:false}).limit(1000);
+    if(error||!data){DBG.baj=error?((error.code?error.code+': ':'')+(error.message||'error')):'sin datos';return false}
+    DBG.baj=null;const have=new Set(S.hist.map(h=>String(h.id))),nuevos=data.filter(r=>r&&r.datos&&r.datos.t&&!have.has(String(r.local_id)));
+    S.ext=S.ext||{};const desc=new Set();
+    nuevos.forEach(r=>idsJug(r.datos).forEach(id=>{if(isUuid(id)&&id!==S.uid&&!S.friends.some(f=>f.id===id)&&!S.ext[id])desc.add(id)}));
+    if(desc.size){const q=await sb.from('perfiles').select('id,nombre').in('id',[...desc]);(q.data||[]).forEach(p=>{S.ext[p.id]=p.nombre||'Jugador'})}
+    nuevos.forEach(r=>{let h=JSON.parse(JSON.stringify(r.datos));const pref='e'+String(r.creador||'x').slice(0,8)+'_',nn=h.nn||{};delete h.nn;
+      let txt=JSON.stringify(h);
+      idsJug(h).forEach(id=>{if(!isUuid(id)){const nid=pref+id;txt=txt.split('"'+id+'"').join('"'+nid+'"');S.ext[nid]=nn[id]||'Jugador'}});
+      h=JSON.parse(txt);h.id=String(r.local_id);h._cl=1;h._by=r.creador;S.hist.push(h)});
+    if(nuevos.length||subidas)save();
+    return nuevos.length>0
+  }catch(e){DBG.baj='Excepción: '+(e&&e.message||e);return false}}
+/* ===== Medallas reclamadas en la nube (fase D) ===== */
+const errTxt=e=>(e&&e.code?e.code+': ':'')+((e&&e.message)||'error');
+/* Guarda en la nube lo que he reclamado (S.claim de mi perfil). Sin upsert: la tabla solo deja modificar «datos» y «actualizado» */
+async function subirReclamosYa(){
+  if(AUTH!=='user'||!S.uid)return false;
+  try{const datos=Object.assign({},((S.claim||{})[S.me])||{}),ahora=new Date().toISOString();
+    let r=await sb.from('reclamos').update({datos,actualizado:ahora}).eq('user_id',S.uid).select('user_id');
+    if(!r.error&&(!r.data||!r.data.length))r=await sb.from('reclamos').insert({user_id:S.uid,datos});
+    DBG.rcl=r.error?errTxt(r.error):null;return !r.error}
+  catch(e){DBG.rcl='Excepción: '+(e&&e.message||e);return false}}
+let rclT=null;
+function subirReclamos(){clearTimeout(rclT);rclT=setTimeout(subirReclamosYa,500);subirResumen()}
+/* Une lo reclamado aquí y en la nube (se queda el nivel más alto de cada medalla: reclamar no se deshace). true si cambia algo en este móvil */
+async function sincReclamos(){
+  if(AUTH!=='user'||!S.uid)return false;
+  try{const{data,error}=await sb.from('reclamos').select('datos').eq('user_id',S.uid).maybeSingle();
+    if(error){DBG.rcl=errTxt(error);return false}
+    const nube=(data&&data.datos)||{};S.claim=S.claim||{};const loc=S.claim[S.me]=S.claim[S.me]||{};
+    let local=false,subir=!data;
+    Object.keys(nube).forEach(k=>{const v=+nube[k]||0;if(v>(+loc[k]||0)){loc[k]=v;local=true}});
+    Object.keys(loc).forEach(k=>{if((+loc[k]||0)>(+nube[k]||0))subir=true});
+    if(local)save();
+    if(subir)await subirReclamosYa();else DBG.rcl=null;
+    return local
+  }catch(e){DBG.rcl='Excepción: '+(e&&e.message||e);return false}}
+/* Sincroniza amistades y partidas; repinta la pantalla si cambia algo y se está viendo Inicio, Amigos, Perfil o Senda */
+let BORRANDO=false; // true mientras se elimina la cuenta: nada se sincroniza ni se guarda
+async function refrescarAmigos(){if(AUTH!=='user'||BORRANDO)return;const a=await sincAmistades(),b=await sincPartidas(),c=await sincReclamos();subirResumen();
+  if((a||b||c)&&['home','friends','profile','senda'].includes(view)&&!document.querySelector('.ov'))draw()}
+setInterval(()=>{if(document.visibilityState==='visible')refrescarAmigos()},45000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refrescarAmigos()});
 function logout(){olvidarSesion();AUTH=null;go('welcome')}
+/* Eliminar cuenta: pide escribir ELIMINAR; borra en la nube (SQL) y después deja este móvil limpio */
+function eliminarCuentaDlg(){
+  const d=document.createElement('div');d.className='ov c auth';
+  d.innerHTML='<div class="mp"><b>¿Eliminar tu cuenta?</b>'
+   +'<p class="atx just">Se borrarán para siempre tu perfil, tus amistades, tus medallas y los datos guardados en este móvil.</p>'
+   +'<p class="atx just">Las partidas compartidas con amigos se conservan sin tu nombre; las que solo eran tuyas se borran.</p>'
+   +'<p class="atx just">Esta acción no se puede deshacer.</p>'
+   +'<label class="alb" for="ec">Escribe ELIMINAR para confirmar</label><input id="ec" autocomplete="off" autocapitalize="characters" spellcheck="false">'
+   +'<p class="aerr" id="aer" role="alert"></p><div class="row"><button class="ghost cr2" id="dc">Cancelar</button><button id="dk" class="cr">Eliminar</button></div></div>';
+  document.body.appendChild(d);
+  const I=d.querySelector('#ec'),R=d.querySelector('#aer'),K=d.querySelector('#dk'),C=d.querySelector('#dc');
+  C.onclick=()=>d.remove();
+  const ok=async()=>{
+    if(I.value.trim().toUpperCase()!=='ELIMINAR'){R.textContent='Escribe la palabra ELIMINAR para confirmar.';return}
+    R.textContent='';K.disabled=true;C.disabled=true;K.textContent='Eliminando…';BORRANDO=true;
+    const r=await API.eliminarCuenta();
+    if(r.error){BORRANDO=false;K.disabled=false;C.disabled=false;K.textContent='Eliminar';R.textContent='No se ha podido eliminar la cuenta. Revisa tu conexión e inténtalo de nuevo.';return}
+    try{await sb.auth.signOut({scope:'local'})}catch(e){}
+    try{localStorage.removeItem(KEY)}catch(e){}
+    location.reload()};
+  K.onclick=ok;I.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ok()}})}
 function enterMode(m){
   AUTH=m;const guest=m==='guest';
   /* La partida en curso es de un modo u otro: la del otro modo se aparca (S.pk.user / S.pk.guest) y se recupera al volver a él */
@@ -1827,7 +2089,7 @@ const lockMsg=n=>dlg('Inicia sesión para acceder a '+n+'.',{cancel:1,ok:'Inicia
 function welcome(){
   app.innerHTML='<div class="hsuits">'+['o','c','e','b'].map(k=>suit(k,k==='o'?50:64)).join('')+'</div><div class="logo">MUS</div>'+fan()
   +'<div class="menu"><button class="gold" style="width:100%" id="li">Iniciar sesión</button><button class="ghost" style="width:100%;background:var(--card)" id="cp">Crear perfil</button><button class="ghost" style="width:100%;background:var(--card)" id="gu">Jugar como invitado</button>'
-  +'<p class="wnote">Como invitado puedes jugar, pero sin perfil, amigos ni estadísticas.</p></div>';
+  +'<p class="wnote">Como invitado puedes jugar, pero sin perfil, amigos ni estadísticas.</p><p class="wnote"><a class="plink" href="privacidad.html" target="_blank" rel="noopener">Política de privacidad</a></p></div>';
   $('#li').onclick=login;$('#cp').onclick=crearPerfil;$('#gu').onclick=()=>enterMode('guest');
 }
 function draw(){if(!AUTH)view='welcome';else if(AUTH==='guest'&&LOCKED.includes(view))view='home';app.className=view==='welcome'?'home':view;({welcome,home,friends,setup,game,profile,senda})[view]()}
@@ -1867,6 +2129,24 @@ let profBack='home';
 const ICO_ME='<svg class="hico" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="8" r="3.9" fill="currentColor"/><path d="M4.5 20c0-4.1 3.2-6.6 7.5-6.6s7.5 2.5 7.5 6.6z" fill="currentColor"/></svg>';
 const ICO_FR='<svg class="hico" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="9" cy="8" r="3.4" fill="currentColor"/><circle cx="17" cy="9" r="2.6" fill="currentColor"/><path d="M2.5 19.5c0-3.7 2.9-6 6.5-6s6.5 2.3 6.5 6z" fill="currentColor"/><path d="M16.2 13.3c3.1-.2 5.3 1.6 5.3 4.7v1.5h-3.9c0-2.4-.6-4.4-1.4-6.2z" fill="currentColor"/></svg>';
 const ICO_AMR='<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke-width="1.7"/><circle cx="12" cy="12" r="7.3" stroke-width=".9" opacity=".7"/><path d="M7.8 16.4V8l4.2 5.6L16.2 8v8.4M6.4 16.4h2.9M14.7 16.4h2.9" stroke-width="1.6"/></svg>';
+/* ===== Subida de liga: el botón de la Senda late con un punto y, al entrar, salen «¡Liga alcanzada!» y «¡Marco desbloqueado!» ===== */
+function ligaAct(){const id=meId(),q=id&&progress()[id];return q?q.lg:null}
+function ligaPend(){if(AUTH!=='user')return false;const lg=ligaAct();if(lg==null)return false;
+  if(S.lgVisto==null||S.lgVisto>lg){S.lgVisto=lg;save();return false} /* primera vez en este móvil: no se celebra lo ya conseguido */
+  return lg>S.lgVisto}
+function ligaAlcanzada(){
+  const lg=ligaAct();if(lg==null||!ligaPend())return;
+  const f=S.friends.find(x=>x.id===meId())||{},ace=avOf(f,progress()[f.id]||blank()).a;
+  const mk=(titulo,cuerpo,botones)=>{const d=document.createElement('div');d.className='ov c lgn';d.innerHTML='<div class="mp"><div class="mpi"><h2 class="lgn-t">'+titulo+'</h2>'+cuerpo+'<div class="row">'+botones+'</div></div></div>';document.body.appendChild(d);return d};
+  /* detrás: el marco desbloqueado; delante: la liga alcanzada */
+  const m=mk('¡Marco desbloqueado!','<div class="lgn-b">'+avFrame(lg,aceImg(ace),150)+'<div class="lgn-n">Marco de '+esc(LEAGUES[lg][0])+'</div></div>','<button class="ghost cr2" id="lgp">Ir a mi perfil</button><button id="lga2" class="cr">Aceptar</button>');
+  const l=mk('¡Liga alcanzada!','<div class="plg lgn-b">'+lgTapete(lg,0)+'</div>','<button id="lga1" class="cr">Aceptar</button>');
+  {const fit=()=>l.querySelectorAll('.nd .nm').forEach(el=>{el.style.removeProperty('font-size');let fs=parseFloat(getComputedStyle(el).fontSize);while(el.scrollWidth>el.clientWidth+0.5&&fs>11){fs-=.5;el.style.setProperty('font-size',fs+'px','important')}});fit();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit)}
+  const visto=()=>{S.lgVisto=lg;save();const b=document.getElementById('sd');if(b){b.classList.remove('late');const dt=b.querySelector('.mbadge');if(dt)dt.remove()}};
+  l.querySelector('#lga1').onclick=()=>{visto();l.remove()};
+  m.querySelector('#lga2').onclick=()=>m.remove();
+  m.querySelector('#lgp').onclick=()=>{m.remove();l.remove();S.profile=S.me;profBack='home';profPila.length=0;go('profile')};
+}
 /* Amarracos bajo «Senda del Órdago»: barra hacia la siguiente liga y cifra */
 function sdProg(){
   const id=meId(),q=id&&progress()[id];if(!q)return'';
@@ -1875,13 +2155,14 @@ function sdProg(){
 }
 function home(){
   const G=AUTH==='guest';
-  app.innerHTML='<div class="hsuits">'+['o','c','e','b'].map(k=>suit(k,k==='o'?50:64)).join('')+'</div>'+'<div class="logo">MUS</div>'+fan()+'<div class="menu">'+(S.game?'<button class="gold" style="width:100%" id="cont">Continuar partida</button>':'')+'<button class="'+(S.game?'ghost" style="width:100%;background:var(--card)':'gold" style="width:100%')+'" id="go">Iniciar partida</button>'
-  +'<button class="ghost'+(G?' glk':'')+'" id="sd"'+(G?' aria-disabled="true"':'')+' style="width:100%;background:var(--card)"><span class="hico hbox">'+ICO_AMR+'</span><span class="sdt">Senda del Órdago</span>'+help('senda')+(G?PLK:'')+'</button>'
-  +'<div class="nav" style="margin-top:0"><button id="fr"'+(G?' class="glk" aria-disabled="true"':'')+'>'+ICO_FR+'Amigos'+(G?PLK:(reqList().length?'<span class="mbadge" aria-label="Solicitudes de amistad pendientes"></span>':''))+'</button><button id="mp">'+ICO_ME+(G?'Iniciar sesión':'Mi perfil')+(G?'':mpBadge())+'</button></div></div>';
-  $('#go').onclick=()=>go('setup');
+  app.innerHTML='<div class="hsuits">'+['o','c','e','b'].map(k=>suit(k,k==='o'?50:64)).join('')+'</div>'+'<div class="logo">MUS</div>'+fan()+'<div class="menu">'+(S.game?'<button class="gold" style="width:100%" id="cont">Continuar partida</button>':'<button class="gold" style="width:100%" id="go">Iniciar partida</button>')+'<button class="ghost'+(INV.length?' late':'')+'" id="cn" style="width:100%;background:var(--card)">Conectarse a partida'+(INV.length?'<span class="mbadge" aria-label="Tienes una invitación"></span>':'')+'</button>'
+  +'<button class="ghost'+(G?' glk':'')+(ligaPend()?' late':'')+'" id="sd"'+(G?' aria-disabled="true"':'')+' style="width:100%;background:var(--card)"><span class="hico hbox">'+ICO_AMR+'</span><span class="sdt">Senda del Órdago</span>'+help('senda')+(G?PLK:'')+(ligaPend()?'<span class="mbadge" aria-label="Has subido de liga"></span>':'')+'</button>'
+  +'<div class="nav" style="margin-top:0"><button id="fr"'+(G?' class="glk" aria-disabled="true"':'')+'>'+ICO_FR+'Amigos'+(G?PLK:(reqList().length||(S.avisoAm||[]).length?'<span class="mbadge" aria-label="Novedades en amigos"></span>':''))+'</button><button id="mp">'+ICO_ME+(G?'Iniciar sesión':'Mi perfil')+(G?'':mpBadge())+'</button></div></div>';
+  if($('#go'))$('#go').onclick=modoDlg;
   if($('#cont'))$('#cont').onclick=()=>go('game');
+  $('#cn').onclick=conectarDlg;
   $('#sd').onclick=()=>G?lockMsg('la Senda del Órdago'):ensureMe(()=>go('senda'));
-  $('#mp').onclick=()=>G?login():ensureMe(()=>{S.profile=S.me;profBack='home';go('profile')});
+  $('#mp').onclick=()=>G?login():ensureMe(()=>{S.profile=S.me;profBack='home';profPila.length=0;go('profile')});
   $('#fr').onclick=()=>G?lockMsg('Amigos'):go('friends');
 }
 
@@ -1915,7 +2196,7 @@ function userCard(u){
   const btn=got?'<button class="sgb" type="button" data-acc="'+u.id+'">Aceptar solicitud</button>'
     :sent?'<button class="sgb sent" type="button" disabled>Solicitud enviada</button>'
     :'<button class="sgb" type="button" data-rq="'+u.id+'">Enviar solicitud de amistad</button>';
-  return '<div class="card"><div class="sg"><div class="sgt"><span class="frnb"><b class="frn">'+esc(u.name)+'</b><span class="frid" data-mid="'+u.id+'" role="button" tabindex="0">#'+esc(musOf(u))+'</span></span><span class="frt">'+trIcon(22)+fmt(u.tr||0)+'</span></div>'+btn+'</div></div>'}
+  return '<div class="card"><div class="sg"><div class="sgt" data-p="'+u.id+'"><span class="frnb"><b class="frn">'+esc(u.name)+'</b><span class="frid" data-mid="'+u.id+'" role="button" tabindex="0">#'+esc(musOf(u))+'</span></span><span class="frt">'+trIcon(22)+fmt(u.tr||0)+'</span></div>'+btn+'</div></div>'}
 /* Menú con las solicitudes recibidas */
 function reqMenu(){
   const d=overlay('');
@@ -1927,23 +2208,31 @@ function reqMenu(){
       +'<button type="button" class="rqn" data-no="'+u.id+'" aria-label="Rechazar solicitud de '+esc(u.name)+'"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div></div>').join('')
      +'</div><button id="dk" class="cr" type="button">Cerrar</button>';
     d.querySelector('#dk').onclick=()=>{d.remove();friends()};
-    d.querySelectorAll('[data-ok]').forEach(b=>b.onclick=()=>{acceptReq(b.dataset.ok);paint()});
-    d.querySelectorAll('[data-no]').forEach(b=>b.onclick=()=>{rejectReq(b.dataset.no);paint()});
+    d.querySelectorAll('[data-ok]').forEach(b=>b.onclick=()=>{b.disabled=true;acceptReq(b.dataset.ok).then(paint)});
+    d.querySelectorAll('[data-no]').forEach(b=>b.onclick=()=>{b.disabled=true;rejectReq(b.dataset.no).then(paint)});
   };
   paint();
 }
+/* Cartel: «X ha aceptado tu solicitud. ¡Ya sois amigos!» (se muestra antes de la lista de amigos) */
+function avisoAmigos(fin){
+  const A=S.avisoAm||[],d=overlay('');
+  d.querySelector('.mpi').innerHTML='<h2 style="text-align:center">¡Ya sois amigos!</h2><div class="rqls">'
+   +A.map(u=>'<div class="rqr"><div class="rqi"><b class="frn">'+esc(u.name)+'</b><small style="color:#e9dcb3;font-size:14px;line-height:1.3">ha aceptado tu solicitud</small></div></div>').join('')
+   +'</div><button id="dk" class="cr" type="button">Aceptar</button>';
+  d.querySelector('#dk').onclick=()=>{S.avisoAm=[];save();d.remove();fin()}}
 function friends(){
+  if((S.avisoAm||[]).length){app.innerHTML='';avisoAmigos(friends);return}
   const P=progress(),mid=meId();
   app.innerHTML='<div class="top"><button id="b">‹ Inicio</button><h2>Amigos</h2>'
   +'<form class="sbx" id="sbf" autocomplete="off"><input id="sbq" type="search" placeholder="Buscar jugadores..." enterkeyhint="search" aria-label="Buscar jugadores"><span class="sbi" id="sbg" role="button" tabindex="0" aria-label="Buscar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></span></form></div>'
   +reqBtnHTML()+'<div id="list"></div>';
   const l=$('#list'),todos=live().filter(f=>f.id!==mid&&!f.gen);
-  const rd=q=>{const amigos=q?todos.filter(f=>matchJ(f,q)):todos;const otros=q?(S.users||[]).filter(u=>!S.friends.some(f=>f.id===u.id)&&matchJ(u,q)).map(userCard).join(''):'';l.innerHTML=(amigos.length||otros)?amigos.map(f=>{const p=P[f.id]||blank();const bm=Object.entries(p.pt).sort((x,y)=>y[1].w-x[1].w||y[1].g-x[1].g)[0],bmOk=bm&&bm[1].w>0;return '<div class="card"><div class="fr"><div class="frl" data-p="'+f.id+'"><div class="frh"><span class="fra">'+avatarHTML(f,p,40)+'</span><span class="frnb"><b class="frn">'+esc(f.name)+'</b><span class="frid" data-mid="'+f.id+'" role="button" tabindex="0">#'+musOf(f)+'</span></span><span class="frt">'+trIcon(22)+fmt(p.tr)+'</span></div><div class="frk"><span class="frc frlg"><small>Liga actual</small><span class="frg">'+lgBadge(p.lg,20)+'<span>'+LEAGUES[p.lg][0]+'</span></span></span><span class="frc"><small>Mejor pareja</small><span class="frg frm">'+(bmOk?'<span class="frmn">'+esc(fname(bm[0]))+'</span><span class="frms">'+bm[1].w+' V · '+bm[1].l+' D · '+Math.round(100*bm[1].w/bm[1].g)+'%</span>':'<span class="frmn">—</span>')+'</span></span></div></div><button class="frs" data-st="'+f.id+'">Estadísticas</button></div></div>'}).join('')+otros:'<div class="card"><span style="color:var(--mute)">'+(q?'Sin resultados para «'+esc(q)+'».':'Aún no hay amigos.')+'</span></div>'};
+  const rd=q=>{const amigos=q?todos.filter(f=>matchJ(f,q)):todos;const otros=q?usersAll().filter(u=>!live().some(f=>f.id===u.id)&&matchJ(u,q)).map(userCard).join(''):'';l.innerHTML=(amigos.length||otros)?amigos.map(f=>{const V=vistaPerfil(f.id)||{f:f,p:P[f.id]||blank(),res:null},p=V.p,bm=mejorDe(matesOf(f.id,p,V.res)),bmOk=!!bm;return '<div class="card"><div class="fr"><div class="frl" data-p="'+f.id+'"><div class="frh"><span class="fra">'+avatarHTML(V.f,p,40)+'</span><span class="frnb"><b class="frn">'+esc(f.name)+'</b><span class="frid" data-mid="'+f.id+'" role="button" tabindex="0">#'+musOf(f)+'</span></span><span class="frt">'+trIcon(22)+fmt(p.tr)+'</span></div><div class="frk"><span class="frc frlg"><small>Liga actual</small><span class="frg">'+lgBadge(p.lg,20)+'<span>'+LEAGUES[p.lg][0]+'</span></span></span><span class="frc"><small>Mejor pareja</small><span class="frg frm">'+(bmOk?'<span class="frmn">'+esc(fname(bm.id))+'</span><span class="frms">'+bm.w+' V · '+bm.l+' D · '+Math.round(100*bm.w/bm.g)+'%</span>':'<span class="frmn">—</span>')+'</span></span></div></div><button class="frs" data-st="'+f.id+'">Estadísticas</button></div></div>'}).join('')+otros:'<div class="card"><span style="color:var(--mute)">'+(q?'Sin resultados para «'+esc(q)+'».':'Aún no hay amigos.')+'</span></div>'};
   rd('');
-  l.onclick=ev=>{const rq=ev.target.closest('[data-rq]');if(rq){ev.stopPropagation();const id=rq.dataset.rq;S.reqOut=S.reqOut||[];if(!S.reqOut.includes(id))S.reqOut.push(id);save();rd($('#sbq').value);return}
-    const ac=ev.target.closest('[data-acc]');if(ac){ev.stopPropagation();acceptReq(ac.dataset.acc);friends();return}
-    const mi=ev.target.closest('[data-mid]');if(mi){ev.stopPropagation();musCopy(S.friends.find(x=>x.id===mi.dataset.mid)||(S.users||[]).find(x=>x.id===mi.dataset.mid),mi);return}const st=ev.target.closest('[data-st]');if(st){ev.stopPropagation();vsStats(st.dataset.st);return}const pr=ev.target.closest('[data-p]');if(pr){S.profile=pr.dataset.p;profBack='friends';go('profile')}};
-  const go2=()=>rd($('#sbq').value);
+  l.onclick=ev=>{const rq=ev.target.closest('[data-rq]');if(rq){ev.stopPropagation();rq.disabled=true;enviarSol(rq.dataset.rq).then(()=>rd($('#sbq').value));return}
+    const ac=ev.target.closest('[data-acc]');if(ac){ev.stopPropagation();ac.disabled=true;acceptReq(ac.dataset.acc).then(friends);return}
+    const mi=ev.target.closest('[data-mid]');if(mi){ev.stopPropagation();musCopy(S.friends.find(x=>x.id===mi.dataset.mid)||usersAll().find(x=>x.id===mi.dataset.mid),mi);return}const st=ev.target.closest('[data-st]');if(st){ev.stopPropagation();vsStats(st.dataset.st);return}const pr=ev.target.closest('[data-p]');if(pr){profBack='friends';abrirPerfil(pr.dataset.p)}};
+  const go2=async()=>{const q=$('#sbq').value;await buscarMusId(q);rd(q)};
   $('#sbf').onsubmit=e=>{e.preventDefault();go2()};
   $('#sbg').onclick=go2;
   $('#sbg').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go2()}};
@@ -1956,7 +2245,7 @@ function vsStats(fid){
   const nm=esc(fname(fid));
   const row=(t,r,la,lb)=>{const pc=r.g?Math.round(100*r.w/r.g):0;
     return '<div class="vsr"><div class="vsh"><b>'+t+'</b>'+(r.g?'<span>('+pc+'% de victorias)</span>':'')+'</div>'
-    +(r.g?'<div class="vsbar"><i class="vsw" style="flex:'+r.w+'">'+(r.w?r.w:'')+'</i><i class="vsd" style="flex:'+r.l+'">'+(r.l?r.l:'')+'</i></div><div class="vsl"><span><u class="vsw"></u>'+la+'</span><span><u class="vsd"></u>'+lb+'</span></div>'
+    +(r.g?'<div class="vsbar">'+(r.w?'<i class="vsw" style="flex:'+r.w+'">'+r.w+'</i>':'')+(r.l?'<i class="vsd" style="flex:'+r.l+'">'+r.l+'</i>':'')+'</div><div class="vsl"><span><u class="vsw"></u>'+la+'</span><span><u class="vsd"></u>'+lb+'</span></div>'
     :'<div class="vsbar vse"></div>')+'</div>'};
   const pt=me.pt[fid]||z,op=me.op[fid]||z;
   const d=overlay('<h2 style="text-align:center">Tú y '+esc(fname(fid))+'</h2>'
@@ -1980,16 +2269,16 @@ function medalInfo(m,p,CL){
   let claimed=false;const d=overlay('');
   const draw=anim=>{
     const r=p.md[m.id]||{lvl:0,t:[],w:[]},cl=CL?Math.min(r.lvl,CL[m.id]||0):r.lvl,v=m.soon?0:m.val(stat(p)),nx=m.goals[cl],pd=!m.soon&&cl<r.lvl,vv=pd?nx:Math.min(v,nx);
-    const big=true,S=big?132:88,hc=big?' lg':'';
+    const big=true,S=big?132:88,hc=big?' lg':'',nt=m.notaF?m.notaF(p):m.nota;
     const head=anim?'<div class="mhd'+hc+'"><span class="mold">'+medal(m,cl-1,S)+'</span><span class="mnew">'+medal(m,cl,S)+'</span></div>':'<div class="mhd'+hc+(pd?' hp':'')+'">'+medal(m,cl,S)+'</div>';
     const top=big?'<div class="mtop"><div class="mtl">'+head+'<b>'+medalLbl(m,cl)+'</b></div><div class="mtr"><h2>'+esc(m.name)+'</h2><div class="mph">'+esc(m.desc)+'</div>'+(m.req?'<div class="mhow"><small>Cómo se consigue</small>'+esc(m.req(nx!==undefined?nx:m.goals[m.goals.length-1]))+'</div>':'')+'</div></div>':'<div style="display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center">'+head+'<h2>'+esc(m.name)+'</h2><div style="color:var(--mute)">'+esc(m.desc)+'</div><b>'+medalLbl(m,cl)+'</b></div>';
     d.querySelector('.mpi').classList.add('mdet');d.querySelector('.mpi').innerHTML=top
       +(m.soon?'<div style="color:var(--mute)">Disponible en una próxima versión.</div>':(nx!==undefined?'<div><div class="bar"><i style="width:'+Math.round(100*vv/nx)+'%;background:'+TIERC[Math.max(0,cl-1)][0]+'"></i></div><div style="margin-top:4px">Siguiente nivel ('+LV[cl]+'): '+'<span style="white-space:nowrap">'+fmt(vv)+' / '+fmt(nx)+'</span></div></div>':'<div><b>¡Nivel máximo alcanzado!</b></div>'))
-      +(pd?'<button class="rcl lat" data-rc="'+m.id+'"'+rclStyle(Math.max(0,cl-1))+'>Reclamar medalla</button>':'')+'<button id="dk" class="cr">Cerrar</button>'+(m.nota?'<div class="mnota">* '+esc(m.nota)+'</div>':'');
+      +(pd?'<button class="rcl lat" data-rc="'+m.id+'"'+rclStyle(Math.max(0,cl-1))+'>Reclamar medalla</button>':'')+'<button id="dk" class="cr">Cerrar</button>'+(nt?'<div class="mnota">* '+esc(nt)+'</div>':'');
     d.querySelector('#dk').onclick=()=>{if(d._fly)d._fly.remove();d.remove();if(claimed)profile()};
     if(anim)flyMedal(d,d.querySelector('.mhd'),medal(m,cl,big?d.querySelector('.mhd').offsetWidth:88),pd);
     const rc=d.querySelector('[data-rc]');
-    if(rc)rc.onclick=()=>{CL[m.id]=cl+1;claimed=true;save();draw(true)};
+    if(rc)rc.onclick=()=>{CL[m.id]=cl+1;claimed=true;save();subirReclamos();draw(true)};
   };
   draw(false);
 }
@@ -2003,15 +2292,15 @@ function secInfo(m,p,CL){
     d.querySelector('#dk').onclick=()=>{if(d._fly)d._fly.remove();d.remove();if(claimed)profile()};
     if(anim)flyMedal(d,d.querySelector('.mhd'),medal(m,SPEC,d.querySelector('.mhd').offsetWidth),false);
     const rc=d.querySelector('[data-rc]');
-    if(rc)rc.onclick=()=>{CL[m.id]=1;claimed=true;save();draw(true)};
+    if(rc)rc.onclick=()=>{CL[m.id]=1;claimed=true;save();subirReclamos();draw(true)};
   };
   draw(false);
 }
 function pickSlot(f,p,i){
   const cur=featured(f,p).map(m=>m.id);
-  const opts=FAM.filter(m=>effLvl(f,p,m.id)>0&&(!cur.includes(m.id)||cur[i]===m.id));
-  const d=overlay('<b>Elige una medalla destacada</b>'+(opts.length?'<div class="mg">'+opts.map(m=>'<button class="med" data-a="'+m.id+'">'+medal(m,effLvl(f,p,m.id),54)+'<span>'+esc(m.name)+'</span><small>'+medalLbl(m,effLvl(f,p,m.id))+'</small></button>').join('')+'</div>':'<span style="color:var(--mute)">Aún no tienes medallas. Gana partidas para conseguirlas.</span>')+'<div class="row">'+(cur[i]?'<button class="ghost cr2" id="rm">Quitar</button>':'')+'<button class="ghost cr2" id="cx">Cancelar</button></div>');
-  const done=n=>{f.medals=n.slice(0,4);save();d.remove();profile()};
+  const libre=m=>!cur.includes(m.id)||cur[i]===m.id,opts=FAM.filter(m=>effLvl(f,p,m.id)>0&&libre(m)),optsS=SEC.filter(m=>secOk(f,p,m.id)&&libre(m));
+  const d=overlay('<b>Elige una medalla destacada</b>'+(opts.length||optsS.length?'<div class="mg">'+opts.map(m=>'<button class="med" data-a="'+m.id+'">'+medal(m,effLvl(f,p,m.id),54)+'<span>'+esc(m.name)+'</span><small>'+medalLbl(m,effLvl(f,p,m.id))+'</small></button>').join('')+optsS.map(m=>'<button class="med" data-a="'+m.id+'">'+medal(m,SPEC,54)+'<span>'+esc(m.name)+'</span><small>Especial</small></button>').join('')+'</div>':'<span style="color:var(--mute)">Aún no tienes medallas. Gana partidas para conseguirlas.</span>')+'<div class="row">'+(cur[i]?'<button class="ghost cr2" id="rm">Quitar</button>':'')+'<button class="ghost cr2" id="cx">Cancelar</button></div>');
+  const done=n=>{f.medals=n.slice(0,4);save();subirResumen();d.remove();profile()};
   d.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const n=cur.slice();if(i<n.length)n[i]=b.dataset.a;else n.push(b.dataset.a);done(n)});
   if(d.querySelector('#rm'))d.querySelector('#rm').onclick=()=>{const n=cur.slice();n.splice(i,1);done(n)};
   d.querySelector('#cx').onclick=()=>d.remove();
@@ -2050,11 +2339,11 @@ function pickAvatar(f,p){
     q('#apa').innerHTML=ACES.map((k,i)=>'<button data-a="'+k+'" class="'+(k===sel.a?'on':'')+'" aria-label="As de '+ACEN[i]+'">'+aceImg(k)+'</button>').join('');
     q('#apf').innerHTML=LEAGUES.map((l,i)=>{const lk=i>lgCap(p);return '<button data-f="'+i+'" class="'+(i===sel.f?'on':'')+(lk?' lk':'')+'">'+avFrame(i,aceImg(sel.a),52,lk)+'<span>'+esc(l[0])+'</span>'+(lk?'<span style="display:flex;align-items:center;gap:3px">'+lock+fmt(l[1])+'</span>':'')+'</button>'}).join('');
     d.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{sel.a=b.dataset.a;q('#apm').textContent='';draw()});
-    d.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{const i=+b.dataset.f;if(i>lgCap(p)){q('#apm').textContent='Se desbloquea al llegar a «'+LEAGUES[i][0]+'» ('+fmt(LEAGUES[i][1])+' amarracos)';return}sel.f=i;q('#apm').textContent='';draw()});
+    d.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{const i=+b.dataset.f;if(i>lgCap(p)){q('#apm').textContent='Se desbloquea al llegar a '+LEAGUES[i][0];return}sel.f=i;q('#apm').textContent='';draw()});
   };
   draw();
   q('#cx').onclick=()=>d.remove();
-  q('#ok').onclick=()=>{f.av={a:sel.a,f:sel.f===p.lg?-1:sel.f};save();d.remove();profile()};
+  q('#ok').onclick=()=>{f.av={a:sel.a,f:sel.f===p.lg?-1:sel.f};save();subirResumen();d.remove();profile()};
 }
 function senda(){
   const f=S.friends.find(x=>x.id===S.me),p=f?(progress()[f.id]||blank()):blank();
@@ -2086,6 +2375,7 @@ function senda(){
   fitNm();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{if(view==='senda')fitNm()});
   const goHere=()=>{const m=app.querySelector('.pm')||app.querySelector('.nd.cur');if(m)m.scrollIntoView({block:'center'})};
   goHere();requestAnimationFrame(goHere);setTimeout(goHere,150);
+  if(ligaPend())setTimeout(()=>{if(view==='senda')ligaAlcanzada()},450);
 }
 const STAT_IMG_V='img/stat-victorias.webp?v=2';
 const STAT_IMG_R='img/stat-racha.webp?v=2';
@@ -2094,37 +2384,49 @@ const STAT_IMG_P='img/stat-pareja.webp';
 function lgTapete(i,tr){const l=LEAGUES[i];
   return '<div class="nd cur" data-l="'+i+'"><div class="nt"><div class="emb">'+lgEmblem(i,68)+'</div><div class="ni"><div class="nm'+(l[0].length>9?' nmx':'')+'">'+l[0]+'</div></div></div></div>'}
 function profile(){
-  const f=S.friends.find(x=>x.id===S.profile);if(!f){go('friends');return}
-  const p=progress()[f.id]||blank(),lg=p.lg,cur=LEAGUES[lg],nx=LEAGUES[lg+1];
+  const V=vistaPerfil(S.profile);if(!V){go('friends');return}
+  const f=V.f,p=V.p,lg=p.lg,cur=LEAGUES[lg],nx=LEAGUES[lg+1];
   const fe=featured(f,p);
   const real=FAM.filter(m=>!m.soon),got=real.filter(m=>effLvl(f,p,m.id)>0).length;
   const mine=f.id===meId();if(mine)ensureClaims();const CL=mine?((S.claim||{})[f.id]||{}):null; // en mi perfil se muestra el nivel reclamado; el pendiente late
   const shown=m=>CL?Math.min(lvl(p,m.id),CL[m.id]||0):lvl(p,m.id),pendF=m=>CL&&!m.soon&&lvl(p,m.id)>(CL[m.id]||0);
-  const mates=Object.entries(p.pt).sort((x,y)=>y[1].w-x[1].w||y[1].g-x[1].g),bm=mates[0];
-  const mrow=([id,r])=>'<tr><td>'+esc(fname(id))+'</td><td>'+r.g+'</td><td>'+r.w+'</td><td>'+r.l+'</td><td>'+Math.round(100*r.w/r.g)+'%</td></tr>',mtab=a=>'<table><tr><th>Pareja</th><th>PJ</th><th>V</th><th>D</th><th>%</th></tr>'+a.map(mrow).join('')+'</table>';
-  app.innerHTML='<div class="top"><button id="b">‹ '+(profBack==='home'?'Inicio':'Amigos')+'</button><h2>'+(f.id===S.me?'Mi perfil':esc(f.name))+'</h2></div>'
+  const mates=matesOf(f.id,p,V.res).slice(0,8),bm=mejorDe(mates);
+  const mtab=(a,rk)=>'<div class="mtw"><table class="mt"><thead><tr><th class="l">Pareja</th><th>PJ</th><th>V</th><th>D</th><th>%</th></tr></thead><tbody>'+a.map((r,n)=>'<tr><td class="l">'+(rk?'<span class="mrk">'+(n+1)+'</span>':'')+'<a class="mnl" role="button" tabindex="0" data-pid="'+esc(r.id)+'">'+esc(fname(r.id))+'</a></td><td>'+r.g+'</td><td>'+r.w+'</td><td>'+r.l+'</td><td class="mpc">'+Math.round(100*r.w/r.g)+'%</td></tr>').join('')+'</tbody></table></div>';
+  app.innerHTML='<div class="top"><button id="b">‹ '+(profPila.length?'Atrás':profBack==='home'?'Inicio':'Amigos')+'</button><h2>'+(f.id===S.me?'Mi perfil':esc(f.name))+'</h2></div>'
   +'<div class="card pcard"><div class="phd"><div class="pav"><button class="avb" id="av" aria-label="Avatar"'+(mine?'':' disabled style="opacity:1"')+'>'+avatarHTML(f,p,96)+'</button>'+(mine?'<button class="ghost" id="avc">Cambiar</button>':'')+'</div>'
-  +'<div class="pid"><label class="pl1"><span class="lbh">Nombre</span>'+(mine?'<input id="pn" class="pnm" maxlength="'+NAME_MAX+'" autocomplete="off" value="'+esc(f.name)+'">':'<div class="pnm ro">'+esc(f.name)+'</div>')+'</label>'
+  +'<div class="pid"><label class="pl1"><span class="lbh">Nombre</span>'+(mine?'<input id="pn" class="pnm" maxlength="'+NAME_MAX+'" autocomplete="off" value="'+esc(f.name)+'">':'<div class="pnm ro">'+esc(f.name)+'</div>')+'</label>'+(mine?'<p class="pnerr" id="pnerr" role="alert"></p>':'')+(V.amigo||mine?'':solBtn(f.id))
   +'<span class="pmid" id="pmid" role="button" tabindex="0" aria-label="Mus ID">#'+musOf(f)+'</span>'
   +'<div class="pamr" aria-label="Amarracos">'+trIcon(38)+'<b>'+fmt(p.tr)+'</b></div>'
   +'</div></div>'
   +'<div class="plg">'+lgTapete(lg,p.tr)+'</div>'
   +'<div class="stg"><div class="stt"><small>'+(p.w===1?'Victoria':'Victorias')+'</small><div class="sr"><img src="'+STAT_IMG_V+'" alt="" draggable="false"><b>'+fmt(p.w)+'</b></div></div><div class="stt"><small>Mejor racha</small><div class="sr"><img src="'+STAT_IMG_R+'" alt="" draggable="false"><b>'+fmt(p.best)+'</b></div></div>'
-  +'<div class="stt wide"><small>Mejor pareja</small><div class="sr"><img src="'+STAT_IMG_P+'" alt="" draggable="false"><b class="nm">'+(bm&&bm[1].w>0?esc(fname(bm[0])):'—')+'</b></div></div></div>'
+  +'<div class="stt wide"><small>Mejor pareja</small><div class="sr"><img src="'+STAT_IMG_P+'" alt="" draggable="false"><b class="nm">'+(bm?esc(fname(bm.id)):'—')+'</b></div></div></div>'
   +'</div>'
-  +'<div class="card"><b>Medallas destacadas</b><div class="slots">'+[0,1,2,3].map(i=>'<button class="slotb" data-slot="'+i+'" aria-label="Elegir medalla"'+(mine?'':' disabled style="opacity:1"')+'>'+(fe[i]?medal(fe[i],effLvl(f,p,fe[i].id),54):(mine?'<span>+</span>':''))+'</button>').join('')+'</div></div>'
-  +'<div class="card"><div class="hh"><b>Medallas</b>'+help('medallas')+'</div><div class="mg">'+FAM.map(m=>'<button class="med'+(pendF(m)?' pend':'')+'" data-a="'+m.id+'">'+medal(m,shown(m),58)+'<span>'+esc(m.name)+'</span><small>'+medalLbl(m,shown(m))+'</small></button>').join('')+'</div></div>'
-  +'<div class="card"><div class="hh"><b>Medallas especiales</b>'+help('especiales')+'</div><div class="mg sp">'+SEC.map(m=>{const on=!!p.sec[m.id],pd=on&&CL&&!CL[m.id],von=on&&!pd;return '<button class="med'+(pd?' pend':'')+(on?'':' lkd')+'" data-s="'+m.id+'">'+medal(m,von?SPEC:0,62)+'<span>'+esc(m.name)+'</span><small>'+(on?'Conseguida':'Bloqueada')+'</small></button>'}).join('')+'</div></div>'
-  +'<div class="card"><div class="fr"><b>Mis parejas</b>'+(mates.length?'<button class="ghost" id="ap" style="padding:7px 12px;font-size:14px">Todas las parejas</button>':'')+'</div>'+(mates.length?mtab([bm]):'<span style="color:var(--mute)">Todavía no ha jugado con ninguna pareja.</span>')+'</div>';
-  if(mine&&profBack==='home'){const lo=document.createElement('button');lo.type='button';lo.id='lo';lo.textContent='Cerrar sesión';lo.style.cssText='flex:0 0 auto;border:1.5px solid rgba(200,160,80,.6);color:#eae2cc;background:rgba(0,0,0,.25)';app.appendChild(lo);lo.onclick=()=>dlg('¿Cerrar sesión?',{cancel:1,ok:'Cerrar sesión',cr:1},logout)}
-  $('#b').onclick=()=>go(profBack);
+  +'<div class="card"><b>Medallas destacadas</b><div class="slots">'+[0,1,2,3].map(i=>'<button class="slotb" data-slot="'+i+'" aria-label="Elegir medalla"'+(mine?'':' disabled style="opacity:1"')+'>'+(fe[i]?fmedal(f,p,fe[i],54):(mine?'<span>+</span>':''))+'</button>').join('')+'</div></div>'
+  +'<div class="card"><div class="hh"><b>Medallas</b></div><div class="mg">'+FAM.map(m=>'<button class="med'+(pendF(m)?' pend':'')+'" data-a="'+m.id+'">'+medal(m,shown(m),58)+'<span>'+esc(m.name)+'</span><small>'+medalLbl(m,shown(m))+'</small></button>').join('')+'</div></div>'
+  +'<div class="card"><div class="hh"><b>Medallas especiales</b></div><div class="mg sp">'+SEC.map(m=>{const on=!!p.sec[m.id],pd=on&&CL&&!CL[m.id],von=on&&!pd;return '<button class="med'+(pd?' pend':'')+(on?'':' lkd')+'" data-s="'+m.id+'">'+medal(m,von?SPEC:0,62)+'<span>'+esc(m.name)+'</span><small>'+(on?'Conseguida':'Bloqueada')+'</small></button>'}).join('')+'</div></div>'
+  +'<div class="card"><div class="fr"><b>Mejor pareja</b>'+(mates.length?'<button class="ghost" id="ap" style="padding:7px 12px;font-size:14px">Principales parejas</button>':'')+'</div>'+(bm?mtab([bm]):'<span style="color:var(--mute)">'+(mates.length?'Aún no hay victorias con ninguna pareja.':'Todavía no ha jugado con ninguna pareja.')+'</span>')+'</div>'+(!V.mine&&!V.res&&!V.amigo?'<p class="wnote">Este jugador aún no ha publicado sus estadísticas.</p>':'');
+  if(mine&&profBack==='home'){const lo=document.createElement('button');lo.type='button';lo.id='lo';lo.textContent='Cerrar sesión';lo.style.cssText='flex:0 0 auto;border:1.5px solid rgba(200,160,80,.6);color:#eae2cc;background:rgba(0,0,0,.25)';app.appendChild(lo);lo.onclick=()=>dlg('¿Cerrar sesión?',{cancel:1,ok:'Cerrar sesión',cr:1},logout);
+    const de=document.createElement('button');de.type='button';de.id='de';de.textContent='Eliminar cuenta';de.style.cssText='flex:0 0 auto;border:1.5px solid rgba(190,84,74,.7);color:#eeb0a8;background:rgba(110,28,24,.32)';app.appendChild(de);de.onclick=eliminarCuentaDlg;
+    const pv=document.createElement('p');pv.className='wnote';pv.innerHTML='<a class="plink" href="privacidad.html" target="_blank" rel="noopener">Política de privacidad</a>';app.appendChild(pv)}
+  if(!mine&&V.amigo&&AUTH==='user'&&isUuid(f.id)){const rb=document.createElement('button');rb.type='button';rb.id='rf';rb.textContent='Eliminar amigo';rb.style.cssText='flex:0 0 auto;border:1.5px solid rgba(190,84,74,.7);color:#eeb0a8;background:rgba(110,28,24,.32)';app.appendChild(rb);
+    rb.onclick=()=>dlg('¿Eliminar a '+f.name+' de tus amigos? Las partidas que habéis jugado juntos se conservan.',{cancel:1,ok:'Eliminar',cr:1},async()=>{if(await borrarAmigo(f.id)){if(profPila.length)profAtras();else go(profBack==='home'?'friends':profBack)}})}
+  $('#b').onclick=profAtras;
   $('#pmid').onclick=e=>musCopy(f,e.currentTarget);
   {const fit=()=>app.querySelectorAll('.nd .nm').forEach(el=>{el.style.removeProperty('font-size');let fs=parseFloat(getComputedStyle(el).fontSize);while(el.scrollWidth>el.clientWidth+0.5&&fs>11){fs-=.5;el.style.setProperty('font-size',fs+'px','important')}});fit();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{if(view==='profile')fit()})}
-  if(mine){const pn=$('#pn');pn.onchange=()=>{const v=pn.value.trim().replace(/\s+/g,' ').slice(0,NAME_MAX);
-    if(!v||S.friends.some(x=>!x.deleted&&x.id!==f.id&&x.name.toLowerCase()===v.toLowerCase())){pn.value=f.name;return}
-    f.name=v;pn.value=v;save();if(AUTH==='user')sb.from('perfiles').update({nombre:v}).eq('id',S.me).then(()=>{})}}
+  if(mine){const pn=$('#pn'),er=$('#pnerr');let tm=0;const msg=t=>{er.textContent=t;clearTimeout(tm);if(t)tm=setTimeout(()=>{er.textContent=''},4500)};
+    pn.oninput=()=>msg('');
+    pn.onchange=async()=>{const v=pn.value.trim().replace(/\s+/g,' ').slice(0,NAME_MAX);
+      if(!v||v===f.name){pn.value=f.name;return}
+      if(RESERVADO.test(v)){pn.value=f.name;msg(NOMBRE_NO);return}
+      if(AUTH==='user'){pn.disabled=true;let error=null;try{({error}=await sb.from('perfiles').update({nombre:v}).eq('id',S.uid))}catch(e){error={message:'red'}}pn.disabled=false;
+        if(error){pn.value=f.name;msg(nombreMalo(error)?NOMBRE_NO:'No se ha podido guardar. Revisa tu conexión.');return}}
+      f.name=v;pn.value=v;save();subirResumen()}}
   if(mine){$('#av').onclick=$('#avc').onclick=()=>pickAvatar(f,p);}
-  const ap=$('#ap');if(ap)ap.onclick=()=>{const d=overlay('<h2 style="text-align:center">Todas las parejas</h2>'+mtab(mates)+'<button id="dk" class="cr">Cerrar</button>');d.querySelector('#dk').onclick=()=>d.remove()};
+  const goP=(b,d)=>{b.onclick=()=>{if(d)d.remove();abrirPerfil(b.dataset.pid,true)};b.onkeydown=e=>{if(e.key==='Enter')b.onclick()}};
+  app.querySelectorAll('.mt [data-pid]').forEach(b=>goP(b));
+  const ap=$('#ap');if(ap)ap.onclick=()=>{const d=overlay('<h2 style="text-align:center">Principales parejas</h2>'+mtab(mates,true)+'<button id="dk" class="cr">Cerrar</button>');d.querySelector('#dk').onclick=()=>d.remove();d.querySelectorAll('[data-pid]').forEach(b=>goP(b,d))};
+  const fs=$('#fsol');if(fs)fs.onclick=async()=>{fs.disabled=true;if(fs.dataset.k==='acc')await acceptReq(f.id);else await enviarSol(f.id);profile()};
   if(mine)app.querySelectorAll('[data-slot]').forEach(b=>b.onclick=()=>pickSlot(f,p,+b.dataset.slot));
   app.querySelectorAll('.mg [data-a]').forEach(b=>b.onclick=()=>medalInfo(FAM.find(m=>m.id===b.dataset.a),p,CL));
   app.querySelectorAll('.mg [data-s]').forEach(b=>b.onclick=()=>secInfo(SEC.find(m=>m.id===b.dataset.s),p,CL));
@@ -2138,12 +2440,12 @@ function setup(){
   const slot=i=>{
     if(G)return fixed(i,'inv'+(i+1),'Jugador '+(i+1));
     /* Todos los huecos se pueden cambiar: 1.º el genérico («Jugador N», sin la app), luego el perfil y luego los amigos */
-    const d=gens[i],def=i===0&&yo?yo:d,list=[d,...(yo?[yo]:[]),...amigos];
-    return '<label class="pl"><select id="p'+i+'" aria-label="Jugador">'+list.map(f=>'<option value="'+f.id+'"'+(f===d?' data-gen="1"':'')+(yo&&f===yo?' data-tag="Tú"':'')+(f===def?' selected':'')+'>'+esc(f.name)+'</option>').join('')+'</select><div id="sb'+i+'" class="sbx"></div></label>';
+    const d=gens[i],isYo=i===0&&yo,def=isYo?yo:null,list=[d,...(yo?[yo]:[]),...amigos];
+    return '<label class="pl"><select id="p'+i+'" aria-label="Jugador">'+(isYo?'':'<option value="" data-ph="1" selected>Elige jugador</option>')+list.map(f=>'<option value="'+f.id+'"'+(f===d?' data-gen="1"':'')+(yo&&f===yo?' data-tag="Tú"':'')+(f===def?' selected':'')+'>'+esc(f.name)+'</option>').join('')+'</select><div id="sb'+i+'" class="sbx"></div></label>';
   };
   const c=S.cfg;
   const tbox=(i,title,k)=>'<div class="card team" style="--c:var(--'+k+');--cf:var(--'+k+'f)"><b style="color:'+(k==='b'?'#a9d6ff':'#f7a99d')+'">'+title+'</b><div class="row">'+slot(i*2)+slot(i*2+1)+'</div><label>Nombre del equipo (opcional)<input id="tn'+i+'" maxlength="'+TEAM_MAX+'" autocomplete="off" placeholder="'+(i?'Equipo rojo':'Equipo azul')+'"></label></div>';
-  app.innerHTML='<div class="top"><button id="b">‹ Inicio</button><h2>Nueva partida</h2></div>'
+  app.innerHTML='<div class="top"><button id="b">‹ Inicio</button><h2>Nueva partida</h2>'+'</div>'
   +tbox(0,'Tu equipo','b')+tbox(1,'Equipo rival','a')
   +'<div class="card"><div class="row cfg"><label>Puntos por juego<input id="meta" type="number" min="5" max="'+META_MAX+'" value="'+c.meta+'" inputmode="numeric"></label>'
   +'<label>Juegos por vaca<input id="jv" type="number" min="1" value="'+c.juegos+'" inputmode="numeric"></label>'
@@ -2158,7 +2460,8 @@ function setup(){
   [0,1].forEach(i=>{const e=$('#tn'+i);e.oninput=()=>{e.dataset.m=e.value.trim()?'1':''}});
   const chk2=()=>{chk();fillN(0);fillN(1)};
   [0,1,2,3].forEach(i=>$('#p'+i).onchange=chk2);chk2();
-  $('#b').onclick=()=>go('home');
+  $('#b').onclick=()=>{SETUP_CONN=false;go('home')};
+  if(SETUP_CONN&&!SETUP_SALA)reservarSala();
   $('#inf').onchange=()=>{const v=$('#inf').checked?'none':'';$('#jv').closest('label').style.display=v;$('#vc').closest('label').style.display=v};
   $('#ok').onclick=()=>{
     const p=[0,1,2,3].map(i=>$('#p'+i).value);
@@ -2169,6 +2472,7 @@ function setup(){
     const n=k=>Math.max(1,parseInt($(k).value)||1);
     S.cfg={meta:Math.min(META_MAX,Math.max(5,n('#meta'))),juegos:n('#jv'),vacas:n('#vc')};
     S.tnames=S.tnames||{};const tn=[0,1].map(i=>{const v=$('#tn'+i).value.trim().slice(0,TEAM_MAX),k=tkey(i);if(k){if(v)S.tnames[k]=v;else delete S.tnames[k]}return v});
+    if(SETUP_CONN){activarSala(p,tn);return}
     S.game={id:uid(),p,pts:[0,0],jg:[0,0],vc:[0,0],hist:[],pal:[0,0],rs:[0,0],pz:[0,0],rsf:[false,false],jt:[0,0],tn,am:(!G&&$('#am').checked)?1:0,guest:G?1:0,inf:$('#inf').checked?1:0};save();go('game');vsIntro();
   };
 }
@@ -2256,6 +2560,7 @@ function wire(){
   });
 }
 function game(){
+  if(S.game&&S.game.sala){game_sala();return}
   const g=S.game;g.mesa=g.mesa||{};
   const cells=LAN.map(([l])=>'<div class="slot"><svg class="slotd" aria-hidden="true"><rect x="0" y="0" width="100%" height="100%" rx="13" fill="none" stroke="rgba(224,176,74,.9)" stroke-width="4" stroke-dasharray="16 10"/></svg><b class="cn" data-pick="'+l+'">'+l+'</b><b class="cn r rot" data-pick="'+l+'">'+l+'</b>'+(g.mesa[l]?chipHTML(l,g.mesa[l]):'<span class="plus" data-pick="'+l+'">'+lanceIcon(l,28)+'</span>')+'</div>').join('');
   app.innerHTML='<div class="table">'+half(1)+'<div class="mid">'+strip(1)+'<div class="mesa"><button class="sm" id="b" aria-label="Menú de la partida">'+EXIT+'</button>'+cells+'</div>'+strip(0)+'</div>'+half(0)+'</div>'+(pick?'<div class="ov gpn bet">'+betPanel(1)+betPanel(0)+'</div>':'')+(menu?'<div class="ov gpn">'+menuPanel(1)+menuPanel(0)+'</div>':'')+(ordOpen?'<div class="ov gpn">'+ordPanel(1)+ordPanel(0)+'</div>':'');
@@ -2268,7 +2573,7 @@ function finish(i,inc){
   const rec={id:g.id||uid(),t:[[g.p[0],g.p[1]],[g.p[2],g.p[3]]],w:i,cfg:c,fecha:Date.now(),o:g.ord||[],pl:g.pal||[0,0],rs:g.rs||[0,0],pz:g.pz||[0,0],jt:g.jt,vc:[...g.vc],am:g.am?1:0,tn:g.tn||['',''],inv:g.guest?1:0};
   if(g.inf){rec.inf=1;rec.jg=[...g.jg]}
   if(inc)rec.inc=1;
-  const A=progress();ensureClaims(A);if(!g.am&&!g.guest)S.hist.push(rec);const B=progress();
+  const A=progress();ensureClaims(A);if(!g.am&&!g.guest){S.hist.push(rec);subirPartida(rec).then(ok=>{if(ok)save()})}const B=progress();subirResumen();
   S.game=null;save();go('home');victory(rec,i,A,B);
 }
 /* Terminar partida: gana quien va por delante (vacas, luego juegos, luego puntos) */
@@ -2315,11 +2620,12 @@ function vsIntro(){
   const g=S.game,H=S.hist,PG=progress(),rec=pred=>{let j=0,w=0;H.forEach(h=>[0,1].forEach(i=>{if(pred(h.t[i])){j++;if(h.w===i)w++}}));return[w,j]};
   const vw=n=>n+(n===1?' victoria':' victorias'),pt=n=>n+(n===1?' partida':' partidas');
   const d=document.createElement('div');d.className='ov vsi';
-  const player=id=>{const f=S.friends.find(x=>x.id===id)||{},p=PG[id]||blank();
+  const player=id=>{const f=S.friends.find(x=>x.id===id)||PUB[id]||{},p=PG[id]||(PUB[id]&&PUB[id].res?pPub(PUB[id].res):blank());
     return '<div class="vb-pw"><div class="vb-p"><div class="vb-pf"><div class="vb-av">'+avatarHTML(f,p,88)+'</div><div class="vb-nm">'+esc(fname(id))+'</div><div class="vb-lg">'+lgBadge(p.lg,16)+'<span>'+LEAGUES[p.lg][0]+'</span></div><div class="vb-tr">'+trIcon(18)+'<b>'+fmt(p.tr)+'</b></div></div></div></div>'};
+  const cn=typeof SL!=='undefined'&&!!SL&&miEq()!=null,bot=cn?miEq():0; /* conectado: mi equipo abajo, el rival arriba y todo derecho */
   const grp=i=>{const ids=g.p.slice(i*2,i*2+2);
-    return '<div class="vb-half '+(i?'t':'b')+' k'+i+'"><div class="vb-in"><div class="vb-fit"><div class="vb-tw"><div class="vb-t"><div class="vb-tf"><span>'+esc(tname(i))+'</span></div></div></div><div class="vb-ps"><i class="vb-rod"></i>'+player(ids[0])+player(ids[1])+'</div></div></div></div>'};
-  if(g.am&&!g.guest)d.classList.add('am');if(g.guest)d.classList.add('inv');
+    return '<div class="vb-half '+(cn?(i===bot?'b':'t'):(i?'t':'b'))+' k'+i+'"><div class="vb-in"><div class="vb-fit"><div class="vb-tw"><div class="vb-t"><div class="vb-tf"><span>'+esc(tname(i))+'</span></div></div></div><div class="vb-ps"><i class="vb-rod"></i>'+player(ids[0])+player(ids[1])+'</div></div></div></div>'};
+  if(g.am&&!g.guest)d.classList.add('am');if(g.guest)d.classList.add('inv');if(cn)d.classList.add('conn');
   d.innerHTML=grp(1)+grp(0)+'<div class="vb-seam"></div><i class="vb-line l"></i><i class="vb-line r"></i><div class="vs-logo"><img src="'+VS_IMG[VS_LOGO]+'" alt="VS" draggable="false"></div>'+(g.guest?'':g.am?'<div class="vs-am">Partida amistosa · sin amarracos</div>':'');
   document.body.appendChild(d);
   const fitNames=()=>{if(!g.guest)return;d.querySelectorAll('.vb-nm').forEach(el=>{el.style.removeProperty('font-size');let fs=parseFloat(getComputedStyle(el).fontSize);while(el.scrollWidth>el.clientWidth+0.5&&fs>11){fs-=.5;el.style.setProperty('font-size',fs+'px','important')}})};const fit=()=>{fitNames();fitBox(d,'.vb-in','.vb-fit',true)};fit();window.addEventListener('resize',fit);
@@ -2341,7 +2647,7 @@ function fitBox(root,boxSel,fitSel,center){
 function victory(rec,i,A,B){
   const d=document.createElement('div');d.className='ov vic';
   const nMed=id=>{const a=A[id]||blank(),b=B[id];if(!b)return 0;return FAM.filter(m=>lvl(b,m.id)>lvl(a,m.id)).length+SEC.filter(m=>b.sec[m.id]&&!a.sec[m.id]).length};
-  const tile=id=>{const f=S.friends.find(x=>x.id===id)||{},a=A[id]||blank(),b=B[id]||blank(),dl=b.tr-a.tr,nm=(rec.am||rec.inv)?0:nMed(id);
+  const tile=id=>{const f=S.friends.find(x=>x.id===id)||{},a=A[id]||blank(),b=B[id]||blank(),dl=b.tr-a.tr,nm=(rec.am||rec.inv||sinCuenta(id))?0:nMed(id);
     return '<div class="vk"><div class="vk-av">'+avatarHTML(f,b,64)+'</div><div class="vk-nm">'+esc(fname(id))+'</div>'
     +((rec.am||rec.inv||rec.inc)?'':'<div class="vk-d '+(dl>0?'up':dl<0?'dn':'')+'"><b>'+(dl>0?'+'+dl:dl<0?'−'+Math.abs(dl):'0')+'</b>'+trIcon(20)+'</div>')
     +(nm?'<div class="vk-md">'+(nm>1?nm+' medallas':'Medalla')+'</div>':'')+'</div>'};
@@ -2374,10 +2680,507 @@ function bootTo(fn){
   }));
 }
 
+
+/* Pie de Mi perfil: versión de la app y estado de la sincronización */
+function pieVersion(){
+  const host=document.getElementById('app');if(!host||document.getElementById('vpie'))return;
+  const d=document.createElement('div');d.id='vpie';d.style.cssText='margin:18px 16px 28px;text-align:center;font-size:12.5px;color:#a9b8a8;line-height:1.5';
+  const n=S.hist.length,p=S.hist.filter(h=>!h._cl).length;
+  d.innerHTML='Versión '+VERSION+(AUTH==='user'?' · partidas: '+n+' ('+p+' sin subir)':'')+(AUTH==='user'?'<br><button type="button" id="vsy" style="display:none;margin-top:8px;padding:8px 16px;font-size:13px;border-radius:10px;border:1px solid #c9a24e;background:none;color:#e9dcb3">Sincronizar ahora</button>':'');
+  host.appendChild(d);
+  let tq=0,t0=0;d.addEventListener('click',e=>{if(e.target.closest('#vsy'))return;const t=Date.now();if(t-t0>3000)tq=0;t0=t;if(++tq>=5){const bb=d.querySelector('#vsy');if(bb)bb.style.display='';tq=0}});
+  const b=d.querySelector('#vsy');if(b)b.onclick=async()=>{b.disabled=true;b.textContent='Sincronizando…';S.hist.forEach(h=>{delete h._err});
+    await sincAmistades();await sincPartidas();await sincReclamos();b.disabled=false;
+    const n2=S.hist.length,p2=S.hist.filter(h=>!h._cl).length;
+    dlg('Versión '+VERSION+'. Partidas en este móvil: '+n2+'. Sin subir: '+p2+'.'+(DBG.sub?' Error al subir: '+DBG.sub+'.':'')+(DBG.baj?' Error al bajar: '+DBG.baj+'.':'')+(DBG.rcl?' Error en medallas: '+DBG.rcl+'.':'')+(!DBG.sub&&!DBG.baj&&!DBG.rcl?' Todo sincronizado.':''),{},()=>{save();draw()})}}
+{const p0=profile;profile=function(){p0();pieVersion()}}
+/* ===================== MODO CONECTADO (paso 7) =====================
+   Varios móviles ven y editan el mismo marcador. El servidor (funciones sala_*) ordena las acciones; las reglas del mus se aplican aquí.
+   · SL = sala en vivo (no se guarda). Lo que se guarda en el móvil es S.game, que sigue la forma de una partida normal + S.game.sala.
+   · Cada jugador solo suma a SU equipo. Mientras suma, su compañero espera ~3 s (turno que aplica el servidor).
+   · Estado del servidor = SL.srv ({j,v,g,seq}); lo que ves = SL.srv + tus toques aún sin confirmar (SL.pend). */
+let SL=null;                     // sala en vivo
+let INV=[],invT=0;               // invitaciones pendientes y su temporizador
+let SETUP_CONN=false,SETUP_SALA=null;
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const clon=o=>JSON.parse(JSON.stringify(o));
+const PARTE0=()=>({pts:0,jg:0,vc:0,pal:0,rs:0,pz:0,jt:0,fs:0,fo:0});
+const juegoVacio=()=>({eq:[PARTE0(),PARTE0()],mesa:{},ord:[]});
+const LAN_SL=['G','C','P','J'],LAN_NM={G:'Grande',C:'Chica',P:'Pares',J:'Juego'};
+const ICO_OJOS='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const ICO_LOG='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+const ICO_COPY='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.4"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>';
+
+/* ---------- Reglas del mus (las mismas que add() del modo local, sin pantalla ni efectos) ---------- */
+function gDe(j){const e=j.eq,rf=k=>!!(e[k].fs||e[1-k].fo);
+  return{pts:[e[0].pts,e[1].pts],jg:[e[0].jg,e[1].jg],vc:[e[0].vc,e[1].vc],pal:[e[0].pal,e[1].pal],rs:[e[0].rs,e[1].rs],pz:[e[0].pz,e[1].pz],jt:[e[0].jt,e[1].jt],rsf:[rf(0),rf(1)],mesa:{...(j.mesa||{})},ord:[...(j.ord||[])]}}
+function jDe(g){return{eq:[0,1].map(k=>({pts:g.pts[k],jg:g.jg[k],vc:g.vc[k],pal:g.pal[k],rs:g.rs[k],pz:g.pz[k],jt:g.jt[k],fs:g.rsf[k]?1:0,fo:g.rsf[1-k]?1:0})),mesa:g.mesa,ord:g.ord}}
+/* Suma n puntos al equipo i (con la ficha 'ficha' si viene de la mesa) → {j: nuevo juego, ev: null|'j'|'v', fin: se alcanzan las vacas} */
+function reglasSuma(j,c,i,n,ficha){
+  const g=gDe(j),meta=c.meta;let ev=null,fin=false;
+  if(ficha)delete g.mesa[ficha];
+  g.pts[i]=Math.max(0,g.pts[i]+n);
+  if(meta>=30)[0,1].forEach(k=>{if(g.pts[k]<=5&&g.pts[1-k]>=meta-5)g.rsf[k]=true});
+  if(g.pts[i]>=meta){
+    if(g.rsf[i])g.rs[i]++;g.rsf=[false,false];
+    if(g.pts[1-i]===0)g.pal[i]++;
+    g.jt[i]++;
+    g.jg[i]++;g.pts=[0,0];g.mesa={};ev='j';
+    if(!c.inf&&g.jg[i]>=c.juegos){if(g.jg[1-i]===0&&c.juegos>=3)g.pz[i]++;g.vc[i]++;g.jg=[0,0];ev='v'}
+    if(!c.inf&&g.vc[i]>=c.vacas)fin=true;
+  }
+  return{j:jDe(g),ev,fin}
+}
+/* Quién va por delante (vacas, luego juegos, luego puntos); -1 si empatan */
+function delante(j){const g=gDe(j),a=[g.vc[0],g.jg[0],g.pts[0]],b=[g.vc[1],g.jg[1],g.pts[1]];
+  for(let k=0;k<3;k++)if(a[k]!==b[k])return a[k]>b[k]?0:1;return -1}
+
+/* ---------- Ayudas de la sala ---------- */
+const miEq=()=>SL&&SL.puesto!=null?SL.puesto>>1:null;
+const esJug=()=>!!SL&&SL.rol==='jugador'&&SL.puesto!=null;
+const memP=p=>SL.mem.find(m=>m.puesto===p&&m.estado!=='expulsado');
+const nomPuesto=p=>{const m=SL&&memP(p);return m&&m.nombre?m.nombre:'Jugador '+(p+1)};
+const idPuesto=p=>{const m=SL&&memP(p);return m&&!m.anonimo?m.user_id:'sg'+(p+1)};
+const toast=(t,ms)=>{document.querySelectorAll('.sl-toast').forEach(x=>x.remove());const d=document.createElement('div');d.className='sl-toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),ms||2600)};
+const sbUser=async()=>{try{const{data}=await sb.auth.getSession();return data&&data.session&&data.session.user||null}catch(e){return null}};
+async function rpcSala(fn,args){try{const{data,error}=await sb.rpc(fn,args||{});if(error)return{ok:false,motivo:error.code?'error':'red',error};return data===null||data===undefined?{ok:true}:data}catch(e){return{ok:false,motivo:'red'}}}
+/* Sesión anónima de Supabase para entrar como invitado (solo para unirse; no crea perfil) */
+async function asegurarAnon(){
+  let u=await sbUser();
+  if(u&&!u.is_anonymous){try{await sb.auth.signOut({scope:'local'})}catch(e){}u=null}
+  if(u)return u;
+  try{
+    if(typeof sb.auth.signInAnonymously==='function'){const{data,error}=await sb.auth.signInAnonymously();if(error||!data||!data.user)return null;return data.user}
+    /* Versión antigua de supabase.js: se pide la sesión anónima directamente al servicio de cuentas */
+    const r=await fetch(SB_URL+'/auth/v1/signup',{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:'{}'});
+    if(!r.ok)return null;const j=await r.json();if(!j.access_token)return null;
+    const{error}=await sb.auth.setSession({access_token:j.access_token,refresh_token:j.refresh_token});if(error)return null;
+    return j.user||await sbUser()
+  }catch(e){return null}
+}
+const MSG={codigo:'Ese código no existe o la sala ya no está activa.',intentos:'Demasiados intentos. Espera unos minutos y vuelve a probar.',expulsado:'El dueño te ha expulsado de esta partida.',sala_llena:'La sala está llena de espectadores.',puesto_ocupado:'Ese puesto ya está ocupado.',red:'No se ha podido conectar. Revisa tu conexión e inténtalo de nuevo.',error:'No se ha podido completar. Inténtalo de nuevo.',cerrada:'La partida ya no está disponible.',no_amigo:'Solo puedes invitar a tus amigos.',demasiadas_salas:'Ya tienes varias partidas conectadas abiertas.'};
+
+/* ---------- Estado en vivo ---------- */
+function nuevoSL(info,yo){
+  return{id:info.id,codigo:info.codigo||'',rol:info.rol,puesto:info.puesto==null?null:+info.puesto,yo,cfg:{},duenoId:null,
+    srv:{j:juegoVacio(),v:[0,0],g:0,seq:0},pend:[],mem:[],ev:[],buf:{},ok:null,lock:null,conn:'ok',pres:{},ch:null,hb:null,
+    busy:false,drag:false,lastV:null,lastG:null,pick:null,menu:false,logO:false,plO:false,ordO:false,esperaO:false,ready:false,fin:false,cerrado:false,gapT:0,okMio:null}}
+/* Lo que se ve: el estado del servidor + mis toques pendientes */
+function vistaS(){
+  let b=clon(SL.srv.j);b.ord=b.ord||[];
+  for(const c of SL.pend){if(c.seq&&c.seq<=SL.srv.seq)continue;
+    if(c.tipo==='juego'){b=clon(c.res)}else{b.eq[c.i]=clon(c.res.eq[c.i]);if(c.ficha)delete b.mesa[c.ficha]}}
+  return b}
+function limpiarPend(){SL.pend=SL.pend.filter(c=>!(c.seq&&c.seq<=SL.srv.seq))}
+function espejo(){ // S.game sigue la forma de una partida normal para que Continuar, VS y demás funcionen
+  if(!SL||SL.cerrado)return;const g=gDe(vistaS());
+  S.game=Object.assign({},S.game&&S.game.sala&&S.game.sala.id===SL.id?S.game:{},g,{id:SL.id,sala:{id:SL.id,codigo:SL.codigo,rol:SL.rol,puesto:SL.puesto},
+    p:[0,1,2,3].map(idPuesto),tn:SL.cfg.tn||['',''],am:SL.cfg.am?1:0,guest:AUTH==='guest'?1:0,inf:SL.cfg.inf?1:0,hist:[]});
+  save()}
+function nombresSala(){SL.mem.forEach(m=>{if(!m.anonimo&&m.nombre)SLNOM[m.user_id]=m.nombre})}
+
+/* ---------- Entrar, conectar y soltar ---------- */
+async function salaEntrar(info){
+  salaSoltar();const u=await sbUser();
+  SL=nuevoSL(info,u&&u.id);
+  const ok=await resync();
+  if(!ok&&!SL)return false;
+  if(SL&&!SL.cerrado){conectar()}
+  return !!SL&&SL.ready}
+function salaSoltar(){
+  if(!SL)return;clearInterval(SL.hb);clearTimeout(SL.gapT);SL.hb=null;
+  if(SL.ch){try{sb.removeChannel(SL.ch)}catch(e){}SL.ch=null}}
+function conectar(){
+  if(!SL||SL.cerrado)return;
+  if(SL.ch){try{sb.removeChannel(SL.ch)}catch(e){}SL.ch=null}
+  const id=SL.id;
+  const ch=sb.channel('sala:'+id,{config:{presence:{key:(SL.puesto!=null?'p'+SL.puesto:'e'+Math.random().toString(36).slice(2,6))}}});
+  ch.on('postgres_changes',{event:'INSERT',schema:'public',table:'sala_eventos',filter:'sala=eq.'+id},p=>{if(SL&&SL.id===id&&p&&p.new)recibir(p.new)});
+  ch.on('presence',{event:'sync'},()=>{if(SL&&SL.id===id){try{SL.pres=ch.presenceState()}catch(e){}pintar()}});
+  ch.subscribe(async st=>{
+    if(!SL||SL.id!==id||SL.ch!==ch)return;
+    if(st==='SUBSCRIBED'){try{await ch.track({rol:SL.rol,puesto:SL.puesto})}catch(e){}SL.conn='ok';resync()}
+    else if(st==='CHANNEL_ERROR'||st==='TIMED_OUT'||st==='CLOSED'){SL.conn='off';pintar();reconectarLuego()}});
+  SL.ch=ch;clearInterval(SL.hb);SL.hb=setInterval(latido,30000)}
+function reconectarLuego(){if(!SL||SL.reT)return;SL.reT=setTimeout(async()=>{if(!SL)return;SL.reT=0;if(SL.conn==='ok')return;const ok=await resync();if(SL&&ok&&!SL.cerrado)conectar();else if(SL)reconectarLuego()},2500)}
+async function latido(){
+  if(!SL||SL.cerrado||document.hidden)return;
+  const r=await rpcSala('sala_latido',{p_sala:SL.id});
+  if(!SL)return;
+  if(r.motivo==='red'){SL.conn='off';pintar();reconectarLuego();return}
+  if(!r.ok){if(r.motivo==='expulsado')return salaTerminada('expulsado');if(r.motivo==='cerrada'||r.motivo==='no_miembro')return salaTerminada('cerrada');return}
+  if(r.seq>SL.srv.seq&&!SL.busy)resync()}
+
+/* Trae el estado completo (al entrar, al volver a la app y si se pierde algún evento) */
+async function resync(){
+  if(!SL)return false;const id=SL.id;
+  try{
+    const a=await sb.from('salas').select('estado,cfg,juego,v_eq,v_glob,seq,dueno,ok,codigo').eq('id',id).maybeSingle();
+    const b=await sb.from('sala_miembros').select('user_id,rol,puesto,estado,nombre,anonimo').eq('sala',id);
+    if(!SL||SL.id!==id)return false;
+    if(a.error||b.error){SL.conn='off';pintar();return false}
+    if(!a.data){salaTerminada('cerrada');return false}
+    const s=a.data;
+    SL.mem=(b.data||[]).filter(m=>m.estado!=='expulsado'||m.user_id===SL.yo);
+    const yo=(b.data||[]).find(m=>m.user_id===SL.yo);
+    if(yo){if(yo.estado==='expulsado'){salaTerminada('expulsado');return false}SL.rol=yo.rol;SL.puesto=yo.puesto==null?null:+yo.puesto}
+    SL.cfg=s.cfg||{};SL.codigo=s.codigo||SL.codigo;SL.duenoId=s.dueno;nombresSala();
+    if(s.seq>=SL.srv.seq){SL.srv={j:s.juego,v:s.v_eq,g:s.v_glob,seq:s.seq};Object.keys(SL.buf).forEach(k=>{if(+k<=s.seq)delete SL.buf[k]})}
+    SL.ok=s.ok&&s.ok.estado?s.ok:null;
+    limpiarPend();SL.conn='ok';SL.ready=true;
+    if(s.estado==='terminada'){const f=await sb.from('sala_eventos').select('despues').eq('sala',id).eq('tipo','fin').maybeSingle();if(SL&&f.data&&f.data.despues)onFin(f.data.despues);else salaTerminada('cerrada');return false}
+    if(s.estado==='cerrada'){salaTerminada('cerrada');return false}
+    espejo();procesar();
+    if(SL.ok&&SL.ok.estado==='aprobado'&&SL.ok.por===SL.puesto&&!SL.okMio)ejecutarOk(SL.ok.tipo);
+    return true
+  }catch(e){if(SL){SL.conn='off';pintar()}return false}}
+
+/* Eventos que llegan por tiempo real: se aplican en orden; si falta alguno se vuelve a pedir el estado */
+function recibir(row){if(!SL)return;if(row.seq>SL.srv.seq)SL.buf[row.seq]=row;procesar()}
+function procesar(){
+  if(!SL)return;
+  while(SL.buf[SL.srv.seq+1]){const e=SL.buf[SL.srv.seq+1];delete SL.buf[e.seq];aplicarEv(e);if(!SL)return}
+  Object.keys(SL.buf).forEach(k=>{if(+k<=SL.srv.seq)delete SL.buf[k]});
+  clearTimeout(SL.gapT);if(Object.keys(SL.buf).length)SL.gapT=setTimeout(()=>{if(SL&&Object.keys(SL.buf).length)resync()},1500);
+  limpiarPend();espejo();pintar()}
+function aplicarEv(e){
+  const d=e.despues||{},s=SL.srv;
+  if(d.juego)s.j=d.juego;
+  else{if(d.eq&&e.equipo!=null)s.j.eq[e.equipo]=d.eq;if(d.mesa)for(const[l,n]of Object.entries(d.mesa)){if(n==null)delete s.j.mesa[l];else s.j.mesa[l]=n}}
+  if(d.v)s.v=d.v;if(d.g!=null)s.g=d.g;s.seq=e.seq;
+  SL.ev.push(e);if(SL.ev.length>40)SL.ev.shift();
+  const t=e.tipo;
+  if(['suma','ficha_sumar','juego','deshacer'].includes(t)&&e.equipo===miEq()&&e.puesto!==SL.puesto){SL.lock={p:e.puesto,hasta:Date.now()+3000};setTimeout(()=>{if(SL)pintar()},3100)}
+  if(t==='deshacer'&&e.antes&&e.antes.seq){const x=SL.ev.find(y=>y.seq===e.antes.seq);if(x)x.deshecho=true}
+  if(['entra','sale','dueno','expulsion'].includes(t)){cargarMiembros();if(t==='expulsion'&&SL.rol==='jugador')setTimeout(latido,300)}
+  if(t==='ok_pedido'||t==='ok_voto'){SL.ok=d.ok;if(t==='ok_pedido')avisoOk(d.ok)}
+  if(t==='ok_aprobado'){SL.ok=d.ok;if(d.ok&&d.ok.por===SL.puesto&&!SL.okMio)ejecutarOk(d.ok.tipo)}
+  if(t==='ok_rechazado'){SL.ok=null;SL.esperaO=false;document.querySelectorAll('#slok').forEach(x=>x.remove());if(e.puesto!==SL.puesto)toast(nomPuesto(e.puesto)+(d.cancelado?' ha cancelado la petición.':' ha dicho que no.'))}
+  if(t==='reinicio'){SL.ok=null;SL.esperaO=false;SL.okMio=null;toast('Partida reiniciada.')}
+  if(t==='fin')onFin(d);
+  if(t==='cierre')salaTerminada('cerrada')}
+async function cargarMiembros(){
+  if(!SL)return;const id=SL.id;
+  let b;try{b=await sb.from('sala_miembros').select('user_id,rol,puesto,estado,nombre,anonimo').eq('sala',id)}catch(e){return}
+  if(!SL||SL.id!==id||b.error||!b.data)return;
+  SL.mem=b.data.filter(m=>m.estado!=='expulsado'||m.user_id===SL.yo);
+  const yo=b.data.find(m=>m.user_id===SL.yo);if(yo&&yo.estado!=='expulsado'){SL.rol=yo.rol;SL.puesto=yo.puesto==null?null:+yo.puesto}
+  nombresSala();espejo();pintar()}
+/* La sala se acabó (cierre, caducidad o expulsión): se avisa y se limpia */
+function salaTerminada(motivo){
+  if(!SL||SL.cerrado)return;SL.cerrado=true;salaSoltar();
+  const msg=motivo==='expulsado'?'El dueño te ha expulsado de la partida.':'La partida se ha cerrado.';
+  S.game=null;save();
+  dlg(msg,{},()=>{SL=null;go('home')})}
+
+/* ---------- Toques: se aplican al instante y se envían en orden; el servidor decide ---------- */
+function puedeJugar(){return esJug()&&SL.ready&&SL.conn==='ok'&&!SL.cerrado&&!bloqueado()}
+function bloqueado(){return !!(SL.lock&&SL.lock.p!==SL.puesto&&Date.now()<SL.lock.hasta)}
+function tocar(n,ficha){
+  if(!puedeJugar())return;
+  const i=miEq(),j0=vistaS();
+  if(!ficha&&n<0&&j0.eq[i].pts===0)return;
+  const r=reglasSuma(j0,SL.cfg,i,n,ficha||null);
+  const c={i,tipo:r.ev?'juego':(ficha?'ficha_sumar':'suma'),res:r.j,fin:r.fin};
+  if(ficha){c.ficha=ficha;c.esp=j0.mesa[ficha]}
+  SL.pend.push(c);espejo();pintar();drain()}
+async function drain(){
+  if(!SL||SL.busy)return;SL.busy=true;
+  try{while(SL){
+    const c=SL.pend.find(x=>!x.seq);if(!c)break;
+    const eq=c.i,base=Math.max(SL.srv.v[eq],SL.lastV?SL.lastV[eq]:0);
+    const a={p_sala:SL.id,p_tipo:c.tipo,p_base:base};
+    if(c.tipo==='suma')a.p_parte=c.res.eq[eq];
+    else if(c.tipo==='ficha_sumar'){a.p_parte=c.res.eq[eq];a.p_ficha=c.ficha;a.p_esperada=c.esp}
+    else a.p_juego=c.res;
+    const r=await rpcSala('sala_accion',a);
+    if(!SL)return;
+    if(r.motivo==='red'){SL.conn='off';pintar();reconectarLuego();await sleep(1500);if(SL&&SL.conn==='off')await resync();continue}
+    if(r.ok){c.seq=r.seq;SL.lastV=r.v;SL.lastG=r.g;esperarEco(r.seq);procesar();if(c.tipo==='juego'&&c.fin)terminarYa(true,c.res)}
+    else rechazo(r)}}
+  finally{if(SL)SL.busy=false}}
+function esperarEco(seq){setTimeout(()=>{if(SL&&SL.srv.seq<seq)resync()},2500)}
+function rechazo(r){
+  if(r.juego&&r.seq>=SL.srv.seq){SL.srv={j:r.juego,v:r.v,g:r.g,seq:r.seq};Object.keys(SL.buf).forEach(k=>{if(+k<=r.seq)delete SL.buf[k]})}
+  SL.pend=SL.pend.filter(c=>c.seq);SL.lastV=null;
+  const m=r.motivo;
+  if(m==='bloqueado'){SL.lock={p:r.puesto,hasta:Date.now()+3000};toast(nomPuesto(r.puesto)+' está sumando…')}
+  else if(m==='version')toast('Otro jugador se ha adelantado. Mira el marcador.');
+  else if(m==='ficha')toast('Esa ficha ya no está.');
+  else if(m==='ficha_ocupada')toast('Ya hay otra ficha en ese sitio.');
+  else if(m==='no_deshacer')toast('Ya no se puede deshacer.');
+  else if(m==='cerrada'||m==='sin_puesto')resync();
+  else if(m==='sin_aprobacion')toast('Falta el OK de los demás.');
+  else if(m!=='pendiente')toast(MSG[m]||'No se ha podido completar.');
+  procesar();pintar()}
+async function fichaPoner(l,n){
+  if(!puedeJugar())return;const cur=vistaS().mesa[l]||null;
+  const a=n?{p_sala:SL.id,p_tipo:'ficha_poner',p_ficha:l,p_esperada:cur,p_nueva:n}:{p_sala:SL.id,p_tipo:'ficha_quitar',p_ficha:l,p_esperada:cur};
+  const r=await rpcSala('sala_accion',a);if(!SL)return;
+  if(r.ok)esperarEco(r.seq);else rechazo(r)}
+async function ordago(w){
+  if(!puedeJugar())return;
+  const j0=vistaS(),g=gDe(j0),r=reglasSuma(j0,SL.cfg,w,SL.cfg.meta-g.pts[w],null);
+  const ids=[0,1,2,3].map(idPuesto),nj=r.j;
+  nj.ord=[...(j0.ord||[]),{w:ids.slice(w*2,w*2+2),l:ids.slice((1-w)*2,(1-w)*2+2)}];
+  const res=await rpcSala('sala_accion',{p_sala:SL.id,p_tipo:'ordago',p_base:Math.max(SL.srv.g,SL.lastG||0),p_juego:nj});if(!SL)return;
+  if(res.ok){SL.lastV=res.v;SL.lastG=res.g;esperarEco(res.seq);if(r.fin)terminarYa(true,nj)}else rechazo(res)}
+async function deshacer(seq){
+  if(!puedeJugar())return;
+  const r=await rpcSala('sala_accion',{p_sala:SL.id,p_tipo:'deshacer',p_esperada:seq});if(!SL)return;
+  if(r.ok)esperarEco(r.seq);else rechazo(r)}
+const deshacible=()=>{ // última acción de mi equipo que se puede deshacer
+  if(!esJug())return null;const i=miEq();let u=null;
+  for(let k=SL.ev.length-1;k>=0;k--){const e=SL.ev[k];
+    if(['inicio','juego','ordago','reinicio'].includes(e.tipo))break;
+    if(e.equipo===i&&['suma','ficha_sumar'].includes(e.tipo)&&!e.deshecho){u=e;break}}
+  return u}
+
+/* ---------- Terminar y reiniciar: hacen falta el OK de todos los jugadores conectados ---------- */
+function okDlg(txt,yes,no){
+  const d=document.createElement('div');d.className='ov c';d.id='slok';
+  d.innerHTML='<div class="mp"><b></b><div class="row"><button class="ghost" id="okn">No</button><button id="oky">OK</button></div></div>';
+  d.querySelector('b').textContent=txt;document.body.appendChild(d);
+  d.querySelector('#oky').onclick=()=>{d.remove();yes()};d.querySelector('#okn').onclick=()=>{d.remove();no()};
+  setTimeout(()=>{if(d.isConnected)d.remove()},58000)}
+function avisoOk(ok){
+  if(!SL||!esJug()||!ok||ok.por===SL.puesto)return;
+  document.querySelectorAll('#slok').forEach(x=>x.remove());
+  okDlg(nomPuesto(ok.por)+(ok.tipo==='terminar'?' quiere terminar la partida. ¿Estás de acuerdo?':' quiere reiniciar la partida. ¿Estás de acuerdo?'),
+    async()=>{const r=await rpcSala('sala_responder_ok',{p_sala:SL.id,p_si:true});if(!r.ok&&r.motivo!=='sin_peticion')toast(MSG[r.motivo]||'No se ha podido enviar tu OK.')},
+    async()=>{await rpcSala('sala_responder_ok',{p_sala:SL.id,p_si:false})})}
+async function pedirOk(tipo){
+  if(!esJug())return;
+  if(tipo==='terminar'&&delante(vistaS())<0){dlg('Van empatados: todavía no hay ganador. Sigue jugando hasta que una pareja se adelante.',{cr:1});return}
+  const txt=tipo==='terminar'?(SL.cfg.inf||SL.cfg.am?'¿Terminar partida? No contará como victoria ni derrota.':'¿Terminar partida? Contará como victoria para la pareja que va por delante y como derrota para la otra (no cuenta si no se llega a las vacas).'):'¿Reiniciar la partida? Se borran puntos, juegos, vacas y fichas.';
+  dlg(txt+' Hace falta el OK de los demás jugadores.',{cancel:1,ok:tipo==='terminar'?'Terminar':'Reiniciar',cr:1},async()=>{
+    const r=await rpcSala('sala_pedir_ok',{p_sala:SL.id,p_tipo:tipo});if(!SL)return;
+    if(!r.ok){toast(r.motivo==='pendiente'?'Ya hay una petición esperando el OK.':(MSG[r.motivo]||'No se ha podido pedir el OK.'));return}
+    SL.menu=false;if(r.estado==='aprobado'){ejecutarOk(tipo)}else{SL.esperaO=tipo;pintar();setTimeout(()=>{if(SL&&SL.esperaO){SL.esperaO=false;pintar()}},61000)}})}
+async function ejecutarOk(tipo){
+  if(!SL||SL.okMio)return;SL.okMio=tipo;SL.esperaO=false;
+  try{
+    if(tipo==='reiniciar'){const r=await rpcSala('sala_reiniciar',{p_sala:SL.id,p_juego:juegoVacio()});if(r.ok)esperarEco(SL.srv.seq+1);else rechazo(r)}
+    else await terminarYa(false)}
+  finally{if(SL)SL.okMio=null;if(SL)pintar()}}
+async function cancelarEspera(){SL.esperaO=false;pintar();rpcSala('sala_cancelar_ok',{p_sala:SL.id})}
+/* Cierra la partida: natural = se han alcanzado las vacas (no hace falta OK) */
+async function terminarYa(natural,jFinal){
+  if(!SL||SL.terminando)return;SL.terminando=true;
+  try{
+    const j=jFinal||vistaS(),g=gDe(j),c=SL.cfg,ids=[0,1,2,3].map(idPuesto);
+    let w=natural?(g.vc[0]>=c.vacas?0:1):delante(j);if(w<0)return;
+    const rec={id:SL.id,t:[[ids[0],ids[1]],[ids[2],ids[3]]],w,cfg:{meta:c.meta,juegos:c.juegos,vacas:c.vacas},fecha:Date.now(),o:j.ord||[],pl:g.pal,rs:g.rs,pz:g.pz,jt:g.jt,vc:[...g.vc],am:c.am?1:0,tn:c.tn||['',''],inv:0,nn:{sg1:'Jugador 1',sg2:'Jugador 2',sg3:'Jugador 3',sg4:'Jugador 4'}};
+    if(c.inf){rec.inf=1;rec.jg=[...g.jg]}
+    if(!natural&&!c.inf)rec.inc=1;
+    for(let k=0;k<3;k++){
+      const r=await rpcSala('sala_terminar',{p_sala:SL.id,p_rec:rec});if(!SL)return;
+      if(r.ok||r.motivo==='cerrada'){esperarEco(SL.srv.seq+1);setTimeout(()=>{if(SL&&!SL.fin)resync()},1500);return}
+      if(r.motivo==='red'){await sleep(1500);continue}
+      toast(MSG[r.motivo]||'No se ha podido terminar la partida.');return}
+  }finally{if(SL)SL.terminando=false}}
+
+/* ---------- Fin de la partida: cada jugador ve la mitad de su equipo; el espectador, la del ganador ---------- */
+function onFin(d){
+  if(!SL||SL.fin||!d||!d.rec)return;SL.fin=true;
+  const rec=d.rec,mi=miEq(),guest=AUTH==='guest',sinTr=guest||!d.guardada||!!rec.am||!!rec.inc;
+  let A=progress(),B=A;
+  if(AUTH==='user'&&d.guardada&&!rec.am&&esJug()){
+    ensureClaims(A);const h=clon(rec);delete h.nn;h.id=String(rec.id);h._cl=1;if(SL.duenoId)h._by=SL.duenoId;S.hist.push(h);B=progress();
+    try{subirResumen()}catch(e){}cargarPub(idsJug(h).filter(isUuid)).then(()=>{try{save()}catch(e){}})}
+  SL.cerrado=true;salaSoltar();S.game=null;save();
+  go('home');victoriaSala(rec,mi,A,B,sinTr)}
+function victoriaSala(rec,mi,A,B,sinTr){
+  const r=mi==null?rec.w:mi,d=document.createElement('div');d.className='ov vic one';
+  const nMed=id=>{const a=A[id]||blank(),b=B[id];if(!b)return 0;return FAM.filter(m=>lvl(b,m.id)>lvl(a,m.id)).length+SEC.filter(m=>b.sec[m.id]&&!a.sec[m.id]).length};
+  const tile=id=>{const f=S.friends.find(x=>x.id===id)||PUB[id]||{},a=A[id]||blank(),b=B[id]||blank(),dl=b.tr-a.tr,nm=(sinTr||sinCuenta(id))?0:nMed(id);
+    return '<div class="vk"><div class="vk-av">'+avatarHTML(f,b,64)+'</div><div class="vk-nm">'+esc(fname(id))+'</div>'
+    +(sinTr?'':'<div class="vk-d '+(dl>0?'up':dl<0?'dn':'')+'"><b>'+(dl>0?'+'+dl:dl<0?'−'+Math.abs(dl):'0')+'</b>'+trIcon(20)+'</div>')
+    +(nm?'<div class="vk-md">'+(nm>1?nm+' medallas':'Medalla')+'</div>':'')+'</div>'};
+  const won=r===rec.w;
+  d.innerHTML='<div class="mp vp'+(won?'':' def')+'"><div class="vc-fit"><small>'+(won?'¡Victoria!':'Derrota')+'</small><div class="vg">'+rec.t[r].map(tile).join('')+'</div>'
+    +(rec.am?'<div class="vu">Partida amistosa · sin cambios en los amarracos</div>':rec.inc?'<div class="vu">Partida terminada antes de tiempo · no cuenta como victoria ni derrota</div>':'')+'</div><div class="row vrow"><button id="vx" type="button">Volver a inicio</button></div></div>';
+  document.body.appendChild(d);if(won)rain(d,34,true,false);
+  const fit=()=>fitBox(d,'.mp.vp','.vc-fit',false);fit();window.addEventListener('resize',fit);
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);
+  d.querySelector('#vx').onclick=()=>{window.removeEventListener('resize',fit);SL=null;bootTo(()=>{d.remove();go('home')})}}
+
+/* ---------- Pantalla de conteo conectado ---------- */
+function game_sala(){
+  const g=S.game;app.classList.add('sl');
+  if(!SL||SL.id!==g.sala.id||!SL.ready){
+    app.innerHTML='<div class="sl-wait"><div class="logo" style="font-size:44px">MUS</div><p>Conectando con la partida…</p><button class="ghost" id="slw">Salir al inicio</button></div>';
+    $('#slw').onclick=()=>{salaSoltar();go('home')};
+    if(!reanudando){reanudando=true;(async()=>{const ok=await salaEntrar(g.sala);reanudando=false;
+      if(!ok&&(!SL||!SL.cerrado)&&view==='game'){app.innerHTML='<div class="sl-wait"><div class="logo" style="font-size:44px">MUS</div><p>No se ha podido conectar con la partida.</p><button class="gold" id="slr">Reintentar</button><button class="ghost" id="slw">Salir al inicio</button></div>';
+        $('#slr').onclick=()=>draw();$('#slw').onclick=()=>{salaSoltar();go('home')}}
+      else if(ok&&view==='game'){draw()}})()}
+    return}
+  pintar()}
+let reanudando=false;
+function presOn(p){if(p===SL.puesto)return SL.conn==='ok';return !!(SL.pres&&SL.pres['p'+p])}
+function pintar(){
+  if(!SL||SL.cerrado||SL.drag||view!=='game'||!S.game||!S.game.sala||S.game.sala.id!==SL.id||!SL.ready)return;
+  const j=vistaS(),c=SL.cfg,jug=esJug(),mi=jug?miEq():1,top=jug?1-mi:0,bot=jug?mi:1;
+  const eqs=Object.keys(SL.pres||{}),nEsp=eqs.filter(k=>k[0]==='e').length;
+  const tbox=k=>{const p=j.eq[k],tn=(c.tn||[])[k];
+    return '<div class="sl-team t'+k+(jug&&k===mi?' mine':'')+'" data-eq="'+k+'"><div class="sl-nm">'+(tn?'<small>'+esc(tn)+'</small>':'')
+      +[2*k,2*k+1].map(q=>'<span class="sl-pn"><i class="sl-dot'+(presOn(q)?' on':'')+'"></i><em>'+esc(nomPuesto(q))+'</em></span>').join('')+'</div>'
+      +'<div class="sl-big">'+p.pts+'</div><div class="sl-jv">J '+p.jg+(c.inf?'':' · V '+p.vc)+'</div></div>'};
+  const tcol=(jug&&mi===1)?'#b3392f':'#1d4f7a';
+  const slot=l=>{const n=j.mesa[l];
+    return '<div class="slot"><svg class="slotd" aria-hidden="true"><rect x="0" y="0" width="100%" height="100%" rx="13" fill="none" stroke="rgba(224,176,74,.9)" stroke-width="4" stroke-dasharray="16 10"/></svg><b class="cn"'+(jug?' data-pick="'+l+'"':'')+'>'+l+'</b>'
+      +(n?'<div class="chip" data-chip="'+l+'"><b style="color:'+tcol+'">'+ul(n)+'</b>'+lanceIcon(l,20)+(jug&&SL.sel===l?'<button class="del" data-del="'+l+'" aria-label="Quitar puntos">✕</button>':'')+'</div>':'<span class="plus"'+(jug?' data-pick="'+l+'"':'')+'>'+lanceIcon(l,28)+'</span>')+'</div>'};
+  const des=deshacible(),off=SL.conn!=='ok',bq=bloqueado();
+  let cap='';if(off)cap='Reconectando…';else if(bq)cap=nomPuesto(SL.lock.p)+' está sumando…';
+  const dis=(off||bq)?' disabled':'';
+  const botones=jug?'<div class="sl-cap">'+cap+'</div><div class="half sl-bw"><div class="btns b2" style="--c:'+col(mi)+'"><button data-n="1"'+dis+'>+1</button><button data-n="5"'+dis+'>+5</button></div><div class="b3"><span class="btns" style="display:contents;--c:'+col(mi)+';--m:'+(mi?'#8f2f28':'#245a8c')+'"><button data-n="-1"'+dis+'>−1</button></span><button class="ord" id="slo"'+(off?' disabled':'')+'>Órdago</button></div></div>'
+    :'<div class="sl-cap sl-watch">'+(off?'Reconectando…':'Estás viendo la partida · solo lectura')+'</div>';
+  app.innerHTML='<div class="sl-top"><span class="sl-mus">MUS</span><span class="sl-tools">'+(jug?'<button class="sl-ib" id="sllog" aria-label="Últimas acciones">'+ICO_LOG+'</button>':'')+'<button class="sl-ib" id="slpl" aria-label="Jugadores">'+ICO_OJOS+'<em>'+nEsp+'</em></button><button class="sl-chip2" id="slcode" aria-label="Copiar código">SALA <b>'+esc(SL.codigo)+'</b>'+ICO_COPY+'</button></span></div>'
+    +(off?'<div class="sl-ban">Reconectando…</div>':'')
+    +tbox(top)+'<div class="mesa sl-mesa"><button class="sm" id="slx" aria-label="Menú de la partida">'+EXIT+'</button>'+LAN_SL.map(slot).join('')+'</div>'+tbox(bot)+botones
+    +(SL.pick?pickSala():'')+(SL.menu?menuSala():'')+(SL.logO?logSala(des):'')+(SL.plO?jugSala():'')+(SL.ordO?ordSala():'')+(SL.esperaO?esperaSala():'');
+  ligar(des)}
+const pickSala=()=>{const l=SL.pick,n=SL.betTmp==null?2:SL.betTmp;
+  return '<div class="ov gpn bet"><div style="flex:1 1 0"></div><div class="mp bp"><h3>'+lanceIcon(l,28)+'<span>'+LAN_NM[l]+'</span></h3><div class="num">'+ul(n)+'</div><div class="row3"><button class="neg" data-bet="-1">−1</button><button data-bet="1">+1</button><button data-bet="5">+5</button></div><div class="row2b"><button class="back" data-bet="back">‹ Atrás</button><button class="ok" data-bet="x">Listo</button></div></div></div>'};
+const menuSala=()=>'<div class="ov gpn sl1"><div class="mp"><b>Partida</b><div class="opts g1">'+(esJug()?'<button data-menu="r">Reiniciar partida</button><button data-menu="t">Terminar partida</button>':'<button data-menu="s">Dejar de ver la partida</button>')+'<button data-menu="q">Salir al inicio</button><button class="ghost" data-menu="x">Seguir '+(esJug()?'jugando':'viendo')+'</button></div></div></div>';
+const ordSala=()=>'<div class="ov gpn sl1"><div class="mp"><b>¿Quién ha ganado el órdago?</b><div class="opts g1 odo">'+[0,1].map(i=>'<button data-od="'+i+'">'+esc(nomPuesto(2*i))+' y '+esc(nomPuesto(2*i+1))+'</button>').join('')+'<button class="ghost odb" data-od="x">‹ Atrás</button></div></div></div>';
+const esperaSala=()=>'<div class="ov c"><div class="mp"><b>Esperando el OK de los demás jugadores…</b><div class="row"><button class="ghost" id="sles">Cerrar</button></div></div></div>';
+function txtEv(e){
+  const n=nomPuesto(e.puesto),eq=e.equipo!=null?(SL.cfg.tn&&SL.cfg.tn[e.equipo]?SL.cfg.tn[e.equipo]:(e.equipo?'el equipo rojo':'el equipo azul')):'',d=e.despues||{},a=e.antes||{};
+  const dl=(a.eq&&d.eq)?d.eq.pts-a.eq.pts:0,sg=x=>x>0?'+'+x:'−'+Math.abs(x);
+  switch(e.tipo){case'suma':return n+' · '+sg(dl)+' a '+eq;case'ficha_sumar':return n+' llevó la ficha ('+sg(dl)+') a '+eq;case'ficha_poner':return n+' puso una ficha';case'ficha_quitar':return n+' quitó una ficha';
+    case'juego':return n+': ¡juego para '+eq+'!';case'ordago':return n+' anotó un órdago';case'deshacer':return n+' deshizo una acción';case'reinicio':return 'Partida reiniciada';case'inicio':return 'Empieza la partida';
+    case'entra':return nomPuesto(e.puesto)+' se ha conectado';case'sale':return 'Un jugador ha salido';default:return null}}
+const logSala=des=>{const ls=SL.ev.map(e=>[e,txtEv(e)]).filter(x=>x[1]).slice(-10).reverse();
+  return '<div class="ov c"><div class="mp"><b>Últimas acciones</b><div class="sl-log">'+(ls.length?ls.map(([e,t])=>'<p'+(e.deshecho?' class="dz"':'')+'>'+esc(t)+'</p>').join(''):'<p>Todavía no hay acciones.</p>')+'</div><div class="row">'+(des?'<button class="ghost" id="sldes">Deshacer: '+esc(txtEv(des))+'</button>':'')+'<button id="slcl">Cerrar</button></div></div></div>'};
+const jugSala=()=>{const due=SL.duenoId&&SL.duenoId===SL.yo,esp=SL.mem.filter(m=>m.rol==='espectador'&&m.estado==='dentro');
+  const fila=m=>'<p><i class="sl-dot'+(m.puesto!=null&&presOn(m.puesto)?' on':'')+'"></i>'+esc(m.nombre||'Jugador')+(m.user_id===SL.duenoId?' · dueño':'')+((due&&m.user_id!==SL.yo&&m.estado!=='invitado')||(due&&m.estado==='invitado')?' <button class="ghost sl-ex" data-ex="'+m.user_id+'">Expulsar</button>':'')+'</p>';
+  const jugs=[0,1,2,3].map(p=>{const m=memP(p);return m?fila(m):'<p><i class="sl-dot"></i>Jugador '+(p+1)+' · libre</p>'}).join('');
+  return '<div class="ov c"><div class="mp"><b>Sala '+esc(SL.codigo)+'</b><div class="sl-log">'+jugs+(esp.length?'<p class="sl-sub">Espectadores ('+esp.length+')</p>'+(due?esp.map(fila).join(''):''):'')+'</div><div class="row"><button id="slpc">Cerrar</button></div></div></div>'};
+function ligar(des){
+  const q=s=>app.querySelector(s),qa=s=>app.querySelectorAll(s);
+  q('#slx').onclick=()=>{SL.menu=true;pintar()};
+  q('#slcode').onclick=()=>{try{navigator.clipboard.writeText(SL.codigo)}catch(e){}toast('Código copiado: '+SL.codigo)};
+  q('#slpl').onclick=()=>{SL.plO=true;cargarMiembros();pintar()};
+  if(q('#sllog'))q('#sllog').onclick=()=>{SL.logO=true;pintar()};
+  qa('[data-n]').forEach(b=>b.onclick=()=>tocar(+b.dataset.n));
+  if(q('#slo'))q('#slo').onclick=()=>{SL.ordO=true;pintar()};
+  qa('[data-pick]').forEach(e=>e.onclick=()=>{SL.pick=e.dataset.pick;SL.sel=null;SL.betTmp=vistaS().mesa[SL.pick]||2;pintar()});
+  qa('[data-bet]').forEach(b=>b.onclick=()=>{const v=b.dataset.bet,l=SL.pick;
+    if(v==='back'){SL.pick=null;SL.betTmp=null;pintar();return}
+    if(v==='x'){const n=SL.betTmp;SL.pick=null;SL.betTmp=null;pintar();fichaPoner(l,n);return}
+    SL.betTmp=Math.max(1,Math.min(60,SL.betTmp+ +v));pintar()});
+  qa('[data-del]').forEach(b=>b.onclick=()=>{const l=b.dataset.del;SL.sel=null;pintar();fichaPoner(l,0)});
+  qa('[data-od]').forEach(b=>b.onclick=()=>{const v=b.dataset.od;SL.ordO=false;pintar();if(v!=='x')ordago(+v)});
+  qa('[data-menu]').forEach(b=>b.onclick=()=>{const v=b.dataset.menu;if(v==='x'){SL.menu=false;pintar()}else if(v==='q'){SL.menu=false;salaSoltar();go('home')}
+    else if(v==='s'){SL.menu=false;pintar();dlg('¿Dejar de ver la partida?',{cancel:1,ok:'Dejar de ver',cr:1},async()=>{try{await rpcSala('sala_salir',{p_sala:SL.id})}catch(e){}salaSoltar();SL=null;S.game=null;save();go('home')})}else{SL.menu=false;pintar();pedirOk(v==='t'?'terminar':'reiniciar')}});
+  if(q('#sles'))q('#sles').onclick=cancelarEspera;
+  if(q('#slcl'))q('#slcl').onclick=()=>{SL.logO=false;pintar()};
+  if(q('#sldes'))q('#sldes').onclick=()=>{SL.logO=false;pintar();deshacer(des.seq)};
+  if(q('#slpc'))q('#slpc').onclick=()=>{SL.plO=false;pintar()};
+  qa('[data-ex]').forEach(b=>b.onclick=()=>{const u=b.dataset.ex;dlg('¿Expulsar a este jugador de la partida?',{cancel:1,ok:'Expulsar',cr:1},async()=>{const r=await rpcSala('sala_expulsar',{p_sala:SL.id,p_user:u});if(!r.ok)toast(MSG[r.motivo]||'No se ha podido expulsar.');else cargarMiembros()})});
+  /* Fichas: se arrastran solo a MI equipo; un toque abre el cuadro para cambiar o quitar */
+  qa('.chip').forEach(ch=>{
+    if(!esJug())return;let sx,sy,mv=false,on=false;
+    ch.onpointerdown=e=>{if(e.target.closest('button'))return;sx=e.clientX;sy=e.clientY;mv=false;on=true;SL.drag=true;ch.setPointerCapture(e.pointerId);ch.style.zIndex=20};
+    ch.onpointermove=e=>{if(!on)return;const dx=e.clientX-sx,dy=e.clientY-sy;if(Math.abs(dx)+Math.abs(dy)>8)mv=true;if(mv)ch.style.transform='translate('+dx+'px,'+dy+'px) scale(1.25)'};
+    ch.onpointerup=e=>{if(!on)return;on=false;
+      SL.drag=false;if(!mv){SL.sel=SL.sel===ch.dataset.chip?null:ch.dataset.chip;pintar();return}
+      ch.style.visibility='hidden';const h=document.elementsFromPoint(e.clientX,e.clientY).find(x=>x.classList&&x.classList.contains('sl-team'));ch.style.visibility='';
+      SL.sel=null;if(h&&h.classList.contains('mine'))tocar(vistaS().mesa[ch.dataset.chip],ch.dataset.chip);
+      else{if(h)toast('Solo puedes sumar puntos a tu equipo.');pintar()}};
+    ch.onpointercancel=()=>{on=false;SL.drag=false;pintar()}})}
+
+/* ---------- Inicio: invitaciones, modo de conteo y conectarse ---------- */
+function invPoll(){
+  clearTimeout(invT);if(view!=='home'||AUTH!=='user'||document.hidden)return;
+  const paso=async()=>{
+    if(view!=='home'||AUTH!=='user')return;
+    let r;try{r=await sb.rpc('sala_invitaciones')}catch(e){r={error:1}}
+    if(!r.error&&Array.isArray(r.data)){const hay=r.data.length>0,antes=INV.length>0;INV=r.data;if(hay!==antes&&view==='home'){const b=$('#cn');if(b){b.classList.toggle('late',hay);const dot=b.querySelector('.mbadge');if(hay&&!dot)b.insertAdjacentHTML('beforeend','<span class="mbadge" aria-label="Tienes una invitación"></span>');if(!hay&&dot)dot.remove()}}}
+    invT=setTimeout(paso,15000)};
+  paso()}
+function modoDlg(){
+  const G=AUTH==='guest',d=document.createElement('div');d.className='ov c sl-modo';
+  d.innerHTML='<div class="mp"><b>¿Cómo quieres llevar el conteo?</b><div class="sl-m2"><button class="ghost sl-mb" id="m1" type="button"><span>Local</span>'+help('modoLocal')+'</button><button class="ghost sl-mb'+(G?' glk':'')+'" id="m2" type="button"><span>Conectando dispositivos</span>'+help('modoConectado')+'</button></div><button class="ghost" id="m0" type="button">Cancelar</button></div>';
+  document.body.appendChild(d);
+  d.querySelector('#m0').onclick=()=>d.remove();
+  d.querySelector('#m1').onclick=()=>{d.remove();SETUP_CONN=false;SETUP_SALA=null;go('setup')};
+  d.querySelector('#m2').onclick=()=>{d.remove();if(G){lockMsg('crear partidas con varios dispositivos');return}SETUP_CONN=true;SETUP_SALA=null;go('setup')}}
+function conectarDlg(){
+  if(S.game){dlg('Ya tienes una partida a medias. Termínala o abandónala antes de conectarte a otra.',{});return}
+  const d=document.createElement('div');d.className='ov c';const inv=INV[0];
+  d.innerHTML='<div class="mp"><b>Conectarse a partida</b>'+(inv?'<div class="sl-inv"><p>Tu amigo <b>'+esc(inv.de||'alguien')+'</b> te ha invitado a una partida, ¿deseas unirte?</p><div class="row"><button class="ghost" id="ir">Rechazar</button><button id="ia">Unirme</button></div></div><p class="sl-or">o con un código de sala</p>':'<p class="sl-or">Escribe el código de sala que te han pasado.</p>')
+    +'<input id="cc" maxlength="8" placeholder="Código de sala" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false"><p id="cm" class="sl-msg"></p><div class="row"><button class="ghost" id="cx">Cancelar</button><button id="ck">Entrar</button></div>'
+    +(AUTH==='guest'?'<p class="sl-or"><a href="#" id="cb" class="plink">Borrar mis datos de conexión</a></p>':'')+'</div>';
+  document.body.appendChild(d);
+  const msg=t=>{d.querySelector('#cm').textContent=t||''},busy=v=>d.querySelectorAll('button').forEach(b=>b.disabled=v);
+  d.querySelector('#cx').onclick=()=>d.remove();
+  const cb=d.querySelector('#cb');if(cb)cb.onclick=async e=>{e.preventDefault();const u=await sbUser();if(!u||!u.is_anonymous){msg('No hay datos guardados.');return}busy(true);const r=await rpcSala('eliminar_mi_cuenta');try{await sb.auth.signOut({scope:'local'})}catch(x){}busy(false);msg(r.ok===false?MSG.red:'Datos borrados.')};
+  if(inv){
+    d.querySelector('#ir').onclick=async()=>{busy(true);await rpcSala('sala_rechazar',{p_sala:inv.sala});INV=INV.filter(x=>x.sala!==inv.sala);d.remove();draw()};
+    d.querySelector('#ia').onclick=async()=>{busy(true);msg('');const r=await rpcSala('sala_aceptar',{p_sala:inv.sala});
+      if(!r.ok){busy(false);msg(MSG[r.motivo]||MSG.error);INV=INV.filter(x=>x.sala!==inv.sala);return}
+      INV=INV.filter(x=>x.sala!==inv.sala);d.remove();await entrarSala({id:inv.sala,rol:'jugador',puesto:r.puesto},true)}}
+  const ir=async()=>{
+    const cod=d.querySelector('#cc').value.trim();if(!cod){msg('Escribe el código.');return}
+    busy(true);msg('');
+    if(AUTH==='guest'){const u=await asegurarAnon();if(!u){busy(false);msg(MSG.red);return}}
+    let r=await rpcSala('sala_unirse',{p_codigo:cod,p_rol:'espectador',p_puesto:null});
+    if(!r.ok){busy(false);msg(MSG[r.motivo]||MSG.error);return}
+    d.remove();
+    if(r.rol==='jugador'){await entrarSala({id:r.sala,rol:'jugador',puesto:r.puesto},true);return}
+    /* No tenía sitio: puede elegir un puesto libre («¿Qué jugador eres?») o solo mirar */
+    const u=await sbUser();const m=await sb.from('sala_miembros').select('puesto,estado').eq('sala',r.sala);
+    const ocupados=new Set((m.data||[]).filter(x=>x.puesto!=null&&x.estado!=='expulsado').map(x=>x.puesto)),libres=[0,1,2,3].filter(p=>!ocupados.has(p));
+    quienDlg(cod,r.sala,libres)};
+  d.querySelector('#ck').onclick=ir;d.querySelector('#cc').onkeydown=e=>{if(e.key==='Enter')ir()}}
+function quienDlg(cod,sala,libres){
+  const d=document.createElement('div');d.className='ov c';
+  d.innerHTML='<div class="mp"><b>¿Qué jugador eres?</b><div class="opts g1">'+libres.map(p=>'<button data-p="'+p+'">Jugador '+(p+1)+'</button>').join('')+'<button class="ghost" id="qm">Solo mirar (espectador)</button></div><p id="qmsg" class="sl-msg"></p></div>';
+  document.body.appendChild(d);
+  d.querySelector('#qm').onclick=async()=>{d.remove();await entrarSala({id:sala,rol:'espectador',puesto:null},false)};
+  d.querySelectorAll('[data-p]').forEach(b=>b.onclick=async()=>{
+    const r=await rpcSala('sala_unirse',{p_codigo:cod,p_rol:'jugador',p_puesto:+b.dataset.p});
+    if(!r.ok){d.querySelector('#qmsg').textContent=MSG[r.motivo]||MSG.error;if(r.motivo==='puesto_ocupado')b.remove();return}
+    d.remove();await entrarSala({id:r.sala,rol:'jugador',puesto:r.puesto},true)})}
+async function entrarSala(info,vs){
+  const ok=await salaEntrar(info);
+  if(!ok){if(!SL||!SL.cerrado)dlg(MSG.red,{});return}
+  go('game');if(vs&&esJug())vsIntro()}
+
+/* ---------- Iniciar partida conectada: el código se reserva al elegir el modo y se activa al «Aceptar y empezar» ---------- */
+async function reservarSala(){
+  const chip=()=>document.getElementById('slc');
+  const r=await rpcSala('sala_crear',{p_cfg:{}});
+  if(!r.ok){dlg(MSG[r.motivo]||MSG.red,{},()=>{SETUP_CONN=false;go('home')});return}
+  SETUP_SALA={id:r.sala,codigo:r.codigo};
+  if(chip())chip().innerHTML='SALA <b>'+r.codigo+'</b>'}
+async function activarSala(p,tn){
+  const me=meId();
+  if(!p.includes(me)){dlg('Tu perfil tiene que jugar en la partida conectada.',{});return}
+  if(!SETUP_SALA){dlg('Espera un momento: se está reservando el código de sala.',{});return}
+  const c=S.cfg,cfg={meta:c.meta,juegos:c.juegos,vacas:c.vacas,inf:$('#inf').checked?1:0,am:($('#am')&&$('#am').checked)?1:0,tn};
+  const ok=$('#ok');ok.disabled=true;
+  const r=await rpcSala('sala_activar',{p_sala:SETUP_SALA.id,p_cfg:cfg,p_juego:juegoVacio(),p_puestos:p.map(id=>isUuid(id)?id:null)});
+  if(!r.ok){ok.disabled=false;dlg(r.motivo==='no_config'?'La sala ha caducado. Vuelve a elegir «Conectando varios dispositivos».':(MSG[r.motivo]||MSG.red),{});return}
+  const info={id:SETUP_SALA.id,codigo:SETUP_SALA.codigo,rol:'jugador',puesto:p.indexOf(me)};SETUP_CONN=false;SETUP_SALA=null;
+  const ok2=await salaEntrar(info);
+  if(!ok2){ok.disabled=false;dlg(MSG.red,{});return}
+  go('game');vsIntro()}
+
+/* ---------- Enganches con el resto de la app ---------- */
+{const d0=draw;draw=function(){if(view!=='game'){app.classList.remove('sl');salaSoltar()}if(view!=='home')clearTimeout(invT);d0();if(view==='home')invPoll()}}
+document.addEventListener('visibilitychange',()=>{if(document.hidden||!SL||SL.cerrado)return;latido();resync().then(ok=>{if(ok&&SL&&view==='game'&&(!SL.ch||SL.conn!=='ok'))conectar()});if(view==='home')invPoll()});
+window.addEventListener('online',()=>{if(SL&&!SL.cerrado)resync().then(ok=>{if(ok&&SL)conectar()})});
+window.addEventListener('offline',()=>{if(SL){SL.conn='off';pintar()}});
+
 view='welcome';
 ensureClaims(progress());pruebaReclamo();
 draw();
 {const h=location.hash.slice(1);if(h&&!/access_token=|refresh_token=|error=|error_code=|type=(signup|recovery|magiclink|invite|email_change)/.test(h))PEND=h} // el enlace compartido se importa al iniciar sesión
+avisoEnlace();
 entrarUsuario() // sesión recordada en este dispositivo: entra directamente, sin pedir los datos
 </script>
 <script>
@@ -2404,7 +3207,7 @@ entrarUsuario() // sesión recordada en este dispositivo: entra directamente, si
  function openList(sel,btn){
   var d=document.createElement('div');d.className='ov c';
   var pk=/^p[0-3]$/.test(sel.id),esc=function(t){return t.replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})};
-  var opts=[].map.call(sel.options,function(o,i){var g=pk&&o.dataset.gen,tg=pk&&o.dataset.tag;return '<button type="button" class="csopt'+(i===sel.selectedIndex?' on':'')+(g?' csgen':'')+'" data-i="'+i+'"><span>'+esc(o.text)+(g?'<small>Sin la app</small>':'')+(tg?'<small class="cstag">'+tg+'</small>':'')+'</span></button>'}).join('');
+  var opts=[].map.call(sel.options,function(o,i){if(pk&&o.dataset.ph)return'';var g=pk&&o.dataset.gen,tg=pk&&o.dataset.tag;return '<button type="button" class="csopt'+(i===sel.selectedIndex?' on':'')+(g?' csgen':'')+'" data-i="'+i+'"><span>'+esc(o.text)+(g?'<small>Jugador sin la app</small>':'')+(tg?'<small class="cstag">'+tg+'</small>':'')+'</span></button>'}).join('');
   if(pk){
    d.innerHTML='<div class="mp pkr"><div class="pkr-bar"><button type="button" class="csback">‹ Atrás</button><b>Escoger jugador</b></div><div class="mpi"><div class="cs-list">'+opts+'</div></div></div>';
    document.body.appendChild(d);
@@ -2600,9 +3403,14 @@ try{if(screen.orientation&&screen.orientation.lock){screen.orientation.lock('por
 .ov.auth .mp>b{font:700 20px Literata,Georgia,serif;text-align:center;letter-spacing:.02em;margin-bottom:2px}
 .ov.auth .alb{font:600 14px Literata,Georgia,serif;color:var(--mute);margin:2px 0 -4px 2px}
 .ov.auth input{width:100%}
+html body .ov.auth .pw{position:relative;display:block;width:100%}
+html body .ov.auth .pw input{padding-right:48px}
+html body .ov.auth .pw .pwe{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:40px;height:40px;min-width:0;margin:0;padding:0;display:flex;align-items:center;justify-content:center;background:none;border:0;box-shadow:none;border-radius:10px;color:#c9a24e;cursor:pointer;filter:none}
+html body .ov.auth .pw .pwe:active{color:#f2d98a}
 .ov.auth .mp>button.alk{align-self:center;border:0!important;background:none!important;box-shadow:none!important;color:#e8bd55!important;text-shadow:none!important;font:600 14px Literata,Georgia,serif;text-decoration:underline;text-underline-offset:3px;padding:4px 8px;margin:0;min-height:0;width:auto;transform:none}
 .ov.auth .aerr{margin:0;min-height:0;text-align:center;font-size:13.5px;line-height:1.35;color:#ff9a8c}
 .ov.auth .aerr:empty{display:none}
+.ov.auth .atx.just{text-align:justify;hyphens:auto;-webkit-hyphens:auto}
 .ov.auth .atx{margin:0;text-align:center;font-size:15px;line-height:1.45;color:var(--ink);overflow-wrap:anywhere}
 .ov.auth .asim{margin:0;text-align:center;font-size:12.5px;line-height:1.35;color:var(--mute)}
 .ov.auth .mp>button.cr2{width:100%}
@@ -2610,6 +3418,7 @@ try{if(screen.orientation&&screen.orientation.lock){screen.orientation.lock('por
 </style>
 <style id="acceso-css">
 /* Acceso: pantalla inicial, secciones bloqueadas y jugadores fijos */
+.plink{color:inherit;text-decoration:underline;text-underline-offset:3px}
 .wnote{margin:2px 0 0;text-align:center;font-size:13px;line-height:1.35;color:rgba(246,239,220,.74)}
 button.glk{position:relative;filter:saturate(.5) brightness(.8)}
 button.glk .plk{position:static;flex:0 0 auto;width:17px;height:17px;color:#f6efdc;pointer-events:none}
@@ -2892,6 +3701,136 @@ box-shadow:inset 0 1.5px 1px rgba(255,205,150,.65),inset 0 -2.5px 3px rgba(0,0,0
 html body #app.friends .rqbtn .rqc{isolation:isolate}
 html body #app.friends .rqbtn .rqc::before{content:'';position:absolute;z-index:-1;left:18%;right:18%;top:9%;height:30%;border-radius:50%;background:linear-gradient(180deg,rgba(255,255,255,.4),rgba(255,255,255,0));pointer-events:none}
 html body #app.friends .rqbtn .rqc>*{position:relative}
+</style>
+<style id="e9-brillo">
+/* Reclamar medalla: el brillo del final era un «drop-shadow» del cuadro de la imagen y dejaba ver sus bordes cuadrados. Ahora es un halo circular que se desvanece solo */
+@keyframes medres{0%{filter:brightness(1)}25%{filter:brightness(1.5)}100%{filter:brightness(1)}}
+@keyframes medhalo{0%{opacity:0;transform:scale(.8)}25%{opacity:1;transform:scale(1.15)}100%{opacity:.4;transform:scale(1)}}
+.mnew::before,.mfly::before{content:"";position:absolute;inset:-12%;border-radius:50%;pointer-events:none;background:radial-gradient(circle closest-side,rgba(255,226,120,.95) 0%,rgba(255,196,60,.55) 55%,rgba(255,196,60,0) 100%);animation:medhalo 1.9s ease-out .4s both}
+.mfly::before{animation-delay:.47s}
+</style>
+<style id="sl-css">
+/* ===== Modo conectado (paso 7) ===== */
+#app.game.sl{padding:calc(10px + env(safe-area-inset-top,0px)*0) 16px 12px;gap:9px;overflow:hidden}
+.sl-wait{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;color:#eae2cc}
+.sl-wait .logo{color:#e0b04a}.sl-wait p{margin:0;font-size:17px}.sl-wait button{min-width:220px;padding:13px}
+.sl-top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:0 0 auto}
+.sl-mus{font:800 28px/1 Literata,Georgia,serif;letter-spacing:.22em;color:#e0b04a;text-shadow:0 2px 0 rgba(0,0,0,.45)}
+.sl-tools{display:flex;align-items:center;gap:7px}
+.sl-ib{position:relative;display:flex;align-items:center;gap:4px;padding:8px 10px;border-radius:12px;border:1.5px solid rgba(224,176,74,.6);background:rgba(0,0,0,.25);color:#f1e8d0;font:700 13px Literata,Georgia,serif}
+.sl-ib em{font-style:normal}
+.sl-chip2{display:flex;align-items:center;gap:7px;padding:8px 12px;border:0;border-radius:14px;background:#cfa63d;color:#2a1a08;font:700 12px Literata,Georgia,serif;letter-spacing:.14em;box-shadow:0 2px 0 rgba(0,0,0,.4)}
+.sl-chip2 b{font:800 21px/1 Literata,Georgia,serif;letter-spacing:.1em}
+.sl-ban{flex:0 0 auto;background:#8a2f26;color:#fff3d6;text-align:center;font:700 14px Literata,Georgia,serif;padding:6px;border-radius:10px}
+.sl-team{position:relative;flex:1 1 0;min-height:0;display:flex;flex-direction:column;justify-content:space-between;padding:14px 18px;border-radius:26px;border:3px solid #c8a050;color:#fbf0d9;overflow:hidden;box-shadow:0 6px 16px rgba(0,0,0,.45)}
+.sl-team.t0{background:radial-gradient(ellipse at 60% 55%,#67a2d6 0,#3a78b5 45%,#2a64a0 100%)}
+.sl-team.t1{background:radial-gradient(ellipse at 60% 55%,#d8685d 0,#bd453c 50%,#a83932 100%)}
+.sl-team.mine{box-shadow:0 0 0 3px rgba(255,240,190,.35),0 6px 16px rgba(0,0,0,.45)}
+.sl-nm{display:flex;flex-direction:column;gap:2px;font:700 clamp(17px,5.1vw,23px)/1.15 Literata,Georgia,serif;text-shadow:0 1px 0 rgba(0,0,0,.35);position:relative;z-index:1;max-width:62%}
+.sl-nm small{font:700 12px Literata,Georgia,serif;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
+.sl-nm span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sl-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:rgba(255,255,255,.28);vertical-align:middle}
+.sl-dot.on{background:#8df0a8;box-shadow:0 0 6px #8df0a8}
+.sl-big{position:absolute;right:20px;bottom:30px;font:800 clamp(86px,28vw,150px)/.9 Literata,Georgia,serif;color:#fbf0d9;text-shadow:0 5px 0 rgba(0,0,0,.28)}
+.sl-jv{position:relative;z-index:1;font:700 clamp(15px,4.3vw,19px) Literata,Georgia,serif;letter-spacing:.12em;opacity:.8}
+.sl-cap{flex:0 0 auto;min-height:18px;text-align:center;font:700 14px Literata,Georgia,serif;color:#f4d98a}
+.sl-watch{color:#cfc7ae;font-weight:600}
+.sl-toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 18px);transform:translateX(-50%);max-width:86%;z-index:60;background:rgba(20,40,28,.96);color:#fbf0d9;border:1.5px solid #c8a050;border-radius:14px;padding:10px 16px;font:700 15px Literata,Georgia,serif;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,.5)}
+.sl-log{display:flex;flex-direction:column;gap:2px;max-height:46vh;overflow-y:auto;text-align:left}
+.sl-log p{margin:0;padding:7px 2px;border-bottom:1px dashed rgba(200,160,80,.3);font-size:15px}
+.sl-log p.dz{text-decoration:line-through;opacity:.55}
+.sl-log .sl-sub{font-weight:700;border:0;color:#e0b04a}
+.sl-ex{padding:4px 9px!important;font-size:12px!important;margin-left:8px}
+.sl-msg{min-height:18px;margin:0;color:#f0a090;font-size:14px}
+.sl-or{margin:2px 0;text-align:center;font-size:14px;opacity:.85}
+.sl-inv{border:1.5px solid rgba(200,160,80,.55);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:10px}
+.sl-inv p{margin:0;font-size:16px}
+#app.home .menu button.late{animation:late 2.4s ease-in-out infinite}
+@keyframes late{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.025);filter:brightness(1.22)}}
+@media (prefers-reduced-motion:reduce){#app.home .menu button.late{animation:none}}
+.setup-code{margin-left:auto}
+.sl-chip3{margin-left:auto;padding:6px 10px;border-radius:12px;background:#cfa63d;color:#2a1a08;font:700 10px Literata,Georgia,serif;letter-spacing:.12em;white-space:nowrap;flex:0 0 auto}
+.sl-chip3 b{font:800 16px Literata,Georgia,serif;letter-spacing:.08em}
+.sl-mus{font-size:24px;letter-spacing:.14em}
+.sl-top{flex-wrap:nowrap}.sl-tools{min-width:0;gap:6px}
+.sl-ib{padding:7px 9px}
+.sl-chip2{padding:7px 10px;gap:6px;font-size:11px;letter-spacing:.1em;min-width:0}
+.sl-chip2 b{font-size:18px;letter-spacing:.06em}
+
+/* ---- conteo: botones y fichas con el aspecto del modo local ---- */
+.sl-mesa{flex:0 0 auto}
+.sl-bw{background:none!important;border:0!important;box-shadow:none!important;padding:0!important;margin:0!important;flex:0 0 auto;display:flex!important;flex-direction:column;gap:8px;transform:none!important}
+.sl-bw button:disabled{opacity:.45;filter:saturate(.7)}
+#app.game.sl .chip{touch-action:none}
+/* ---- cuadro «¿Cómo quieres llevar el conteo?» ---- */
+.sl-modo .mp{gap:14px}
+.sl-m2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sl-m2 .sl-mb{position:relative;display:flex!important;align-items:center;justify-content:center;text-align:center;min-height:78px;padding:12px 38px 12px 12px!important;font-size:17px;line-height:1.15;color:#f6efdc}
+.sl-m2 .sl-mb .hq{position:absolute;right:10px;top:50%;margin:-11px 0 0 0}
+.sl-m2 .sl-mb.glk{opacity:.8}
+/* ---- inicio: botones algo más pequeños ---- */
+#app.home .menu #cn{font-size:clamp(15px,calc(2.1*var(--vh)),18px);padding:clamp(9px,calc(1.6*var(--vh)),13px) 14px;position:relative}
+#app.home .menu .nav button{font-size:clamp(15px,calc(1.9*var(--vh)),17px);padding:clamp(9px,calc(1.6*var(--vh)),13px) 8px}
+/* ---- final de partida: el cartel ocupa toda la pantalla y el botón queda dentro del marco ---- */
+.ov.vic.one{padding:max(8px,env(safe-area-inset-top,0px)) 8px max(8px,env(safe-area-inset-bottom,0px))!important}
+.vic.one .mp.vp{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding-bottom:20px!important}
+.vic.one .mp.vp .vc-fit{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0}
+.vic.one .mp.vp .vrow{position:relative;z-index:3;flex:0 0 auto;width:100%;display:flex;justify-content:center;padding:6px 0 0}
+/* botones azules con borde dorado (cuadro de modo) */
+.ov.c.sl-modo .mp button{background:linear-gradient(180deg,#34509a 0%,#27407f 45%,#1c2f63 100%)!important;border:2.5px solid #c9a24e!important;border-radius:16px!important;color:#f6efdc!important;font-weight:700!important;text-shadow:0 1px 0 rgba(0,0,0,.45);box-shadow:inset 0 2px 0 rgba(255,255,255,.22),inset 0 -3px 6px rgba(0,0,0,.28),0 3px 0 rgba(0,0,0,.55),0 6px 10px rgba(0,0,0,.35)!important}
+.ov.c.sl-modo .mp button:active{transform:translateY(2px);box-shadow:inset 0 2px 6px rgba(0,0,0,.45),0 1px 0 rgba(0,0,0,.55)!important}
+.ov.c.sl-modo #m0{padding:14px!important;font-size:18px!important}
+.sl-bw .b3 button[data-n="-1"]{background:linear-gradient(180deg,rgba(255,255,255,.2) 0%,rgba(255,255,255,.05) 55%,rgba(0,0,0,.14) 100%),var(--m)!important}
+.vic.one .vrow #vx{color:#f6efdc!important;opacity:1!important}
+#app.home .menu{padding-bottom:6px}
+
+/* ===== E-13 ===== */
+/* «Cancelar» del cuadro de modo: un azul más claro para que no parezca una tercera modalidad */
+.ov.c.sl-modo #m0{background:linear-gradient(180deg,#6f90d8 0%,#5878c4 45%,#4663a8 100%)!important}
+/* nombres del marcador conectado: punto + nombre, sin «y»; el brillo del punto ya no se corta en cuadrado */
+.sl-nm .sl-pn{display:flex;align-items:center;min-width:0;overflow:visible;text-overflow:clip}
+.sl-nm .sl-pn em{font-style:normal;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sl-nm .sl-dot{flex:0 0 auto;width:10px;height:10px;margin-right:9px;vertical-align:baseline}
+.sl-nm .sl-dot.on{background:#8df0a8;box-shadow:0 0 5px 1px rgba(141,240,168,.55)}
+.sl-nm{max-width:78%}
+/* menús del conteo conectado: una sola tarjeta centrada, como el modo local */
+html body .ov.gpn.sl1:not(.c):not(.vic):not(.vsi){justify-content:center}
+html body .ov.gpn.sl1:not(.c):not(.vic):not(.vsi) .mp{flex:0 0 auto;min-height:min(440px,66vh);padding:26px 22px;gap:16px}
+html body .ov.gpn.sl1 .mp .opts.g1{gap:12px}
+html body .ov.gpn.sl1 .mp .opts.g1>button{padding:15px 10px}
+@media (max-height:700px){html body .ov.gpn.sl1:not(.c):not(.vic):not(.vsi) .mp{min-height:0;padding:16px 18px;gap:10px}html body .ov.gpn.sl1 .mp .opts.g1{gap:8px}html body .ov.gpn.sl1 .mp .opts.g1>button{padding:11px 10px}}
+/* botones crema de las listas de opciones de los cuadros (p. ej. «¿Qué jugador eres?»): línea negra fina */
+html body .ov.c:not(.gpn) .mp .opts>button:not(.ghost):not([style]):not(.pr):not(:active){border:1.5px solid #101010!important;
+box-shadow:inset 0 1.5px 0 rgba(255,255,255,.9),inset 0 -3px 6px rgba(120,86,24,.3),inset 0 0 9px rgba(120,86,24,.28),0 3px 0 #0f2418,0 6px 9px rgba(0,0,0,.4)!important}
+/* VS en modo conectado: rival arriba y sin girar; mi equipo abajo */
+html body .vsi.conn .vb-half.t .vb-in{transform:none;justify-content:flex-start;padding:calc(18px + env(safe-area-inset-top,0px)) 28px var(--pt)}
+/* ===== E-15 ===== */
+/* «‹ Atrás» del menú del órdago: un verde claro que se distingue del fondo (local y conectado) */
+html body .ov.gpn .mp .opts.odo>button.odb{background:linear-gradient(180deg,#6fb585 0%,#4a9565 48%,#357a4e 100%) padding-box!important;border:1.5px solid #101010!important;color:#fff!important;text-shadow:0 1px 0 rgba(0,0,0,.5)!important;box-shadow:inset 0 1.5px 0 rgba(255,255,255,.5),inset 0 -3px 5px rgba(0,0,0,.22),0 3px 0 #0f2418,0 6px 9px rgba(0,0,0,.4)!important}
+/* selector de jugador: «Jugador sin la app» más grande */
+button.csopt.csgen small{font-size:14px;font-weight:600;opacity:.95;margin-top:2px}
+/* marcador conectado: MUS centrado entre el borde y el reloj; los nombres no cortan g, y, j... */
+.sl-top .sl-mus{flex:1 1 0;min-width:0;text-align:center;padding-left:.14em}
+html body .sl-nm .sl-pn em{line-height:1.32;padding-bottom:.12em}
+/* Senda: sin franja negra bajo el suelo de la taberna */
+#app.senda{padding-bottom:0!important}
+.rm[data-r="0"]::before{bottom:-30px}
+/* cartel de liga alcanzada / marco desbloqueado */
+.ov.lgn .mp{text-align:center}
+.ov.lgn .mpi{min-height:min(420px,62vh);display:flex;flex-direction:column;justify-content:center}
+.ov.lgn .lgn-t{margin:6px 0 14px;font-size:24px;color:#f2d98a;letter-spacing:.03em}
+.ov.lgn .lgn-b{display:flex;flex-direction:column;align-items:center;gap:12px;margin:0 0 18px}
+.ov.lgn .lgn-n{font:700 18px Literata,Georgia,serif;color:#f6efdc}
+.ov.lgn .plg{width:100%;margin:6px 0 18px;position:relative}
+.ov.lgn .plg .nd{width:100%}
+/* configurar partida: «Elige jugador» cabe entero aunque la columna sea estrecha */
+#app.setup label.pl:not(.has) button.csel{font-size:15px;padding:12px 30px 12px 10px}
+/* botones del conteo conectado más grandes (aprovechan el hueco) */
+#app.game.sl .sl-bw{gap:12px}
+#app.game.sl .sl-bw .b2{gap:14px}
+#app.game.sl .sl-bw .b2 button{height:clamp(60px,10.5vh,100px);font-size:clamp(30px,5vh,44px);border-radius:16px}
+#app.game.sl .sl-bw .b3{gap:14px}
+#app.game.sl .sl-bw .b3 button{height:clamp(44px,7vh,66px);font-size:clamp(17px,2.7vh,23px);border-radius:14px}
 </style>
 </body>
 </html>
