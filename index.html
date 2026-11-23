@@ -1430,7 +1430,7 @@ table.mt tbody tr:last-child td{border-bottom:0}
 table.mt th.l,table.mt td.l{text-align:left;padding-left:2px}
 table.mt td.mpc{color:#f2d98a;font-weight:700}
 table.mt .mrk{display:inline-block;min-width:1.35em;margin-right:2px;color:var(--mute);font-size:13px}
-table.mt .mnl{cursor:pointer;color:#f2d98a;font:700 15px/1.25 Literata,Georgia,serif;text-decoration:underline dotted rgba(242,217,138,.55);text-underline-offset:4px;-webkit-tap-highlight-color:transparent}
+table.mt .mnl{cursor:pointer;color:#f2d98a;font:700 15px/1.25 Literata,Georgia,serif;text-decoration:none;-webkit-tap-highlight-color:transparent}
 table.mt .mnl:active{filter:brightness(1.25)}
 .pnerr{margin:2px 0 0;font-size:13.5px;line-height:1.35;color:#ff9a8c}
 .pnerr:empty{display:none}
@@ -1906,9 +1906,10 @@ const idsJug=h=>[...new Set([...h.t[0],...h.t[1]])];
 /* Jugador de una cuenta eliminada: sus partidas siguen contando, pero no aparece en las tablas de parejas */
 /* Hueco de la mesa («Jugador 1-4»: hoy Carlos, mañana Pepe…): no es una pareja real y no sale en las tablas de parejas */
 const hueco=id=>{const f=S.friends.find(x=>x.id===id);if(f&&f.gen)return true;if(!f&&/^(.*_)?inv[1-4]$/.test(String(id)))return true;return !f&&!isUuid(id)&&/^Jugador [1-4]$/.test(fname(id))};
+const sinCuenta=id=>hueco(id)||/^sg[1-4]$/.test(String(id));
 const oculto=id=>gone(id)||hueco(id);
 const gone=id=>/(^|_)del_[0-9a-f]{8}$/.test(String(id))||!!(S.gone&&S.gone[id]);
-const VERSION='E-12';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
+const VERSION='E-13';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
 /* ===== Perfiles públicos (fase I) ===== */
 const RESERVADO=/^(yo|invitado|jugador( ?[1-4])?|jugador eliminado)$/i; // mismos nombres que bloquea la base de datos
 const NOMBRE_NO='Nombre no disponible';
@@ -2419,12 +2420,12 @@ function setup(){
   const slot=i=>{
     if(G)return fixed(i,'inv'+(i+1),'Jugador '+(i+1));
     /* Todos los huecos se pueden cambiar: 1.º el genérico («Jugador N», sin la app), luego el perfil y luego los amigos */
-    const d=gens[i],def=i===0&&yo?yo:d,list=[d,...(yo?[yo]:[]),...amigos];
-    return '<label class="pl"><select id="p'+i+'" aria-label="Jugador">'+list.map(f=>'<option value="'+f.id+'"'+(f===d?' data-gen="1"':'')+(yo&&f===yo?' data-tag="Tú"':'')+(f===def?' selected':'')+'>'+esc(f.name)+'</option>').join('')+'</select><div id="sb'+i+'" class="sbx"></div></label>';
+    const d=gens[i],isYo=i===0&&yo,def=isYo?yo:null,list=[d,...(yo?[yo]:[]),...amigos];
+    return '<label class="pl"><select id="p'+i+'" aria-label="Jugador">'+(isYo?'':'<option value="" data-ph="1" selected>Elige jugador</option>')+list.map(f=>'<option value="'+f.id+'"'+(f===d?' data-gen="1"':'')+(yo&&f===yo?' data-tag="Tú"':'')+(f===def?' selected':'')+'>'+esc(f.name)+'</option>').join('')+'</select><div id="sb'+i+'" class="sbx"></div></label>';
   };
   const c=S.cfg;
   const tbox=(i,title,k)=>'<div class="card team" style="--c:var(--'+k+');--cf:var(--'+k+'f)"><b style="color:'+(k==='b'?'#a9d6ff':'#f7a99d')+'">'+title+'</b><div class="row">'+slot(i*2)+slot(i*2+1)+'</div><label>Nombre del equipo (opcional)<input id="tn'+i+'" maxlength="'+TEAM_MAX+'" autocomplete="off" placeholder="'+(i?'Equipo rojo':'Equipo azul')+'"></label></div>';
-  app.innerHTML='<div class="top"><button id="b">‹ Inicio</button><h2>Nueva partida</h2>'+(SETUP_CONN?'<span class="sl-chip3" id="slc">SALA <b>' +(SETUP_SALA?SETUP_SALA.codigo:'·····')+'</b></span>':'')+'</div>'
+  app.innerHTML='<div class="top"><button id="b">‹ Inicio</button><h2>Nueva partida</h2>'+'</div>'
   +tbox(0,'Tu equipo','b')+tbox(1,'Equipo rival','a')
   +'<div class="card"><div class="row cfg"><label>Puntos por juego<input id="meta" type="number" min="5" max="'+META_MAX+'" value="'+c.meta+'" inputmode="numeric"></label>'
   +'<label>Juegos por vaca<input id="jv" type="number" min="1" value="'+c.juegos+'" inputmode="numeric"></label>'
@@ -2625,7 +2626,7 @@ function fitBox(root,boxSel,fitSel,center){
 function victory(rec,i,A,B){
   const d=document.createElement('div');d.className='ov vic';
   const nMed=id=>{const a=A[id]||blank(),b=B[id];if(!b)return 0;return FAM.filter(m=>lvl(b,m.id)>lvl(a,m.id)).length+SEC.filter(m=>b.sec[m.id]&&!a.sec[m.id]).length};
-  const tile=id=>{const f=S.friends.find(x=>x.id===id)||{},a=A[id]||blank(),b=B[id]||blank(),dl=b.tr-a.tr,nm=(rec.am||rec.inv)?0:nMed(id);
+  const tile=id=>{const f=S.friends.find(x=>x.id===id)||{},a=A[id]||blank(),b=B[id]||blank(),dl=b.tr-a.tr,nm=(rec.am||rec.inv||sinCuenta(id))?0:nMed(id);
     return '<div class="vk"><div class="vk-av">'+avatarHTML(f,b,64)+'</div><div class="vk-nm">'+esc(fname(id))+'</div>'
     +((rec.am||rec.inv||rec.inc)?'':'<div class="vk-d '+(dl>0?'up':dl<0?'dn':'')+'"><b>'+(dl>0?'+'+dl:dl<0?'−'+Math.abs(dl):'0')+'</b>'+trIcon(20)+'</div>')
     +(nm?'<div class="vk-md">'+(nm>1?nm+' medallas':'Medalla')+'</div>':'')+'</div>'};
@@ -2971,7 +2972,7 @@ function onFin(d){
 function victoriaSala(rec,mi,A,B,sinTr){
   const r=mi==null?rec.w:mi,d=document.createElement('div');d.className='ov vic one';
   const nMed=id=>{const a=A[id]||blank(),b=B[id];if(!b)return 0;return FAM.filter(m=>lvl(b,m.id)>lvl(a,m.id)).length+SEC.filter(m=>b.sec[m.id]&&!a.sec[m.id]).length};
-  const tile=id=>{const f=S.friends.find(x=>x.id===id)||PUB[id]||{},a=A[id]||blank(),b=B[id]||blank(),dl=b.tr-a.tr,nm=sinTr?0:nMed(id);
+  const tile=id=>{const f=S.friends.find(x=>x.id===id)||PUB[id]||{},a=A[id]||blank(),b=B[id]||blank(),dl=b.tr-a.tr,nm=(sinTr||sinCuenta(id))?0:nMed(id);
     return '<div class="vk"><div class="vk-av">'+avatarHTML(f,b,64)+'</div><div class="vk-nm">'+esc(fname(id))+'</div>'
     +(sinTr?'':'<div class="vk-d '+(dl>0?'up':dl<0?'dn':'')+'"><b>'+(dl>0?'+'+dl:dl<0?'−'+Math.abs(dl):'0')+'</b>'+trIcon(20)+'</div>')
     +(nm?'<div class="vk-md">'+(nm>1?nm+' medallas':'Medalla')+'</div>':'')+'</div>'};
@@ -3003,7 +3004,7 @@ function pintar(){
   const eqs=Object.keys(SL.pres||{}),nEsp=eqs.filter(k=>k[0]==='e').length;
   const tbox=k=>{const p=j.eq[k],tn=(c.tn||[])[k];
     return '<div class="sl-team t'+k+(jug&&k===mi?' mine':'')+'" data-eq="'+k+'"><div class="sl-nm">'+(tn?'<small>'+esc(tn)+'</small>':'')
-      +[2*k,2*k+1].map((q,n)=>'<span><i class="sl-dot'+(presOn(q)?' on':'')+'"></i>'+(n?'y ':'')+esc(nomPuesto(q))+'</span>').join('')+'</div>'
+      +[2*k,2*k+1].map(q=>'<span class="sl-pn"><i class="sl-dot'+(presOn(q)?' on':'')+'"></i><em>'+esc(nomPuesto(q))+'</em></span>').join('')+'</div>'
       +'<div class="sl-big">'+p.pts+'</div><div class="sl-jv">J '+p.jg+(c.inf?'':' · V '+p.vc)+'</div></div>'};
   const tcol=(jug&&mi===1)?'#b3392f':'#1d4f7a';
   const slot=l=>{const n=j.mesa[l];
@@ -3021,8 +3022,8 @@ function pintar(){
   ligar(des)}
 const pickSala=()=>{const l=SL.pick,n=SL.betTmp==null?2:SL.betTmp;
   return '<div class="ov gpn bet"><div style="flex:1 1 0"></div><div class="mp bp"><h3>'+lanceIcon(l,28)+'<span>'+LAN_NM[l]+'</span></h3><div class="num">'+ul(n)+'</div><div class="row3"><button class="neg" data-bet="-1">−1</button><button data-bet="1">+1</button><button data-bet="5">+5</button></div><div class="row2b"><button class="back" data-bet="back">‹ Atrás</button><button class="ok" data-bet="x">Listo</button></div></div></div>'};
-const menuSala=()=>'<div class="ov c"><div class="mp"><b>Partida</b><div class="opts g1">'+(esJug()?'<button data-menu="t">Terminar partida</button><button data-menu="r">Reiniciar partida</button>':'<button data-menu="s">Dejar de ver la partida</button>')+'<button data-menu="q">Salir al inicio</button><button class="ghost" data-menu="x">Seguir '+(esJug()?'jugando':'viendo')+'</button></div></div></div>';
-const ordSala=()=>'<div class="ov c"><div class="mp"><b>¿Quién ha ganado el órdago?</b><div class="opts g1 odo">'+[0,1].map(i=>'<button data-od="'+i+'">'+esc(nomPuesto(2*i))+' y '+esc(nomPuesto(2*i+1))+'</button>').join('')+'<button class="ghost odb" data-od="x">‹ Atrás</button></div></div></div>';
+const menuSala=()=>'<div class="ov gpn sl1"><div class="mp"><b>Partida</b><div class="opts g1">'+(esJug()?'<button data-menu="r">Reiniciar partida</button><button data-menu="t">Terminar partida</button>':'<button data-menu="s">Dejar de ver la partida</button>')+'<button data-menu="q">Salir al inicio</button><button class="ghost" data-menu="x">Seguir '+(esJug()?'jugando':'viendo')+'</button></div></div></div>';
+const ordSala=()=>'<div class="ov gpn sl1"><div class="mp"><b>¿Quién ha ganado el órdago?</b><div class="opts g1 odo">'+[0,1].map(i=>'<button data-od="'+i+'">'+esc(nomPuesto(2*i))+' y '+esc(nomPuesto(2*i+1))+'</button>').join('')+'<button class="ghost odb" data-od="x">‹ Atrás</button></div></div></div>';
 const esperaSala=()=>'<div class="ov c"><div class="mp"><b>Esperando el OK de los demás jugadores…</b><div class="row"><button class="ghost" id="sles">Cerrar</button></div></div></div>';
 function txtEv(e){
   const n=nomPuesto(e.puesto),eq=e.equipo!=null?(SL.cfg.tn&&SL.cfg.tn[e.equipo]?SL.cfg.tn[e.equipo]:(e.equipo?'el equipo rojo':'el equipo azul')):'',d=e.despues||{},a=e.antes||{};
@@ -3185,7 +3186,7 @@ entrarUsuario() // sesión recordada en este dispositivo: entra directamente, si
  function openList(sel,btn){
   var d=document.createElement('div');d.className='ov c';
   var pk=/^p[0-3]$/.test(sel.id),esc=function(t){return t.replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})};
-  var opts=[].map.call(sel.options,function(o,i){var g=pk&&o.dataset.gen,tg=pk&&o.dataset.tag;return '<button type="button" class="csopt'+(i===sel.selectedIndex?' on':'')+(g?' csgen':'')+'" data-i="'+i+'"><span>'+esc(o.text)+(g?'<small>Sin la app</small>':'')+(tg?'<small class="cstag">'+tg+'</small>':'')+'</span></button>'}).join('');
+  var opts=[].map.call(sel.options,function(o,i){if(pk&&o.dataset.ph)return'';var g=pk&&o.dataset.gen,tg=pk&&o.dataset.tag;return '<button type="button" class="csopt'+(i===sel.selectedIndex?' on':'')+(g?' csgen':'')+'" data-i="'+i+'"><span>'+esc(o.text)+(g?'<small>Sin la app</small>':'')+(tg?'<small class="cstag">'+tg+'</small>':'')+'</span></button>'}).join('');
   if(pk){
    d.innerHTML='<div class="mp pkr"><div class="pkr-bar"><button type="button" class="csback">‹ Atrás</button><b>Escoger jugador</b></div><div class="mpi"><div class="cs-list">'+opts+'</div></div></div>';
    document.body.appendChild(d);
@@ -3761,6 +3762,33 @@ html body #app.friends .rqbtn .rqc>*{position:relative}
 .sl-bw .b3 button[data-n="-1"]{background:linear-gradient(180deg,rgba(255,255,255,.2) 0%,rgba(255,255,255,.05) 55%,rgba(0,0,0,.14) 100%),var(--m)!important}
 .vic.one .vrow #vx{color:#f6efdc!important;opacity:1!important}
 #app.home .menu{padding-bottom:6px}
+
+/* ===== E-13 ===== */
+/* «Cancelar» del cuadro de modo: un azul más claro para que no parezca una tercera modalidad */
+.ov.c.sl-modo #m0{background:linear-gradient(180deg,#6f90d8 0%,#5878c4 45%,#4663a8 100%)!important}
+/* nombres del marcador conectado: punto + nombre, sin «y»; el brillo del punto ya no se corta en cuadrado */
+.sl-nm .sl-pn{display:flex;align-items:center;min-width:0;overflow:visible;text-overflow:clip}
+.sl-nm .sl-pn em{font-style:normal;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sl-nm .sl-dot{flex:0 0 auto;width:10px;height:10px;margin-right:9px;vertical-align:baseline}
+.sl-nm .sl-dot.on{background:#8df0a8;box-shadow:0 0 5px 1px rgba(141,240,168,.55)}
+.sl-nm{max-width:78%}
+/* menús del conteo conectado: una sola tarjeta centrada, como el modo local */
+html body .ov.gpn.sl1:not(.c):not(.vic):not(.vsi){justify-content:center}
+html body .ov.gpn.sl1:not(.c):not(.vic):not(.vsi) .mp{flex:0 0 auto;min-height:min(440px,66vh);padding:26px 22px;gap:16px}
+html body .ov.gpn.sl1 .mp .opts.g1{gap:12px}
+html body .ov.gpn.sl1 .mp .opts.g1>button{padding:15px 10px}
+@media (max-height:700px){html body .ov.gpn.sl1:not(.c):not(.vic):not(.vsi) .mp{min-height:0;padding:16px 18px;gap:10px}html body .ov.gpn.sl1 .mp .opts.g1{gap:8px}html body .ov.gpn.sl1 .mp .opts.g1>button{padding:11px 10px}}
+/* botones crema de las listas de opciones de los cuadros (p. ej. «¿Qué jugador eres?»): línea negra fina */
+html body .ov.c:not(.gpn) .mp .opts>button:not(.ghost):not([style]):not(.pr):not(:active){border:1.5px solid #101010!important;
+box-shadow:inset 0 1.5px 0 rgba(255,255,255,.9),inset 0 -3px 6px rgba(120,86,24,.3),inset 0 0 9px rgba(120,86,24,.28),0 3px 0 #0f2418,0 6px 9px rgba(0,0,0,.4)!important}
+/* configurar partida: «Elige jugador» cabe entero aunque la columna sea estrecha */
+#app.setup label.pl:not(.has) button.csel{font-size:15px;padding:12px 30px 12px 10px}
+/* botones del conteo conectado más grandes (aprovechan el hueco) */
+#app.game.sl .sl-bw{gap:12px}
+#app.game.sl .sl-bw .b2{gap:14px}
+#app.game.sl .sl-bw .b2 button{height:clamp(60px,10.5vh,100px);font-size:clamp(30px,5vh,44px);border-radius:16px}
+#app.game.sl .sl-bw .b3{gap:14px}
+#app.game.sl .sl-bw .b3 button{height:clamp(44px,7vh,66px);font-size:clamp(17px,2.7vh,23px);border-radius:14px}
 </style>
 </body>
 </html>
