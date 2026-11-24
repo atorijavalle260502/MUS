@@ -1910,7 +1910,7 @@ const hueco=id=>{const f=S.friends.find(x=>x.id===id);if(f&&f.gen)return true;if
 const sinCuenta=id=>hueco(id)||/^sg[1-4]$/.test(String(id));
 const oculto=id=>gone(id)||hueco(id);
 const gone=id=>/(^|_)del_[0-9a-f]{8}$/.test(String(id))||!!(S.gone&&S.gone[id]);
-const VERSION='E-16';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
+const VERSION='E-17';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
 /* ===== Perfiles públicos (fase I) ===== */
 const RESERVADO=/^(yo|invitado|jugador( ?[1-4])?|jugador eliminado)$/i; // mismos nombres que bloquea la base de datos
 const NOMBRE_NO='Nombre no disponible';
@@ -3840,6 +3840,18 @@ html body .ov.lgn .plg .nd[data-l] .nm.nmx{font-size:clamp(17px,5.6vw,23px)!impo
 #app.game.sl .sl-bw .b2 button{height:clamp(60px,10.5vh,100px);font-size:clamp(30px,5vh,44px);border-radius:16px}
 #app.game.sl .sl-bw .b3{gap:14px}
 #app.game.sl .sl-bw .b3 button{height:clamp(44px,7vh,66px);font-size:clamp(17px,2.7vh,23px);border-radius:14px}
+/* ===== E-17: brillo del cartel «¡Liga alcanzada!» ===== */
+/* sin el aro duro de antes: halo de luz suave que respira, con espacio propio para no cortarse, y un destello que cruza el tapete */
+html body .ov.lgn .plg{padding:26px 20px!important;isolation:isolate;background:radial-gradient(ellipse closest-side at 50% 50%,rgba(255,226,140,.20) 0%,rgba(255,226,140,.09) 60%,transparent 100%)}
+html body .ov.lgn .plg .nd.cur[data-l]{filter:none!important;box-shadow:none!important}
+.ov.lgn .plg::before{content:"";position:absolute;inset:22px 15px;border-radius:12px;pointer-events:none;z-index:0;box-shadow:0 0 10px 2px rgba(255,214,110,.60),0 0 26px 7px rgba(240,194,74,.42),0 0 34px 8px rgba(224,176,74,.20);animation:lgnRespira 2.8s ease-in-out infinite}
+.ov.lgn .plg::after{content:"";position:absolute;inset:26px 20px;border-radius:8px;pointer-events:none;z-index:3;background:linear-gradient(108deg,transparent 38%,rgba(255,246,208,.38) 50%,transparent 62%) no-repeat;background-size:260% 100%;background-position:130% 0;animation:lgnDestello 4.2s ease-in-out .5s infinite}
+@keyframes lgnRespira{0%,100%{opacity:.72;transform:scale(1)}50%{opacity:1;transform:scale(1.018)}}
+@keyframes lgnDestello{0%{background-position:130% 0}38%,100%{background-position:-30% 0}}
+@media (prefers-reduced-motion:reduce){.ov.lgn .plg::before{animation:none;opacity:.9}.ov.lgn .plg::after{animation:none;display:none}}
+/* punto de aviso de «Senda del Órdago»: sobre el marco (antes lo recortaba el overflow del botón) */
+html body #app.home .menu #sd{overflow:visible!important}
+html body #app.home .menu #sd .mbadge{top:-11px;right:-8px;z-index:6}
 </style>
 </body>
 </html>
