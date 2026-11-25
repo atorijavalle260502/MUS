@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Confirmar correo · MUS</title>
+<style>
+:root{--bg:#172b1f;--card:#16291e;--ink:#eae2cc;--mute:#c3ba9e;--gold:#c8a050;--line:rgba(200,160,80,.45)}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--ink);font:16px/1.5 Literata,Georgia,"Times New Roman",serif;padding:18px}
+.card{width:100%;max-width:420px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px 22px;text-align:center;box-shadow:0 8px 28px rgba(0,0,0,.4)}
+h1{margin:0 0 6px;font-size:34px;letter-spacing:.14em;color:#e0b04a}
+h2{margin:0 0 12px;font-size:20px;color:#f0cf7c}
+p{margin:10px 0}
+.mute{color:var(--mute);font-size:14px}
+button{display:block;width:100%;margin-top:18px;padding:14px 12px;border:0;border-radius:12px;font:700 18px Literata,Georgia,serif;color:#2a1c06;background:linear-gradient(180deg,#f0cd6a 0%,#d9ac45 52%,#b98a26 100%);box-shadow:inset 0 1.5px 0 rgba(255,246,200,.85),0 3px 0 #6a4609,0 6px 9px rgba(0,0,0,.4);cursor:pointer}
+button:active{transform:translateY(3px);box-shadow:inset 0 3px 7px rgba(0,0,0,.35)}
+button:disabled{opacity:.6;cursor:default}
+.ok h2{color:#9fe0b0}
+.err h2{color:#ff9a8c}
+[hidden]{display:none!important}
+a{color:#f2d98a}
+</style>
+</head>
+<body>
+<main class="card" id="c">
+<h1>MUS</h1>
+<div id="s0">
+<h2>Confirmar tu correo</h2>
+<p>Pulsa «Aceptar» para activar tu perfil.</p>
+<button id="b" type="button">Aceptar</button>
+</div>
+<div id="s1" class="ok" hidden>
+<h2>¡Correo confirmado!</h2>
+<p>Tu perfil ya está activo.</p>
+<p><b>Vuelve a la app de MUS</b> e inicia sesión con tu correo y tu contraseña.</p>
+<p class="mute">Ya puedes cerrar esta página.</p>
+</div>
+<div id="s2" class="err" hidden>
+<h2>No se ha podido confirmar</h2>
+<p id="m2"></p>
+<p class="mute">Si ya lo habías confirmado antes, tu perfil está activo: vuelve a la app de MUS e inicia sesión.</p>
+</div>
+</main>
+<script>
+/* Confirma el correo SOLO al pulsar «Aceptar» (así los programas de correo que abren los enlaces por su cuenta no lo gastan).
+   No guarda nada en este navegador ni inicia sesión aquí: el nombre de perfil se elige dentro de la app. */
+const SB_URL='https://ksxrjrnecjilntkefltm.supabase.co',SB_KEY='sb_publishable_J121b3gCkI5P1UI5my-k-Q_R5dwTOea';
+const q=new URLSearchParams(location.search),th=q.get('token_hash'),ty=['email','signup'].includes(q.get('type'))?q.get('type'):'email';
+const $=id=>document.getElementById(id),show=n=>{['s0','s1','s2'].forEach((x,i)=>$(x).hidden=i!==n)};
+const fallo=t=>{$('m2').textContent=t;show(2)};
+if(!th){fallo('Este enlace no es válido. Abre el enlace del último correo que te enviamos.')}
+$('b').onclick=async()=>{
+const b=$('b');b.disabled=true;
+try{
+const r=await fetch(SB_URL+'/auth/v1/verify',{method:'POST',headers:{'Content-Type':'application/json',apikey:SB_KEY},body:JSON.stringify({type:ty,token_hash:th})});
+if(r.ok){show(1);try{history.replaceState(null,'',location.pathname)}catch(e){}return}
+fallo('El enlace ya se ha usado o ha caducado.')
+}catch(e){b.disabled=false;fallo('No se ha podido conectar. Revisa tu conexión e inténtalo de nuevo.')}
+};
+</script>
+</body>
+</html>

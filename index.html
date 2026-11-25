@@ -1778,14 +1778,28 @@ function confirmarDlg(m,reintento){
    +(SIMULAR?'<p class="asim">Solo pruebas: aún no hay servidor de correo.</p><button type="button" id="ac" class="ghost cr2">Simular que he confirmado</button>':'')
    +'<div class="row"><button id="dk" class="cr">Aceptar</button></div></div>';
   const ps=reintento
-    ?['Tu perfil todavía no está activado. Abre el enlace del correo que enviamos a '+m+'.','El enlace se abre en el navegador. Después vuelve a la app e inicia sesión. Si ves una página de error, tranquilo: el perfil queda activado igualmente.','¿No lo encuentras? Mira en la carpeta de spam.']
-    :['Te hemos enviado un correo a '+m+' para activar tu perfil.','Abre el enlace (se abre en el navegador) y después vuelve a la app e inicia sesión. Si ves una página de error, tranquilo: el perfil queda activado igualmente.','¿No te llega? Mira en la carpeta de spam.'];
+    ?['Tu perfil todavía no está activado. Abre el correo que enviamos a '+m+' y pulsa el enlace.','Se abre una página con un botón «Aceptar»: púlsalo para confirmar. Después vuelve a la app e inicia sesión.','¿No lo encuentras? Mira en la carpeta de spam.']
+    :['Te hemos enviado un correo a '+m+' para activar tu perfil.','Abre el enlace: se abre una página con un botón «Aceptar». Púlsalo para confirmar y después vuelve a la app e inicia sesión.','¿No te llega? Mira en la carpeta de spam.'];
   const box=d.querySelector('.atx'),pad=box.parentNode;
   ps.forEach(t=>{const e=document.createElement('p');e.className='atx just';e.textContent=t;pad.insertBefore(e,box)});box.remove();
   document.body.appendChild(d);
   d.querySelector('#dk').onclick=()=>d.remove();
   const c=d.querySelector('#ac');if(c)c.onclick=async()=>{await API.confirmarSim(m);d.remove();dlg('Correo confirmado. Ya puedes iniciar sesión.',{ok:'Iniciar sesión'},()=>authDlg('in',m))};
 }
+/* Ayuda y contacto (guía 1.2 de Apple: contacto publicado dentro de la app) */
+const CONTACTO='contadordemus26@gmail.com';
+function contactoDlg(){
+const d=document.createElement('div');d.className='ov c auth';
+d.innerHTML='<div class="mp"><b>Ayuda y contacto</b><p class="atx just">¿Tienes una duda, un problema o quieres avisar de un nombre o un comportamiento inadecuado? Escríbenos y lo revisaremos lo antes posible.</p><p class="atx" id="cmail" style="font-weight:700;user-select:all;-webkit-user-select:all"></p>'
++'<button type="button" class="alk" id="cm">Abrir el correo</button><p class="aerr" id="aer" style="color:#a9d6ff"></p>'
++'<div class="row"><button class="ghost cr2" id="dc">Cerrar</button><button id="dk" class="cr">Copiar correo</button></div></div>';
+document.body.appendChild(d);d.querySelector('#cmail').textContent=CONTACTO;
+const R=d.querySelector('#aer');
+d.querySelector('#dc').onclick=()=>d.remove();
+d.querySelector('#cm').onclick=()=>{location.href='mailto:'+CONTACTO+'?subject='+encodeURIComponent('MUS · ayuda')};
+d.querySelector('#dk').onclick=async()=>{let ok=false;try{await navigator.clipboard.writeText(CONTACTO);ok=true}catch(e){}
+if(!ok){try{const r=document.createRange();r.selectNodeContents(d.querySelector('#cmail'));const sel=getSelection();sel.removeAllRanges();sel.addRange(r);ok=document.execCommand('copy')}catch(e){}}
+R.textContent=ok?'Correo copiado.':'Mantén pulsado el correo para copiarlo.'}}
 /* Recuperar contraseña: pide el correo y avisa sin revelar si la cuenta existe */
 function recuperarDlg(prefill){
   const d=document.createElement('div');d.className='ov c auth';
@@ -1822,7 +1836,7 @@ function nombreDlg(){return new Promise(res=>{
    +'<p class="aerr" id="aer" role="alert"></p><div class="row"><button id="dk" class="cr">Aceptar</button></div></div>';
   document.body.appendChild(d);
   const I=d.querySelector('#nm'),R=d.querySelector('#aer'),K=d.querySelector('#dk');I.focus();
-  const ok=async()=>{const v=I.value.trim().replace(/\s+/g,' ').slice(0,NAME_MAX);if(!v){R.textContent='Escribe un nombre.';return}if(RESERVADO.test(v)){R.textContent=NOMBRE_NO;return}
+  const ok=async()=>{const v=I.value.trim().replace(/\s+/g,' ').slice(0,NAME_MAX);if(!v){R.textContent='Escribe un nombre.';return}if(nombreVetado(v)){R.textContent=NOMBRE_NO;return}
     K.disabled=true;const{error}=await sb.from('perfiles').update({nombre:v}).eq('id',(await sb.auth.getUser()).data.user.id);
     K.disabled=false;if(error){R.textContent=nombreMalo(error)?NOMBRE_NO:'No se ha podido guardar. Inténtalo de nuevo.';return}
     d.remove();res(v)};
@@ -1910,10 +1924,19 @@ const hueco=id=>{const f=S.friends.find(x=>x.id===id);if(f&&f.gen)return true;if
 const sinCuenta=id=>hueco(id)||/^sg[1-4]$/.test(String(id));
 const oculto=id=>gone(id)||hueco(id);
 const gone=id=>/(^|_)del_[0-9a-f]{8}$/.test(String(id))||!!(S.gone&&S.gone[id]);
-const VERSION='E-17';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
+const VERSION='E-18';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
 /* ===== Perfiles públicos (fase I) ===== */
 const RESERVADO=/^(yo|invitado|jugador( ?[1-4])?|jugador eliminado)$/i; // mismos nombres que bloquea la base de datos
 const NOMBRE_NO='Nombre no disponible';
+/* Filtro de nombres ofensivos (guía 1.2 de Apple). MISMA lista y normalización que la fase M del SQL: el servidor es el que manda; esto avisa antes y cubre los nombres que solo viven en el móvil */
+const VET_P=["puta", "puto", "putas", "putos", "putita", "zorra", "coño", "polla", "pollas", "verga", "capullo", "imbecil", "mongolo", "joder", "bastardo", "nazi", "nazis", "shit", "cunt", "slut", "rape", "fag"]; // coinciden con una palabra entera
+const VET_C=["hijoputa", "cabron", "hijodeputa", "gilipollas", "mierda", "follar", "maricon", "negrata", "sudaca", "subnormal", "retrasado", "pedofil", "pederast", "violador", "hitler", "fuck", "nigger", "nigga", "faggot", "whore", "bitch", "asshole", "dickhead"]; // coinciden aunque vayan dentro de otra palabra
+const nomNorm=(t,k)=>{let x=String(t==null?'':t).toLowerCase().replace(/ñ/g,'\u0001').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\u0001/g,'ñ');
+x=x.replace(/[01345@$7!]/g,c=>({'0':'o','1':'i','3':'e','4':'a','@':'a','5':'s','$':'s','7':'t','!':'i'})[c]).replace(/[^a-zñ]+/g,' ').trim();
+return x.replace(/(.)\1{2,}/g,k===1?'$1':'$1$1')};
+const nombreOfensivo=t=>{for(const k of [1,2]){const n=nomNorm(t,k),c=n.replace(/ /g,'');if(!c)continue;const ps=n.split(' ');
+if(VET_C.some(w=>c.includes(nomNorm(w,2)))||VET_P.some(w=>{const q=nomNorm(w,2);return q===c||ps.includes(q)}))return true}return false};
+const nombreVetado=v=>RESERVADO.test(v)||nombreOfensivo(v);
 const nombreMalo=e=>!!e&&(e.code==='23505'||e.code==='23514'||/perfiles_nombre/.test(String(e.message||'')));
 /* Puntuación de una pareja: límite inferior de Wilson con z = 1,28 (≈ 90 % a una cara). Pondera el % de victorias por el nº de partidas */
 const WZ=1.2816;
@@ -2089,8 +2112,8 @@ const lockMsg=n=>dlg('Inicia sesión para acceder a '+n+'.',{cancel:1,ok:'Inicia
 function welcome(){
   app.innerHTML='<div class="hsuits">'+['o','c','e','b'].map(k=>suit(k,k==='o'?50:64)).join('')+'</div><div class="logo">MUS</div>'+fan()
   +'<div class="menu"><button class="gold" style="width:100%" id="li">Iniciar sesión</button><button class="ghost" style="width:100%;background:var(--card)" id="cp">Crear perfil</button><button class="ghost" style="width:100%;background:var(--card)" id="gu">Jugar como invitado</button>'
-  +'<p class="wnote">Como invitado puedes jugar, pero sin perfil, amigos ni estadísticas.</p><p class="wnote"><a class="plink" href="privacidad.html" target="_blank" rel="noopener">Política de privacidad</a></p></div>';
-  $('#li').onclick=login;$('#cp').onclick=crearPerfil;$('#gu').onclick=()=>enterMode('guest');
+  +'<p class="wnote">Como invitado puedes jugar, pero sin perfil, amigos ni estadísticas.</p><p class="wnote"><a class="plink" href="privacidad.html" target="_blank" rel="noopener">Política de privacidad</a> · <a class="plink" href="#" id="ct">Ayuda y contacto</a></p></div>';
+  $('#ct').onclick=e=>{e.preventDefault();contactoDlg()};$('#li').onclick=login;$('#cp').onclick=crearPerfil;$('#gu').onclick=()=>enterMode('guest');
 }
 function draw(){if(!AUTH)view='welcome';else if(AUTH==='guest'&&LOCKED.includes(view))view='home';app.className=view==='welcome'?'home':view;({welcome,home,friends,setup,game,profile,senda})[view]()}
 
@@ -2408,7 +2431,7 @@ function profile(){
   +'<div class="card"><div class="fr"><b>Mejor pareja</b>'+(mates.length?'<button class="ghost" id="ap" style="padding:7px 12px;font-size:14px">Principales parejas</button>':'')+'</div>'+(bm?mtab([bm]):'<span style="color:var(--mute)">'+(mates.length?'Aún no hay victorias con ninguna pareja.':'Todavía no ha jugado con ninguna pareja.')+'</span>')+'</div>'+(!V.mine&&!V.res&&!V.amigo?'<p class="wnote">Este jugador aún no ha publicado sus estadísticas.</p>':'');
   if(mine&&profBack==='home'){const lo=document.createElement('button');lo.type='button';lo.id='lo';lo.textContent='Cerrar sesión';lo.style.cssText='flex:0 0 auto;border:1.5px solid rgba(200,160,80,.6);color:#eae2cc;background:rgba(0,0,0,.25)';app.appendChild(lo);lo.onclick=()=>dlg('¿Cerrar sesión?',{cancel:1,ok:'Cerrar sesión',cr:1},logout);
     const de=document.createElement('button');de.type='button';de.id='de';de.textContent='Eliminar cuenta';de.style.cssText='flex:0 0 auto;border:1.5px solid rgba(190,84,74,.7);color:#eeb0a8;background:rgba(110,28,24,.32)';app.appendChild(de);de.onclick=eliminarCuentaDlg;
-    const pv=document.createElement('p');pv.className='wnote';pv.innerHTML='<a class="plink" href="privacidad.html" target="_blank" rel="noopener">Política de privacidad</a>';app.appendChild(pv)}
+    const pv=document.createElement('p');pv.className='wnote';pv.innerHTML='<a class="plink" href="privacidad.html" target="_blank" rel="noopener">Política de privacidad</a> · <a class="plink" href="#" id="ct">Ayuda y contacto</a>';app.appendChild(pv);pv.querySelector('#ct').onclick=e=>{e.preventDefault();contactoDlg()}}
   if(!mine&&V.amigo&&AUTH==='user'&&isUuid(f.id)){const rb=document.createElement('button');rb.type='button';rb.id='rf';rb.textContent='Eliminar amigo';rb.style.cssText='flex:0 0 auto;border:1.5px solid rgba(190,84,74,.7);color:#eeb0a8;background:rgba(110,28,24,.32)';app.appendChild(rb);
     rb.onclick=()=>dlg('¿Eliminar a '+f.name+' de tus amigos? Las partidas que habéis jugado juntos se conservan.',{cancel:1,ok:'Eliminar',cr:1},async()=>{if(await borrarAmigo(f.id)){if(profPila.length)profAtras();else go(profBack==='home'?'friends':profBack)}})}
   $('#b').onclick=profAtras;
@@ -2418,7 +2441,7 @@ function profile(){
     pn.oninput=()=>msg('');
     pn.onchange=async()=>{const v=pn.value.trim().replace(/\s+/g,' ').slice(0,NAME_MAX);
       if(!v||v===f.name){pn.value=f.name;return}
-      if(RESERVADO.test(v)){pn.value=f.name;msg(NOMBRE_NO);return}
+      if(nombreVetado(v)){pn.value=f.name;msg(NOMBRE_NO);return}
       if(AUTH==='user'){pn.disabled=true;let error=null;try{({error}=await sb.from('perfiles').update({nombre:v}).eq('id',S.uid))}catch(e){error={message:'red'}}pn.disabled=false;
         if(error){pn.value=f.name;msg(nombreMalo(error)?NOMBRE_NO:'No se ha podido guardar. Revisa tu conexión.');return}}
       f.name=v;pn.value=v;save();subirResumen()}}
@@ -2468,10 +2491,12 @@ function setup(){
     if(p.some(x=>!x)||new Set(p).size<4){dlg('Elige cuatro jugadores distintos.',{});return}
     if(G){const nm=[0,1,2,3].map(i=>$('#gn'+i).value.trim().replace(/\s+/g,' ')||('Jugador '+(i+1)));
       if(new Set(nm.map(x=>x.toLowerCase())).size<4){dlg('Elige cuatro nombres distintos.',{});return}
+if(nm.some(nombreOfensivo)){dlg('Algún nombre no está permitido. Elige otro.',{});return}
       S.invNames={};nm.forEach((x,i)=>{if(x!=='Jugador '+(i+1))S.invNames['inv'+(i+1)]=x})}
     const n=k=>Math.max(1,parseInt($(k).value)||1);
     S.cfg={meta:Math.min(META_MAX,Math.max(5,n('#meta'))),juegos:n('#jv'),vacas:n('#vc')};
-    S.tnames=S.tnames||{};const tn=[0,1].map(i=>{const v=$('#tn'+i).value.trim().slice(0,TEAM_MAX),k=tkey(i);if(k){if(v)S.tnames[k]=v;else delete S.tnames[k]}return v});
+    if([0,1].some(i=>nombreOfensivo($('#tn'+i).value))){dlg('Algún nombre de equipo no está permitido. Elige otro.',{});return}
+S.tnames=S.tnames||{};const tn=[0,1].map(i=>{const v=$('#tn'+i).value.trim().slice(0,TEAM_MAX),k=tkey(i);if(k){if(v)S.tnames[k]=v;else delete S.tnames[k]}return v});
     if(SETUP_CONN){activarSala(p,tn);return}
     S.game={id:uid(),p,pts:[0,0],jg:[0,0],vc:[0,0],hist:[],pal:[0,0],rs:[0,0],pz:[0,0],rsf:[false,false],jt:[0,0],tn,am:(!G&&$('#am').checked)?1:0,guest:G?1:0,inf:$('#inf').checked?1:0};save();go('game');vsIntro();
   };
@@ -2758,7 +2783,7 @@ async function asegurarAnon(){
     return j.user||await sbUser()
   }catch(e){return null}
 }
-const MSG={codigo:'Ese código no existe o la sala ya no está activa.',intentos:'Demasiados intentos. Espera unos minutos y vuelve a probar.',expulsado:'El dueño te ha expulsado de esta partida.',sala_llena:'La sala está llena de espectadores.',puesto_ocupado:'Ese puesto ya está ocupado.',red:'No se ha podido conectar. Revisa tu conexión e inténtalo de nuevo.',error:'No se ha podido completar. Inténtalo de nuevo.',cerrada:'La partida ya no está disponible.',no_amigo:'Solo puedes invitar a tus amigos.',demasiadas_salas:'Ya tienes varias partidas conectadas abiertas.'};
+const MSG={codigo:'Ese código no existe o la sala ya no está activa.',intentos:'Demasiados intentos. Espera unos minutos y vuelve a probar.',expulsado:'El dueño te ha expulsado de esta partida.',sala_llena:'La sala está llena de espectadores.',puesto_ocupado:'Ese puesto ya está ocupado.',red:'No se ha podido conectar. Revisa tu conexión e inténtalo de nuevo.',error:'No se ha podido completar. Inténtalo de nuevo.',cerrada:'La partida ya no está disponible.',no_amigo:'Solo puedes invitar a tus amigos.',demasiadas_salas:'Ya tienes varias partidas conectadas abiertas.',nombre:'Algún nombre de equipo no está permitido. Elige otro.'};
 
 /* ---------- Estado en vivo ---------- */
 function nuevoSL(info,yo){
