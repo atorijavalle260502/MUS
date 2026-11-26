@@ -1701,7 +1701,29 @@ const KEY_SES='mus-sesion'; // solo una marca de «sesión iniciada» en este di
 const EMAIL_RE=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/,PASS_MIN=6;
 const SB_URL='https://ksxrjrnecjilntkefltm.supabase.co',SB_KEY='sb_publishable_J121b3gCkI5P1UI5my-k-Q_R5dwTOea'; // claves públicas: la seguridad la ponen las reglas (RLS) de la base de datos
 const HASH0=location.hash,SEARCH0=location.search; // se guardan antes de que la librería lea (y borre) los datos del enlace del correo
-const APP_URL=location.protocol==='https:'?location.origin+location.pathname.replace(/[^\/]*$/,''):undefined; // a dónde vuelve el enlace del correo (la propia app, p. ej. https://…github.io/MUS/); debe estar en «Redirect URLs» de Supabase
+/* ===== E-21 · Bloque 4: funciones nativas SOLO si la app va empaquetada con Capacitor. En la PWA/navegador NAT.on es false y todo sigue como siempre ===== */
+const WEB_BASE='https://atorijavalle260502.github.io/MUS/'; // la web pública (privacidad, términos, soporte y destino de los correos)
+const NAT=(()=>{let on=false;try{const C=window.Capacitor;on=!!(C&&typeof C.isNativePlatform==='function'&&C.isNativePlatform())}catch(e){}
+  return{on,plug:n=>{try{const P=window.Capacitor&&window.Capacitor.Plugins;return on&&P&&P[n]||null}catch(e){return null}}}})();
+const APP_URL=NAT.on?WEB_BASE:location.protocol==='https:'?location.origin+location.pathname.replace(/[^\/]*$/,''):undefined; // a dónde vuelve el enlace del correo (la propia app, p. ej. https://…github.io/MUS/); debe estar en «Redirect URLs» de Supabase
+/* Vibración: en la app, motor háptico nativo (iOS no tiene navigator.vibrate); en la PWA, como siempre */
+function haptico(ev){
+  try{const H=NAT.plug('Haptics');
+    if(H){if(ev==='v')H.notification({type:'SUCCESS'});else H.impact({style:'HEAVY'});return}}catch(e){}
+  try{if(navigator.vibrate)navigator.vibrate(ev==='v'?[120,60,120,60,200]:200)}catch(e){}}
+/* Compartir con la hoja nativa (solo en la app). Devuelve true si la ha lanzado */
+function compartirNat(texto){const Sh=NAT.plug('Share');if(!Sh)return false;try{const r=Sh.share({text:texto});if(r&&r.catch)r.catch(()=>{});return true}catch(e){return false}}
+/* Pantalla siempre encendida mientras hay una partida en pantalla (solo en la app) */
+let WAKE_ON=false;
+function wakeSync(){const K=NAT.plug('KeepAwake');if(!K)return;const want=view==='game'&&document.visibilityState!=='hidden';if(want===WAKE_ON)return;WAKE_ON=want;
+  try{const r=want?K.keepAwake():K.allowSleep();if(r&&r.catch)r.catch(()=>{WAKE_ON=!want})}catch(e){WAKE_ON=!want}}
+document.addEventListener('visibilitychange',()=>{WAKE_ON=false;wakeSync()});
+/* Enlaces: en la app abren la web pública en el navegador del sistema (Safari integrado), no dentro de la app */
+function abrirWeb(h){const u=/^https?:/i.test(h)?h:WEB_BASE+h.replace(/^\.?\//,'');const B=NAT.plug('Browser');
+  try{if(B){const r=B.open({url:u});if(r&&r.catch)r.catch(()=>{});return}}catch(e){}
+  try{window.open(u,'_blank','noopener')}catch(e){location.href=u}}
+document.addEventListener('click',e=>{if(!NAT.on)return;const a=e.target&&e.target.closest&&e.target.closest('a[href]');if(!a)return;
+  const h=a.getAttribute('href')||'';if(/^(privacidad|terminos|soporte|confirmar)\.html(#.*)?$/i.test(h)||/^https?:/i.test(h)){e.preventDefault();abrirWeb(h)}},true);
 const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const errAuth=e=>{const m=String((e&&e.message)||''),c=String((e&&e.code)||'');
   if(/invalid login|invalid_credentials/i.test(m+c))return'Correo o contraseña incorrectos.';
@@ -2111,7 +2133,8 @@ async function sincReclamos(){
 /* Sincroniza amistades y partidas; repinta la pantalla si cambia algo y se está viendo Inicio, Amigos, Perfil o Senda */
 let BORRANDO=false; // true mientras se elimina la cuenta: nada se sincroniza ni se guarda
 async function refrescarAmigos(){if(AUTH!=='user'||BORRANDO)return;const a=await sincAmistades(),b=await sincPartidas(),c=await sincReclamos();subirResumen();
-  if((a||b||c)&&['home','friends','profile','senda'].includes(view)&&!document.querySelector('.ov'))draw()}
+  const primera=!LG_LISTO;LG_LISTO=true;
+  if((a||b||c||(primera&&ligaPend()))&&['home','friends','profile','senda'].includes(view)&&!document.querySelector('.ov'))draw()}
 setInterval(()=>{if(document.visibilityState==='visible')refrescarAmigos()},45000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refrescarAmigos()});
 function logout(){olvidarSesion();AUTH=null;go('welcome')}
@@ -2193,9 +2216,10 @@ const ICO_FR='<svg class="hico" viewBox="0 0 24 24" width="20" height="20" aria-
 const ICO_AMR='<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke-width="1.7"/><circle cx="12" cy="12" r="7.3" stroke-width=".9" opacity=".7"/><path d="M7.8 16.4V8l4.2 5.6L16.2 8v8.4M6.4 16.4h2.9M14.7 16.4h2.9" stroke-width="1.6"/></svg>';
 /* ===== Subida de liga: el botón de la Senda late con un punto y, al entrar, salen «¡Liga alcanzada!» y «¡Marco desbloqueado!» ===== */
 function ligaAct(){const id=meId(),q=id&&progress()[id];return q?q.lg:null}
-function ligaPend(){if(AUTH!=='user')return false;const lg=ligaAct();if(lg==null)return false;
-  if(S.lgVisto==null||S.lgVisto>lg){S.lgVisto=lg;save();return false} /* primera vez en este móvil: no se celebra lo ya conseguido */
-  return lg>S.lgVisto}
+let LG_LISTO=false; /* true cuando ya se ha sincronizado con la nube en esta sesión: antes, la liga calculada puede ser menor que la real */
+function ligaPend(){if(AUTH!=='user'||!LG_LISTO)return false;const lg=ligaAct();if(lg==null)return false;
+  if(S.lgVisto==null){S.lgVisto=lg;save();return false} /* primera vez en este móvil: no se celebra lo ya conseguido */
+  return lg>S.lgVisto} /* nunca se baja lgVisto: así no vuelve a salir al iniciar sesión */
 function ligaAlcanzada(){
   const lg=ligaAct();if(lg==null||!ligaPend())return;
   const f=S.friends.find(x=>x.id===meId())||{},ace=avOf(f,progress()[f.id]||blank()).a;
@@ -2237,7 +2261,10 @@ function musCopy(f,el){const id='#'+musOf(f);
   const doCopy=()=>{if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(id).then(ok,fb);else fb()};
   document.querySelectorAll('.mcpop').forEach(x=>x.remove());
   const pop=document.createElement('div');pop.className='mcpop';
-  const b=document.createElement('button');b.type='button';b.textContent='Copiar';pop.appendChild(b);document.body.appendChild(pop);
+  const b=document.createElement('button');b.type='button';b.textContent='Copiar';pop.appendChild(b);
+  if(NAT.on&&NAT.plug('Share')){const b2=document.createElement('button');b2.type='button';b2.textContent='Compartir';pop.appendChild(b2);
+    b2.onclick=e=>{e.stopPropagation();close();compartirNat('Añádeme en MUS: mi Mus ID es '+musOf(f))}}
+  document.body.appendChild(pop);
   const r=el&&el.getBoundingClientRect?el.getBoundingClientRect():{left:innerWidth/2,top:innerHeight/2,bottom:innerHeight/2,width:0};
   const w=pop.offsetWidth,h=pop.offsetHeight;
   let x=r.left+r.width/2-w/2;x=Math.max(8,Math.min(innerWidth-w-8,x));
@@ -2665,7 +2692,7 @@ function add(i,n,rec){
     if(g.jt){g.jt=[...g.jt];g.jt[i]++}
     g.jg=[...g.jg];g.jg[i]++;g.pts=[0,0];g.mesa={};ev='j';
     if(!g.inf&&g.jg[i]>=c.juegos){if(g.jg[1-i]===0&&c.juegos>=3){g.pz=[...(g.pz||[0,0])];g.pz[i]++}g.vc=[...g.vc];g.vc[i]++;g.jg=[0,0];ev='v'}
-    if(navigator.vibrate)navigator.vibrate(ev==='v'?[120,60,120,60,200]:200);
+    haptico(ev);
     if(g.inf||g.vc[i]<c.vacas)fx(ev,i);
     if(!g.inf&&g.vc[i]>=c.vacas){finish(i,0);return}
   }
@@ -3130,7 +3157,7 @@ const jugSala=()=>{const due=SL.duenoId&&SL.duenoId===SL.yo,esp=SL.mem.filter(m=
 function ligar(des){
   const q=s=>app.querySelector(s),qa=s=>app.querySelectorAll(s);
   q('#slx').onclick=()=>{SL.menu=true;pintar()};
-  q('#slcode').onclick=()=>{try{navigator.clipboard.writeText(SL.codigo)}catch(e){}toast('Código copiado: '+SL.codigo)};
+  q('#slcode').onclick=()=>{if(compartirNat('Únete a mi partida de mus en MUS con el código '+SL.codigo))return;try{navigator.clipboard.writeText(SL.codigo)}catch(e){}toast('Código copiado: '+SL.codigo)};
   q('#slpl').onclick=()=>{SL.plO=true;cargarMiembros();pintar()};
   if(q('#sllog'))q('#sllog').onclick=()=>{SL.logO=true;pintar()};
   qa('[data-n]').forEach(b=>b.onclick=()=>tocar(+b.dataset.n));
@@ -3221,6 +3248,7 @@ async function entrarSala(info,vs){
   go('game');if(vs&&esJug())vsIntro()}
 
 /* ---------- Iniciar partida conectada: el código se reserva al elegir el modo y se activa al «Aceptar y empezar» ---------- */
+document.addEventListener('click',e=>{const c=e.target&&e.target.closest&&e.target.closest('#slc');if(c&&SETUP_SALA&&SETUP_SALA.codigo)compartirNat('Únete a mi partida de mus en MUS con el código '+SETUP_SALA.codigo)});
 async function reservarSala(){
   const chip=()=>document.getElementById('slc');
   const r=await rpcSala('sala_crear',{p_cfg:{}});
@@ -3252,6 +3280,7 @@ draw();
 {const h=location.hash.slice(1);if(h&&!/access_token=|refresh_token=|error=|error_code=|type=(signup|recovery|magiclink|invite|email_change)/.test(h))PEND=h} // el enlace compartido se importa al iniciar sesión
 avisoEnlace();
 entrarUsuario() // sesión recordada en este dispositivo: entra directamente, sin pedir los datos
+{const d1=draw;draw=function(){d1();wakeSync()}}
 </script>
 <script>
 /* Efecto de hundirse al pulsar: funciona con dedo y ratón, y se alcanza a ver antes de cambiar de pantalla */
@@ -3910,15 +3939,14 @@ html body .ov.lgn .plg .nd[data-l] .nm.nmx{font-size:clamp(17px,5.6vw,23px)!impo
 #app.game.sl .sl-bw .b2 button{height:clamp(60px,10.5vh,100px);font-size:clamp(30px,5vh,44px);border-radius:16px}
 #app.game.sl .sl-bw .b3{gap:14px}
 #app.game.sl .sl-bw .b3 button{height:clamp(44px,7vh,66px);font-size:clamp(17px,2.7vh,23px);border-radius:14px}
-/* ===== E-17: brillo del cartel «¡Liga alcanzada!» ===== */
-/* sin el aro duro de antes: halo de luz suave que respira, con espacio propio para no cortarse, y un destello que cruza el tapete */
-html body .ov.lgn .plg{padding:26px 20px!important;isolation:isolate;background:radial-gradient(ellipse closest-side at 50% 50%,rgba(255,226,140,.20) 0%,rgba(255,226,140,.09) 60%,transparent 100%)}
-html body .ov.lgn .plg .nd.cur[data-l]{filter:none!important;box-shadow:none!important}
-.ov.lgn .plg::before{content:"";position:absolute;inset:22px 15px;border-radius:12px;pointer-events:none;z-index:0;box-shadow:0 0 10px 2px rgba(255,214,110,.60),0 0 26px 7px rgba(240,194,74,.42),0 0 34px 8px rgba(224,176,74,.20);animation:lgnRespira 2.8s ease-in-out infinite}
-.ov.lgn .plg::after{content:"";position:absolute;inset:26px 20px;border-radius:8px;pointer-events:none;z-index:3;background:linear-gradient(108deg,transparent 38%,rgba(255,246,208,.38) 50%,transparent 62%) no-repeat;background-size:260% 100%;background-position:130% 0;animation:lgnDestello 4.2s ease-in-out .5s infinite}
-@keyframes lgnRespira{0%,100%{opacity:.72;transform:scale(1)}50%{opacity:1;transform:scale(1.018)}}
+/* ===== E-21: cartel «¡Liga alcanzada!»: sin resplandor de fondo; solo el tapete late y un destello lo cruza ===== */
+html body .ov.lgn .plg{padding:26px 20px!important;isolation:isolate;background:none!important}
+html body .ov.lgn .plg .nd.cur[data-l]{filter:none!important;box-shadow:none!important;animation:lgnLate 2.8s ease-in-out infinite;transform-origin:50% 50%}
+.ov.lgn .plg::before{content:none!important}
+.ov.lgn .plg::after{content:"";position:absolute;inset:26px 20px;border-radius:8px;pointer-events:none;z-index:3;background:linear-gradient(108deg,transparent 38%,rgba(255,246,208,.38) 50%,transparent 62%) no-repeat;background-size:260% 100%;background-position:130% 0;animation:lgnDestello 4.2s ease-in-out infinite}
+@keyframes lgnLate{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
 @keyframes lgnDestello{0%{background-position:130% 0}38%,100%{background-position:-30% 0}}
-@media (prefers-reduced-motion:reduce){.ov.lgn .plg::before{animation:none;opacity:.9}.ov.lgn .plg::after{animation:none;display:none}}
+@media (prefers-reduced-motion:reduce){html body .ov.lgn .plg .nd.cur[data-l]{animation:none}.ov.lgn .plg::after{animation:none;display:none}}
 /* punto de aviso de «Senda del Órdago»: sobre el marco (antes lo recortaba el overflow del botón) */
 html body #app.home .menu #sd{overflow:visible!important}
 html body #app.home .menu #sd .mbadge{top:-11px;right:-8px;z-index:6}
