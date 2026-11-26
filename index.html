@@ -1738,7 +1738,7 @@ function authDlg(modo,prefill){
    +'<label class="alb" for="ae">Correo electrónico</label><input id="ae" type="email" inputmode="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="nombre@correo.com">'
    +'<label class="alb" for="ap">Contraseña</label><input id="ap" type="password" autocomplete="'+(up?'new-password':'current-password')+'" placeholder="'+(up&&!SIMULAR?'Mínimo '+PASS_MIN+' caracteres':'Tu contraseña')+'">'
    +(up?'<label class="alb" for="ap2">Repetir contraseña</label><input id="ap2" type="password" autocomplete="new-password" placeholder="Escríbela otra vez">':'')
-+(up?'<label class="alb" for="at" style="display:flex;gap:10px;align-items:flex-start;margin-top:12px;font-size:14px;line-height:1.35"><input id="at" type="checkbox" style="width:22px;height:22px;flex:0 0 auto;margin:1px 0 0"><span>He leído y acepto los <a class="plink" href="terminos.html" target="_blank" rel="noopener">Términos de uso y normas</a> y la <a class="plink" href="privacidad.html" target="_blank" rel="noopener">Política de privacidad</a>.</span></label>':'')
++(up?'<label class="alb" for="at" style="display:flex!important;flex-direction:row!important;text-align:left;gap:10px;align-items:flex-start;margin-top:12px;font-size:14px;line-height:1.35"><input id="at" type="checkbox" style="width:22px;height:22px;flex:0 0 auto;margin:1px 0 0"><span>He leído y acepto los <a class="plink" href="terminos.html" target="_blank" rel="noopener">Términos de uso y normas</a> y la <a class="plink" href="privacidad.html" target="_blank" rel="noopener">Política de privacidad</a>.</span></label>':'')
    +(up?'':'<button type="button" class="alk" id="af" style="background:none">¿Has olvidado tu contraseña?</button>')
    +(up?'':'<button type="button" class="alk" id="an" style="background:none">¿No tienes perfil? Crear perfil</button>')
    +'<p class="aerr" id="aer" role="alert"></p>'
@@ -1803,20 +1803,42 @@ d.querySelector('#dk').onclick=async()=>{let ok=false;try{await navigator.clipbo
 if(!ok){try{const r=document.createRange();r.selectNodeContents(d.querySelector('#cmail'));const sel=getSelection();sel.removeAllRanges();sel.addRange(r);ok=document.execCommand('copy')}catch(e){}}
 R.textContent=ok?'Correo copiado.':'Mantén pulsado el correo para copiarlo.'}}
 /* Denunciar a un jugador (guía 1.2 de Apple: mecanismo de denuncia). Lo recibe el responsable; no se avisa al denunciado */
-function denunciarDlg(uid,nombre,sala){
+function denunciarDlg(uid,nombre,sala,bloq,despues){
 const d=document.createElement('div');d.className='ov c auth';
 const fs='width:100%;box-sizing:border-box;margin-top:8px;padding:11px 12px;border:1px solid rgba(200,160,80,.5);border-radius:10px;background:rgba(0,0,0,.3);color:#eae2cc;font:16px Literata,Georgia,serif';
 d.innerHTML='<div class="mp"><b>Denunciar</b><p class="atx just">¿Qué ocurre con <b id="dn"></b>?</p>'
-+'<select id="dm" style="'+fs+'"><option value="nombre">Nombre ofensivo o inadecuado</option><option value="comportamiento">Comportamiento abusivo o acoso</option><option value="otro">Otro motivo</option></select>'
++'<select id="dm" style="'+fs+'"><option value="">Selecciona motivo</option><option value="nombre">Nombre ofensivo o inadecuado</option><option value="comportamiento">Comportamiento abusivo o acoso</option><option value="otro">Otro motivo</option></select>'
 +'<textarea id="dd" rows="3" maxlength="300" placeholder="Detalles (opcional)" style="'+fs+';resize:none"></textarea>'
++(bloq?'<label class="alb" for="db" style="display:flex!important;flex-direction:row!important;text-align:left;gap:10px;align-items:center;margin-top:12px;font-size:15px"><input id="db" type="checkbox" style="width:22px;height:22px;flex:0 0 auto;margin:0"><span>Bloquear también a este jugador</span></label>':'')
 +'<p class="aerr" id="aer" role="alert"></p><div class="row"><button class="ghost cr2" id="dc">Cancelar</button><button id="dk" class="cr">Enviar</button></div></div>';
 document.body.appendChild(d);d.querySelector('#dn').textContent=nombre||'este jugador';
 const R=d.querySelector('#aer'),K=d.querySelector('#dk');
+d.querySelector('#dm').addEventListener('change',()=>{R.textContent=''});
 d.querySelector('#dc').onclick=()=>d.remove();
-K.onclick=async()=>{R.textContent='';K.disabled=true;
-const r=await rpcSala('denunciar',{p_usuario:uid,p_motivo:d.querySelector('#dm').value,p_detalle:d.querySelector('#dd').value.trim().slice(0,300),p_sala:sala||null});
+K.onclick=async()=>{R.textContent='';const mot=d.querySelector('#dm').value;if(!mot){R.textContent='Selecciona un motivo.';return}K.disabled=true;
+const r=await rpcSala('denunciar',{p_usuario:uid,p_motivo:mot,p_detalle:d.querySelector('#dd').value.trim().slice(0,300),p_sala:sala||null});
 K.disabled=false;
-if(r.ok){d.remove();toast('Gracias. Revisaremos tu aviso lo antes posible.',3800)}else R.textContent=MSG[r.motivo]||MSG.error}}
+if(r.ok){const bq=bloq&&d.querySelector('#db')&&d.querySelector('#db').checked;let bok=false;
+if(bq){const rb=await rpcSala('bloquear',{p_usuario:uid});bok=!!rb.ok;if(bok)await sincAmistades()}
+d.remove();toast(bq?(bok?'Gracias. Aviso enviado y usuario bloqueado.':'Aviso enviado, pero no se ha podido bloquear. Inténtalo desde su perfil.'):'Gracias. Revisaremos tu aviso lo antes posible.',3800);if(bok&&despues)despues()}else R.textContent=MSG[r.motivo]||MSG.error}}
+/* Bloquear (guía 1.2 de Apple): dejáis de veros (amistad, perfil, búsquedas y partidas conectadas). No se avisa a la otra persona */
+function bloquearDlg(uid,nombre,despues){
+dlg('¿Bloquear a '+(nombre||'este jugador')+'? Dejaréis de ser amigos si lo erais y no podréis encontraros: ni perfiles, ni búsquedas, ni partidas conectadas juntos. No se le avisa. Puedes desbloquear en Mi perfil.',{cancel:1,ok:'Bloquear',cr:1},async()=>{
+const r=await rpcSala('bloquear',{p_usuario:uid});
+if(r.ok){await sincAmistades();toast('Usuario bloqueado.',3000);if(despues)despues()}else toast(MSG[r.motivo]||MSG.error,3500)})}
+/* Mi perfil → Usuarios bloqueados: lista con botón para desbloquear */
+async function bloqueadosDlg(){
+const d=document.createElement('div');d.className='ov c auth';
+d.innerHTML='<div class="mp"><b>Usuarios bloqueados</b><div id="bl" class="atx" style="max-height:48vh;overflow:auto;text-align:left">Cargando…</div><div class="row"><button class="ghost cr2" id="dc">Cerrar</button></div></div>';
+document.body.appendChild(d);d.querySelector('#dc').onclick=()=>d.remove();
+const B=d.querySelector('#bl');
+const pinta=async()=>{let q;try{q=await sb.rpc('mis_bloqueados')}catch(e){q={error:1}}
+if(q.error||!Array.isArray(q.data)){B.textContent='No se ha podido cargar la lista. Inténtalo de nuevo.';return}
+if(!q.data.length){B.textContent='No has bloqueado a nadie.';return}
+B.innerHTML=q.data.map(u=>'<div style="display:flex;gap:10px;align-items:center;justify-content:space-between;margin:8px 0"><span class="bn" data-i="'+esc(u.id)+'"></span><button type="button" class="ghost sl-ex" data-ub="'+esc(u.id)+'">Desbloquear</button></div>').join('');
+B.querySelectorAll('.bn').forEach((e,i)=>e.textContent=q.data[i].nombre||'Jugador');
+B.querySelectorAll('[data-ub]').forEach(b=>b.onclick=async()=>{b.disabled=true;const r=await rpcSala('desbloquear',{p_usuario:b.dataset.ub});if(r.ok){toast('Usuario desbloqueado.',2500);pinta()}else{b.disabled=false;toast(MSG[r.motivo]||MSG.error,3000)}})};
+pinta()}
 /* Recuperar contraseña: pide el correo y avisa sin revelar si la cuenta existe */
 function recuperarDlg(prefill){
   const d=document.createElement('div');d.className='ov c auth';
@@ -1941,7 +1963,7 @@ const hueco=id=>{const f=S.friends.find(x=>x.id===id);if(f&&f.gen)return true;if
 const sinCuenta=id=>hueco(id)||/^sg[1-4]$/.test(String(id));
 const oculto=id=>gone(id)||hueco(id);
 const gone=id=>/(^|_)del_[0-9a-f]{8}$/.test(String(id))||!!(S.gone&&S.gone[id]);
-const VERSION='E-19';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
+const VERSION='E-20';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
 /* ===== Perfiles públicos (fase I) ===== */
 const RESERVADO=/^(yo|invitado|jugador( ?[1-4])?|jugador eliminado)$/i; // mismos nombres que bloquea la base de datos
 const NOMBRE_NO='Nombre no disponible';
@@ -2446,13 +2468,17 @@ function profile(){
   +'<div class="card"><div class="hh"><b>Medallas</b></div><div class="mg">'+FAM.map(m=>'<button class="med'+(pendF(m)?' pend':'')+'" data-a="'+m.id+'">'+medal(m,shown(m),58)+'<span>'+esc(m.name)+'</span><small>'+medalLbl(m,shown(m))+'</small></button>').join('')+'</div></div>'
   +'<div class="card"><div class="hh"><b>Medallas especiales</b></div><div class="mg sp">'+SEC.map(m=>{const on=!!p.sec[m.id],pd=on&&CL&&!CL[m.id],von=on&&!pd;return '<button class="med'+(pd?' pend':'')+(on?'':' lkd')+'" data-s="'+m.id+'">'+medal(m,von?SPEC:0,62)+'<span>'+esc(m.name)+'</span><small>'+(on?'Conseguida':'Bloqueada')+'</small></button>'}).join('')+'</div></div>'
   +'<div class="card"><div class="fr"><b>Mejor pareja</b>'+(mates.length?'<button class="ghost" id="ap" style="padding:7px 12px;font-size:14px">Principales parejas</button>':'')+'</div>'+(bm?mtab([bm]):'<span style="color:var(--mute)">'+(mates.length?'Aún no hay victorias con ninguna pareja.':'Todavía no ha jugado con ninguna pareja.')+'</span>')+'</div>'+(!V.mine&&!V.res&&!V.amigo?'<p class="wnote">Este jugador aún no ha publicado sus estadísticas.</p>':'');
-  if(mine&&profBack==='home'){const lo=document.createElement('button');lo.type='button';lo.id='lo';lo.textContent='Cerrar sesión';lo.style.cssText='flex:0 0 auto;border:1.5px solid rgba(200,160,80,.6);color:#eae2cc;background:rgba(0,0,0,.25)';app.appendChild(lo);lo.onclick=()=>dlg('¿Cerrar sesión?',{cancel:1,ok:'Cerrar sesión',cr:1},logout);
+  if(mine&&profBack==='home'){const bq=document.createElement('button');bq.type='button';bq.id='bq';bq.textContent='Usuarios bloqueados';bq.style.cssText='flex:0 0 auto;border:1.5px solid rgba(200,160,80,.6);color:#eae2cc;background:rgba(0,0,0,.25)';app.appendChild(bq);bq.onclick=bloqueadosDlg;
+const lo=document.createElement('button');lo.type='button';lo.id='lo';lo.textContent='Cerrar sesión';lo.style.cssText='flex:0 0 auto;border:1.5px solid rgba(200,160,80,.6);color:#eae2cc;background:rgba(0,0,0,.25)';app.appendChild(lo);lo.onclick=()=>dlg('¿Cerrar sesión?',{cancel:1,ok:'Cerrar sesión',cr:1},logout);
     const de=document.createElement('button');de.type='button';de.id='de';de.textContent='Eliminar cuenta';de.style.cssText='flex:0 0 auto;border:1.5px solid rgba(190,84,74,.7);color:#eeb0a8;background:rgba(110,28,24,.32)';app.appendChild(de);de.onclick=eliminarCuentaDlg;
     const pv=document.createElement('p');pv.className='wnote';pv.innerHTML='<a class="plink" href="privacidad.html" target="_blank" rel="noopener">Política de privacidad</a> · <a class="plink" href="terminos.html" target="_blank" rel="noopener">Términos</a> · <a class="plink" href="#" id="ct">Ayuda y contacto</a>';app.appendChild(pv);pv.querySelector('#ct').onclick=e=>{e.preventDefault();contactoDlg()}}
   if(!mine&&V.amigo&&AUTH==='user'&&isUuid(f.id)){const rb=document.createElement('button');rb.type='button';rb.id='rf';rb.textContent='Eliminar amigo';rb.style.cssText='flex:0 0 auto;border:1.5px solid rgba(190,84,74,.7);color:#eeb0a8;background:rgba(110,28,24,.32)';app.appendChild(rb);
     rb.onclick=()=>dlg('¿Eliminar a '+f.name+' de tus amigos? Las partidas que habéis jugado juntos se conservan.',{cancel:1,ok:'Eliminar',cr:1},async()=>{if(await borrarAmigo(f.id)){if(profPila.length)profAtras();else go(profBack==='home'?'friends':profBack)}})}
   $('#b').onclick=profAtras;
-  if(!mine&&AUTH==='user'&&isUuid(f.id)){const rd=document.createElement('button');rd.type='button';rd.id='rd';rd.textContent='Denunciar';rd.style.cssText='flex:0 0 auto;border:1.5px solid rgba(200,160,80,.6);color:#eae2cc;background:rgba(0,0,0,.25)';app.appendChild(rd);rd.onclick=()=>denunciarDlg(f.id,f.name)}
+  if(!mine&&AUTH==='user'&&isUuid(f.id)){const rd=document.createElement('button');rd.type='button';rd.id='rd';rd.textContent='Denunciar';rd.style.cssText='flex:0 0 auto;border:1.5px solid rgba(190,84,74,.7);color:#eeb0a8;background:rgba(110,28,24,.32)';app.appendChild(rd);
+const bk=document.createElement('button');bk.type='button';bk.id='bk';bk.textContent='Bloquear';bk.style.cssText='flex:0 0 auto;border:1.5px solid rgba(200,160,80,.6);color:#eae2cc;background:rgba(0,0,0,.25)';app.appendChild(bk);
+const volver=()=>{if(profPila.length)profAtras();else go(profBack==='home'?'friends':profBack)};
+rd.onclick=()=>denunciarDlg(f.id,f.name,null,true,volver);bk.onclick=()=>bloquearDlg(f.id,f.name,volver)}
 $('#pmid').onclick=e=>musCopy(f,e.currentTarget);
   {const fit=()=>app.querySelectorAll('.nd .nm').forEach(el=>{el.style.removeProperty('font-size');let fs=parseFloat(getComputedStyle(el).fontSize);while(el.scrollWidth>el.clientWidth+0.5&&fs>11){fs-=.5;el.style.setProperty('font-size',fs+'px','important')}});fit();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{if(view==='profile')fit()})}
   if(mine){const pn=$('#pn'),er=$('#pnerr');let tm=0;const msg=t=>{er.textContent=t;clearTimeout(tm);if(t)tm=setTimeout(()=>{er.textContent=''},4500)};
@@ -2801,7 +2827,7 @@ async function asegurarAnon(){
     return j.user||await sbUser()
   }catch(e){return null}
 }
-const MSG={codigo:'Ese código no existe o la sala ya no está activa.',intentos:'Demasiados intentos. Espera unos minutos y vuelve a probar.',expulsado:'El dueño te ha expulsado de esta partida.',sala_llena:'La sala está llena de espectadores.',puesto_ocupado:'Ese puesto ya está ocupado.',red:'No se ha podido conectar. Revisa tu conexión e inténtalo de nuevo.',error:'No se ha podido completar. Inténtalo de nuevo.',cerrada:'La partida ya no está disponible.',no_amigo:'Solo puedes invitar a tus amigos.',demasiadas_salas:'Ya tienes varias partidas conectadas abiertas.',nombre:'Algún nombre de equipo no está permitido. Elige otro.',limite:'Has enviado muchas denuncias hoy. Inténtalo mañana.',no_existe:'No se ha podido encontrar a ese jugador.',propio:'No puedes denunciarte a ti mismo.'};
+const MSG={codigo:'Ese código no existe o la sala ya no está activa.',intentos:'Demasiados intentos. Espera unos minutos y vuelve a probar.',expulsado:'El dueño te ha expulsado de esta partida.',sala_llena:'La sala está llena de espectadores.',puesto_ocupado:'Ese puesto ya está ocupado.',red:'No se ha podido conectar. Revisa tu conexión e inténtalo de nuevo.',error:'No se ha podido completar. Inténtalo de nuevo.',cerrada:'La partida ya no está disponible.',no_amigo:'Solo puedes invitar a tus amigos.',demasiadas_salas:'Ya tienes varias partidas conectadas abiertas.',nombre:'Algún nombre de equipo no está permitido. Elige otro.',limite:'Has llegado al límite. Inténtalo más tarde.',no_existe:'No se ha podido encontrar a ese jugador.',propio:'No puedes denunciarte a ti mismo.'};
 
 /* ---------- Estado en vivo ---------- */
 function nuevoSL(info,yo){
@@ -3098,7 +3124,7 @@ function txtEv(e){
 const logSala=des=>{const ls=SL.ev.map(e=>[e,txtEv(e)]).filter(x=>x[1]).slice(-10).reverse();
   return '<div class="ov c"><div class="mp"><b>Últimas acciones</b><div class="sl-log">'+(ls.length?ls.map(([e,t])=>'<p'+(e.deshecho?' class="dz"':'')+'>'+esc(t)+'</p>').join(''):'<p>Todavía no hay acciones.</p>')+'</div><div class="row">'+(des?'<button class="ghost" id="sldes">Deshacer: '+esc(txtEv(des))+'</button>':'')+'<button id="slcl">Cerrar</button></div></div></div>'};
 const jugSala=()=>{const due=SL.duenoId&&SL.duenoId===SL.yo,esp=SL.mem.filter(m=>m.rol==='espectador'&&m.estado==='dentro');
-  const fila=m=>'<p><i class="sl-dot'+(m.puesto!=null&&presOn(m.puesto)?' on':'')+'"></i>'+esc(m.nombre||'Jugador')+(m.user_id===SL.duenoId?' · dueño':'')+((due&&m.user_id!==SL.yo&&m.estado!=='invitado')||(due&&m.estado==='invitado')?' <button class="ghost sl-ex" data-ex="'+m.user_id+'">Expulsar</button>':'')+(m.user_id!==SL.yo?' <button class="ghost sl-ex" data-rp="'+m.user_id+'" data-rn="'+esc(m.nombre||'Jugador')+'">Denunciar</button>':'')+'</p>';
+  const fila=m=>'<p><i class="sl-dot'+(m.puesto!=null&&presOn(m.puesto)?' on':'')+'"></i>'+esc(m.nombre||'Jugador')+(m.user_id===SL.duenoId?' · dueño':'')+((due&&m.user_id!==SL.yo&&m.estado!=='invitado')||(due&&m.estado==='invitado')?' <button class="ghost sl-ex" data-ex="'+m.user_id+'">Expulsar</button>':'')+(m.user_id!==SL.yo?' <button class="ghost sl-ex" style="border:1.5px solid rgba(190,84,74,.7);color:#eeb0a8;background:rgba(110,28,24,.32)" data-rp="'+m.user_id+'" data-rb="'+(m.anonimo?'0':'1')+'" data-rn="'+esc(m.nombre||'Jugador')+'">Denunciar</button>':'')+'</p>';
   const jugs=[0,1,2,3].map(p=>{const m=memP(p);return m?fila(m):'<p><i class="sl-dot"></i>Jugador '+(p+1)+' · libre</p>'}).join('');
   return '<div class="ov c"><div class="mp"><b>Sala '+esc(SL.codigo)+'</b><div class="sl-log">'+jugs+(esp.length?'<p class="sl-sub">Espectadores ('+esp.length+')</p>'+(due?esp.map(fila).join(''):''):'')+'</div><div class="row"><button id="slpc">Cerrar</button></div></div></div>'};
 function ligar(des){
@@ -3122,7 +3148,7 @@ function ligar(des){
   if(q('#slcl'))q('#slcl').onclick=()=>{SL.logO=false;pintar()};
   if(q('#sldes'))q('#sldes').onclick=()=>{SL.logO=false;pintar();deshacer(des.seq)};
   if(q('#slpc'))q('#slpc').onclick=()=>{SL.plO=false;pintar()};
-  qa('[data-rp]').forEach(b=>b.onclick=()=>denunciarDlg(b.dataset.rp,b.dataset.rn,SL.id));
+  qa('[data-rp]').forEach(b=>b.onclick=()=>denunciarDlg(b.dataset.rp,b.dataset.rn,SL.id,b.dataset.rb==='1'));
 qa('[data-ex]').forEach(b=>b.onclick=()=>{const u=b.dataset.ex;dlg('¿Expulsar a este jugador de la partida?',{cancel:1,ok:'Expulsar',cr:1},async()=>{const r=await rpcSala('sala_expulsar',{p_sala:SL.id,p_user:u});if(!r.ok)toast(MSG[r.motivo]||'No se ha podido expulsar.');else cargarMiembros()})});
   /* Fichas: se arrastran solo a MI equipo; un toque abre el cuadro para cambiar o quitar */
   qa('.chip').forEach(ch=>{
