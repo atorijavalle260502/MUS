@@ -1723,7 +1723,7 @@ function abrirWeb(h){const u=/^https?:/i.test(h)?h:WEB_BASE+h.replace(/^\.?\//,'
   try{if(B){const r=B.open({url:u});if(r&&r.catch)r.catch(()=>{});return}}catch(e){}
   try{window.open(u,'_blank','noopener')}catch(e){location.href=u}}
 document.addEventListener('click',e=>{if(!NAT.on)return;const a=e.target&&e.target.closest&&e.target.closest('a[href]');if(!a)return;
-  const h=a.getAttribute('href')||'';if(/^(privacidad|terminos|soporte|confirmar)\.html(#.*)?$/i.test(h)||/^https?:/i.test(h)){e.preventDefault();abrirWeb(h)}},true);
+  const h=a.getAttribute('href')||'';if(/^(privacidad|terminos|soporte|licencias|confirmar)\.html(#.*)?$/i.test(h)||/^https?:/i.test(h)){e.preventDefault();abrirWeb(h)}},true);
 const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const errAuth=e=>{const m=String((e&&e.message)||''),c=String((e&&e.code)||'');
   if(/invalid login|invalid_credentials/i.test(m+c))return'Correo o contraseña incorrectos.';
@@ -2174,7 +2174,7 @@ const lockMsg=n=>dlg('Inicia sesión para acceder a '+n+'.',{cancel:1,ok:'Inicia
 function welcome(){
   app.innerHTML='<div class="hsuits">'+['o','c','e','b'].map(k=>suit(k,k==='o'?50:64)).join('')+'</div><div class="logo">MUS</div>'+fan()
   +'<div class="menu"><button class="gold" style="width:100%" id="li">Iniciar sesión</button><button class="ghost" style="width:100%;background:var(--card)" id="cp">Crear perfil</button><button class="ghost" style="width:100%;background:var(--card)" id="gu">Jugar como invitado</button>'
-  +'<p class="wnote">Como invitado puedes jugar, pero sin perfil, amigos ni estadísticas.</p><p class="wnote"><a class="plink" href="privacidad.html" target="_blank" rel="noopener">Política de privacidad</a> · <a class="plink" href="terminos.html" target="_blank" rel="noopener">Términos</a> · <a class="plink" href="#" id="ct">Ayuda y contacto</a></p></div>';
+  +'<p class="wnote">Como invitado puedes jugar, pero sin perfil, amigos ni estadísticas.</p><p class="wnote"><a class="plink" href="privacidad.html" target="_blank" rel="noopener">Política de privacidad</a> · <a class="plink" href="terminos.html" target="_blank" rel="noopener">Términos</a> · <a class="plink" href="licencias.html" target="_blank" rel="noopener">Licencias</a> · <a class="plink" href="#" id="ct">Ayuda y contacto</a></p></div>';
   $('#ct').onclick=e=>{e.preventDefault();contactoDlg()};$('#li').onclick=login;$('#cp').onclick=crearPerfil;$('#gu').onclick=()=>enterMode('guest');
 }
 function draw(){if(!AUTH)view='welcome';else if(AUTH==='guest'&&LOCKED.includes(view))view='home';app.className=view==='welcome'?'home':view;({welcome,home,friends,setup,game,profile,senda})[view]()}
@@ -2498,7 +2498,7 @@ function profile(){
   if(mine&&profBack==='home'){const bq=document.createElement('button');bq.type='button';bq.id='bq';bq.textContent='Usuarios bloqueados';bq.style.cssText='flex:0 0 auto;border:1.5px solid rgba(200,160,80,.6);color:#eae2cc;background:rgba(0,0,0,.25)';app.appendChild(bq);bq.onclick=bloqueadosDlg;
 const lo=document.createElement('button');lo.type='button';lo.id='lo';lo.textContent='Cerrar sesión';lo.style.cssText='flex:0 0 auto;border:1.5px solid rgba(200,160,80,.6);color:#eae2cc;background:rgba(0,0,0,.25)';app.appendChild(lo);lo.onclick=()=>dlg('¿Cerrar sesión?',{cancel:1,ok:'Cerrar sesión',cr:1},logout);
     const de=document.createElement('button');de.type='button';de.id='de';de.textContent='Eliminar cuenta';de.style.cssText='flex:0 0 auto;border:1.5px solid rgba(190,84,74,.7);color:#eeb0a8;background:rgba(110,28,24,.32)';app.appendChild(de);de.onclick=eliminarCuentaDlg;
-    const pv=document.createElement('p');pv.className='wnote';pv.innerHTML='<a class="plink" href="privacidad.html" target="_blank" rel="noopener">Política de privacidad</a> · <a class="plink" href="terminos.html" target="_blank" rel="noopener">Términos</a> · <a class="plink" href="#" id="ct">Ayuda y contacto</a>';app.appendChild(pv);pv.querySelector('#ct').onclick=e=>{e.preventDefault();contactoDlg()}}
+    const pv=document.createElement('p');pv.className='wnote';pv.innerHTML='<a class="plink" href="privacidad.html" target="_blank" rel="noopener">Política de privacidad</a> · <a class="plink" href="terminos.html" target="_blank" rel="noopener">Términos</a> · <a class="plink" href="licencias.html" target="_blank" rel="noopener">Licencias</a> · <a class="plink" href="#" id="ct">Ayuda y contacto</a>';app.appendChild(pv);pv.querySelector('#ct').onclick=e=>{e.preventDefault();contactoDlg()}}
   if(!mine&&V.amigo&&AUTH==='user'&&isUuid(f.id)){const rb=document.createElement('button');rb.type='button';rb.id='rf';rb.textContent='Eliminar amigo';rb.style.cssText='flex:0 0 auto;border:1.5px solid rgba(190,84,74,.7);color:#eeb0a8;background:rgba(110,28,24,.32)';app.appendChild(rb);
     rb.onclick=()=>dlg('¿Eliminar a '+f.name+' de tus amigos? Las partidas que habéis jugado juntos se conservan.',{cancel:1,ok:'Eliminar',cr:1},async()=>{if(await borrarAmigo(f.id)){if(profPila.length)profAtras();else go(profBack==='home'?'friends':profBack)}})}
   $('#b').onclick=profAtras;
