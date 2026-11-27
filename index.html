@@ -1985,7 +1985,7 @@ const hueco=id=>{const f=S.friends.find(x=>x.id===id);if(f&&f.gen)return true;if
 const sinCuenta=id=>hueco(id)||/^sg[1-4]$/.test(String(id));
 const oculto=id=>gone(id)||hueco(id);
 const gone=id=>/(^|_)del_[0-9a-f]{8}$/.test(String(id))||!!(S.gone&&S.gone[id]);
-const VERSION='E-24';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
+const VERSION='E-26';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
 /* ===== Perfiles públicos (fase I) ===== */
 const RESERVADO=/^(yo|invitado|jugador( ?[1-4])?|jugador eliminado)$/i; // mismos nombres que bloquea la base de datos
 const NOMBRE_NO='Nombre no disponible';
@@ -2567,7 +2567,6 @@ function setup(){
     let h='';
     if(gen)h+='<button type="button" class="psr psg'+(cur[i]===gen.id?' on':'')+'" data-id="'+gen.id+'"><span class="psgi" aria-hidden="true"><svg viewBox="0 0 24 24" width="30" height="30"><circle cx="12" cy="8" r="3.9" fill="currentColor"/><path d="M4.5 20c0-4.1 3.2-6.6 7.5-6.6s7.5 2.5 7.5 6.6z" fill="currentColor"/></svg></span><span class="psn"><b>'+esc(gen.name)+'</b><small>Jugador sin la app</small></span></button>';
     h+=mine.map(f=>row(f,where(f.id)===i)).join('')+rest(placed).map(f=>row(f,where(f.id)===i)).join('')+rest(free).map(f=>row(f,false)).join('');
-    if(cur[i])h+='<button type="button" class="ghost psv" data-id="">Dejar vacío</button>';
     const d=document.createElement('div');d.className='ov c';
     d.innerHTML='<div class="mp pkr"><div class="pkr-bar"><button type="button" class="csback">‹ Atrás</button><b>Escoger jugador</b></div><div class="mpi"><div class="ps-list">'+h+'</div></div></div>';
     document.body.appendChild(d);
@@ -3990,7 +3989,10 @@ html body .ov.c .psn .pst2{font-style:normal;font-size:12px;font-weight:700;marg
 html body .ov.c .pst{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;font-size:18px;font-weight:700}
 html body .ov.c .psg{background:linear-gradient(180deg,#3b4f7a,#26365a)!important;border-color:#8ea4d6!important}
 html body .ov.c .psgi{flex:0 0 52px;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#e9e2cc;background:rgba(255,255,255,.14);border:2px solid rgba(255,255,255,.35)}
-html body .ov.c .psv{width:100%;margin-top:4px;padding:12px;font-size:16px}
+
+/* «Nueva partida» (local, conectado e invitado): cabecera fija arriba al hacer scroll */
+html body #app.setup{padding-top:0!important}
+html body #app.setup .top{position:sticky;top:0;z-index:20;margin:0 -22px;padding:calc(15px + 12px) 22px 12px;background:var(--tp2);border-bottom:3px solid #c9a24e;box-shadow:0 3px 0 #101010,0 7px 12px rgba(0,0,0,.45)}
 </style>
 </body>
 </html>
