@@ -1985,7 +1985,7 @@ const hueco=id=>{const f=S.friends.find(x=>x.id===id);if(f&&f.gen)return true;if
 const sinCuenta=id=>hueco(id)||/^sg[1-4]$/.test(String(id));
 const oculto=id=>gone(id)||hueco(id);
 const gone=id=>/(^|_)del_[0-9a-f]{8}$/.test(String(id))||!!(S.gone&&S.gone[id]);
-const VERSION='E-20';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
+const VERSION='E-23';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
 /* ===== Perfiles públicos (fase I) ===== */
 const RESERVADO=/^(yo|invitado|jugador( ?[1-4])?|jugador eliminado)$/i; // mismos nombres que bloquea la base de datos
 const NOMBRE_NO='Nombre no disponible';
@@ -2535,7 +2535,7 @@ function setup(){
     if(G)return fixed(i,'inv'+(i+1),'Jugador '+(i+1));
     /* Todos los huecos se pueden cambiar: 1.º el genérico («Jugador N», sin la app), luego el perfil y luego los amigos */
     const d=gens[i],isYo=i===0&&yo,def=isYo?yo:null,list=[d,...(yo?[yo]:[]),...amigos];
-    return '<label class="pl"><select id="p'+i+'" aria-label="Jugador">'+(isYo?'':'<option value="" data-ph="1" selected>Elige jugador</option>')+list.map(f=>'<option value="'+f.id+'"'+(f===d?' data-gen="1"':'')+(yo&&f===yo?' data-tag="Tú"':'')+(f===def?' selected':'')+'>'+esc(f.name)+'</option>').join('')+'</select><div id="sb'+i+'" class="sbx"></div></label>';
+    return '<label class="pl"><select id="p'+i+'" aria-label="Jugador">'+'<option value="" data-ph="1"'+(isYo?'':' selected')+'>Elige jugador</option>'+list.map(f=>'<option value="'+f.id+'"'+(f===d?' data-gen="1"':'')+(yo&&f===yo?' data-tag="Tú"':'')+(f===def?' selected':'')+'>'+esc(f.name)+'</option>').join('')+'</select><div id="sb'+i+'" class="sbx"></div></label>';
   };
   const c=S.cfg;
   const tbox=(i,title,k)=>'<div class="card team" style="--c:var(--'+k+');--cf:var(--'+k+'f)"><b style="color:'+(k==='b'?'#a9d6ff':'#f7a99d')+'">'+title+'</b><div class="row">'+slot(i*2)+slot(i*2+1)+'</div><label>Nombre del equipo (opcional)<input id="tn'+i+'" maxlength="'+TEAM_MAX+'" autocomplete="off" placeholder="'+(i?'Equipo rojo':'Equipo azul')+'"></label></div>';
@@ -2554,6 +2554,28 @@ function setup(){
   [0,1].forEach(i=>{const e=$('#tn'+i);e.oninput=()=>{e.dataset.m=e.value.trim()?'1':''}});
   const chk2=()=>{chk();fillN(0);fillN(1)};
   [0,1,2,3].forEach(i=>$('#p'+i).onchange=chk2);chk2();
+  /* Lista de jugadores: avatar, nombre grande y amarracos; los que ya están en un equipo salen con su color y al elegirlos se mueven */
+  if(!G)window.musPicker=sel=>{
+    const i=+sel.id.slice(1),cur=[0,1,2,3].map(k=>$('#p'+k).value),pool=[...(yo?[yo]:[]),...amigos],gen=gens[i];
+    const where=id=>cur.findIndex(v=>v===id);
+    const row=(f,own)=>{const j=where(f.id),t=j<0?-1:j>>1,p=P[f.id]||blank();
+      return '<button type="button" class="psr'+(t===0?' tb':t===1?' ta':'')+(own?' on':'')+'" data-id="'+f.id+'">'+avatarHTML(f,p,52)
+        +'<span class="psn"><b>'+esc(f.name)+(yo&&f===yo?'<i class="pst2">Tú</i>':'')+'</b>'+(t>=0?'<small>'+(t?'Equipo rojo':'Equipo azul')+'</small>':'')+'</span>'
+        +'<span class="pst">'+trIcon(20)+'<b>'+fmt(p.tr)+'</b></span></button>'};
+    const placed=pool.filter(f=>where(f.id)>=0).sort((a,b)=>where(a.id)-where(b.id)),free=pool.filter(f=>where(f.id)<0);
+    let h=placed.map(f=>row(f,where(f.id)===i)).join('')+free.map(f=>row(f,false)).join('');
+    if(gen)h+='<button type="button" class="psr psg'+(cur[i]===gen.id?' on':'')+'" data-id="'+gen.id+'"><span class="psgi" aria-hidden="true">?</span><span class="psn"><b>'+esc(gen.name)+'</b><small>Jugador sin la app</small></span></button>';
+    if(cur[i])h+='<button type="button" class="ghost psv" data-id="">Dejar vacío</button>';
+    const d=document.createElement('div');d.className='ov c';
+    d.innerHTML='<div class="mp pkr"><div class="pkr-bar"><button type="button" class="csback">‹ Atrás</button><b>Escoger jugador</b></div><div class="mpi"><div class="ps-list">'+h+'</div></div></div>';
+    document.body.appendChild(d);
+    d.onclick=e=>{if(e.target===d)d.remove()};
+    d.querySelector('.csback').onclick=()=>d.remove();
+    d.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>{const id=b.dataset.id,j=id?where(id):-1;
+      if(j>=0&&j!==i)$('#p'+j).value='';   /* el jugador deja su hueco anterior (queda vacante) */
+      sel.value=id;sel.dispatchEvent(new Event('change',{bubbles:true}));d.remove()});
+    const on0=d.querySelector('.psr.on');if(on0)on0.scrollIntoView({block:'center'});
+  };
   $('#b').onclick=()=>{SETUP_CONN=false;go('home')};
   if(SETUP_CONN&&!SETUP_SALA)reservarSala();
   $('#inf').onchange=()=>{const v=$('#inf').checked?'none':'';$('#jv').closest('label').style.display=v;$('#vc').closest('label').style.display=v};
@@ -3307,6 +3329,7 @@ entrarUsuario() // sesión recordada en este dispositivo: entra directamente, si
   var d=document.createElement('div');d.className='ov c';
   var pk=/^p[0-3]$/.test(sel.id),esc=function(t){return t.replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})};
   var opts=[].map.call(sel.options,function(o,i){if(pk&&o.dataset.ph)return'';var g=pk&&o.dataset.gen,tg=pk&&o.dataset.tag;return '<button type="button" class="csopt'+(i===sel.selectedIndex?' on':'')+(g?' csgen':'')+'" data-i="'+i+'"><span>'+esc(o.text)+(g?'<small>Jugador sin la app</small>':'')+(tg?'<small class="cstag">'+tg+'</small>':'')+'</span></button>'}).join('');
+  if(pk&&window.musPicker){window.musPicker(sel);return}
   if(pk){
    d.innerHTML='<div class="mp pkr"><div class="pkr-bar"><button type="button" class="csback">‹ Atrás</button><b>Escoger jugador</b></div><div class="mpi"><div class="cs-list">'+opts+'</div></div></div>';
    document.body.appendChild(d);
@@ -3950,6 +3973,22 @@ html body .ov.lgn .plg .nd.cur[data-l]{filter:none!important;box-shadow:none!imp
 /* punto de aviso de «Senda del Órdago»: sobre el marco (antes lo recortaba el overflow del botón) */
 html body #app.home .menu #sd{overflow:visible!important}
 html body #app.home .menu #sd .mbadge{top:-11px;right:-8px;z-index:6}
+
+/* Lista de jugadores de «Nueva partida»: avatar, nombre grande, amarracos y color de equipo */
+html body .ov.c .ps-list{display:flex;flex-direction:column;gap:10px}
+html body .ov.c .psr{display:flex!important;align-items:center;gap:12px;width:100%;box-sizing:border-box;text-align:left;padding:9px 12px;border-radius:16px;border:2px solid rgba(201,162,78,.5)!important;color:#f6efdc!important;background:linear-gradient(180deg,#2f4b3a,#1f3529)!important;box-shadow:inset 0 1.5px 0 rgba(255,255,255,.2),0 2px 0 rgba(0,0,0,.4)!important;margin:0}
+html body .ov.c .psr.tb{background:linear-gradient(180deg,#3e6c97,#284a6b)!important;border-color:#a9d6ff!important}
+html body .ov.c .psr.ta{background:linear-gradient(180deg,#9b4a3e,#6d2d25)!important;border-color:#f7a99d!important}
+html body .ov.c .psr.on{box-shadow:inset 0 1.5px 0 rgba(255,255,255,.35),0 0 0 3px #d9b24f,0 2px 0 rgba(0,0,0,.4)!important}
+html body .ov.c .psr .av{flex:0 0 auto;margin:0}
+html body .ov.c .psn{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
+html body .ov.c .psn b{font-size:21px;line-height:1.15;font-weight:700;overflow-wrap:anywhere}
+html body .ov.c .psn small{font-size:14px;font-weight:600;opacity:.92}
+html body .ov.c .psn .pst2{font-style:normal;font-size:12px;font-weight:700;margin-left:8px;padding:1px 7px;border-radius:8px;background:rgba(255,255,255,.18);vertical-align:middle}
+html body .ov.c .pst{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;font-size:18px;font-weight:700}
+html body .ov.c .psg{background:linear-gradient(180deg,#3b4f7a,#26365a)!important;border-color:#8ea4d6!important;margin-top:4px}
+html body .ov.c .psgi{flex:0 0 52px;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;background:rgba(255,255,255,.14);border:2px solid rgba(255,255,255,.35)}
+html body .ov.c .psv{width:100%;margin-top:4px;padding:12px;font-size:16px}
 </style>
 </body>
 </html>
