@@ -1985,7 +1985,7 @@ const hueco=id=>{const f=S.friends.find(x=>x.id===id);if(f&&f.gen)return true;if
 const sinCuenta=id=>hueco(id)||/^sg[1-4]$/.test(String(id));
 const oculto=id=>gone(id)||hueco(id);
 const gone=id=>/(^|_)del_[0-9a-f]{8}$/.test(String(id))||!!(S.gone&&S.gone[id]);
-const VERSION='E-23';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
+const VERSION='E-24';let DBG={sub:null,baj:null,rcl:null,n:0}; // DBG: último error de sincronización (se enseña en Mi perfil)
 /* ===== Perfiles públicos (fase I) ===== */
 const RESERVADO=/^(yo|invitado|jugador( ?[1-4])?|jugador eliminado)$/i; // mismos nombres que bloquea la base de datos
 const NOMBRE_NO='Nombre no disponible';
@@ -2560,11 +2560,13 @@ function setup(){
     const where=id=>cur.findIndex(v=>v===id);
     const row=(f,own)=>{const j=where(f.id),t=j<0?-1:j>>1,p=P[f.id]||blank();
       return '<button type="button" class="psr'+(t===0?' tb':t===1?' ta':'')+(own?' on':'')+'" data-id="'+f.id+'">'+avatarHTML(f,p,52)
-        +'<span class="psn"><b>'+esc(f.name)+(yo&&f===yo?'<i class="pst2">Tú</i>':'')+'</b>'+(t>=0?'<small>'+(t?'Equipo rojo':'Equipo azul')+'</small>':'')+'</span>'
+        +'<span class="psn"><b>'+esc(f.name)+'</b>'+((yo&&f===yo)||t>=0?'<small>'+[yo&&f===yo?'Tú':'',t>=0?(t?'Equipo rojo':'Equipo azul'):''].filter(Boolean).join(' · ')+'</small>':'')+'</span>'
         +'<span class="pst">'+trIcon(20)+'<b>'+fmt(p.tr)+'</b></span></button>'};
     const placed=pool.filter(f=>where(f.id)>=0).sort((a,b)=>where(a.id)-where(b.id)),free=pool.filter(f=>where(f.id)<0);
-    let h=placed.map(f=>row(f,where(f.id)===i)).join('')+free.map(f=>row(f,false)).join('');
-    if(gen)h+='<button type="button" class="psr psg'+(cur[i]===gen.id?' on':'')+'" data-id="'+gen.id+'"><span class="psgi" aria-hidden="true">?</span><span class="psn"><b>'+esc(gen.name)+'</b><small>Jugador sin la app</small></span></button>';
+    const mine=yo?[yo]:[],rest=pl=>pl.filter(f=>f!==yo);
+    let h='';
+    if(gen)h+='<button type="button" class="psr psg'+(cur[i]===gen.id?' on':'')+'" data-id="'+gen.id+'"><span class="psgi" aria-hidden="true"><svg viewBox="0 0 24 24" width="30" height="30"><circle cx="12" cy="8" r="3.9" fill="currentColor"/><path d="M4.5 20c0-4.1 3.2-6.6 7.5-6.6s7.5 2.5 7.5 6.6z" fill="currentColor"/></svg></span><span class="psn"><b>'+esc(gen.name)+'</b><small>Jugador sin la app</small></span></button>';
+    h+=mine.map(f=>row(f,where(f.id)===i)).join('')+rest(placed).map(f=>row(f,where(f.id)===i)).join('')+rest(free).map(f=>row(f,false)).join('');
     if(cur[i])h+='<button type="button" class="ghost psv" data-id="">Dejar vacío</button>';
     const d=document.createElement('div');d.className='ov c';
     d.innerHTML='<div class="mp pkr"><div class="pkr-bar"><button type="button" class="csback">‹ Atrás</button><b>Escoger jugador</b></div><div class="mpi"><div class="ps-list">'+h+'</div></div></div>';
@@ -3986,8 +3988,8 @@ html body .ov.c .psn b{font-size:21px;line-height:1.15;font-weight:700;overflow-
 html body .ov.c .psn small{font-size:14px;font-weight:600;opacity:.92}
 html body .ov.c .psn .pst2{font-style:normal;font-size:12px;font-weight:700;margin-left:8px;padding:1px 7px;border-radius:8px;background:rgba(255,255,255,.18);vertical-align:middle}
 html body .ov.c .pst{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;font-size:18px;font-weight:700}
-html body .ov.c .psg{background:linear-gradient(180deg,#3b4f7a,#26365a)!important;border-color:#8ea4d6!important;margin-top:4px}
-html body .ov.c .psgi{flex:0 0 52px;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;background:rgba(255,255,255,.14);border:2px solid rgba(255,255,255,.35)}
+html body .ov.c .psg{background:linear-gradient(180deg,#3b4f7a,#26365a)!important;border-color:#8ea4d6!important}
+html body .ov.c .psgi{flex:0 0 52px;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#e9e2cc;background:rgba(255,255,255,.14);border:2px solid rgba(255,255,255,.35)}
 html body .ov.c .psv{width:100%;margin-top:4px;padding:12px;font-size:16px}
 </style>
 </body>
